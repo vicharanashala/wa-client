@@ -83,13 +83,13 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
                 ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
-      - name: Deploy ajrasakha-client on VM
+      - name: Deploy ajrasakha-wa-client on VM
         run: |
           ssh ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
             set -e
         
             IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
-            CONTAINER=ajrasakha-client
+            CONTAINER=ajrasakha-wa-client
             ENV_FILE=/tmp/ajrasakha.env
         
             echo "Pulling image: $IMAGE"
@@ -118,7 +118,7 @@ jobs:
             docker run -d \
               --name $CONTAINER \
               --restart unless-stopped \
-              -p 3081:3080 \
+              -p 9112:3000 \
               -e INFISICAL_ENVIRONMENT='${{ env.INFISICAL_ENVIRONMENT }}' \
               -e INFISICAL_PROJECT_ID='${{ secrets.INFISICAL_PROJECT_ID }}' \
               -e INFISICAL_SECRET_PATH='${{ env.INFISICAL_SECRET_PATH }}' \
