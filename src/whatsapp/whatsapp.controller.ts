@@ -159,7 +159,7 @@ export class WhatsappController {
     @Query('hub.challenge') challenge: string,
     @Query('hub.verify_token') token: string, // ← remove underscore
   ): string {
-    const verifyToken = process.env.WEBHOOK_VERIFY_TOKEN;
+    const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
 
     if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Webhook verified');
@@ -177,7 +177,7 @@ export class WhatsappController {
   ): void {
     this.logger.log('Webhook received');
     // ── Signature Verification ──
-    const appSecret = process.env.META_APP_SECRET || '';
+    const appSecret = process.env.WHATSAPP_META_APP_SECRET || '';
     const expected =
       'sha256=' +
       crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
