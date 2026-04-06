@@ -29,15 +29,23 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAdd
       `[${event.phoneNumber}] User: "${event.content.slice(0, 60)}"`,
     );
 
-    await this.whatsappService.showTyping(event.messageId);
+    try {
+      await this.whatsappService.showTyping(event.messageId);
+    } catch (err) {
+      this.logger.warn(`showTyping failed for ${event.messageId}: ${err}`);
+    }
 
     const conversation = await this.conversationRepository.findByPhone(
       event.phoneNumber,
     );
-    if (!conversation) return;
+    if (!conversation) {
+      this.logger.warn(`No conversation found for ${event.phoneNumber}, skipping`);
+      return;
+    }
 
     // Ask for location once if not yet provided
     if (!conversation.hasLocation) {
+      this.logger.log(`[${event.phoneNumber}] No location yet, sending location request`);
       await this.whatsappService.sendLocationRequest(event.phoneNumber);
       return;
     }

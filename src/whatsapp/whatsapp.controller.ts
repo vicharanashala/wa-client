@@ -15,6 +15,7 @@ import { SetUserLocationCommand } from './conversations/application/set-user-loc
 import {
   AddUserVoiceMessageCommand
 } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
+import { CallingService } from './calling/calling.service';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
 
@@ -144,7 +145,10 @@ interface LocationMessage {
 export class WhatsappController {
   private readonly logger = new Logger(WhatsappController.name);
 
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly callingService: CallingService,
+  ) {}
 
   @Get('webhook')
   verify(
@@ -161,13 +165,20 @@ export class WhatsappController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  receive(@Body() body: WebhookPayload): void {
+  receive(@Body() body: any): void {
 
     this.logger.log('Webhook received');
 
     const change = body?.entry?.[0]?.changes?.[0];
+    if (!change) return;
 
-    if (!change || change.field !== 'messages') return;
+    // ── Handle Call Webhooks ──
+    if (change.field === 'calls') {
+      this.handleCallWebhook(change.value);
+      return;
+    }
+
+    if (change.field !== 'messages') return;
 
     const value = change.value;
 
@@ -232,6 +243,54 @@ export class WhatsappController {
             err.stack,
           ),
         );
+    }
+  }
+
+  // ── Call Webhook Handler ──────────────────────────────────────────────────
+
+  private handleCallWebhook(value: any): void {
+    if (!value) return;
+
+    // DEBUG: Log raw call webhook payload to understand structure
+    this.logger.debug(`📞 RAW CALL WEBHOOK: ${JSON.stringify(value, null, 2)}`);
+
+    // value.calls is an array of call events
+    const calls = value.calls;
+    if (!Array.isArray(calls)) {
+      this.logger.warn(`No calls array in webhook value. Keys: ${Object.keys(value).join(', ')}`);
+      return;
+    }
+
+    for (const call of calls) {
+      this.logger.debug(`📞 RAW CALL OBJECT: ${JSON.stringify(call, null, 2)}`);
+      const callId = call.call_id || call.id;
+      const event = call.event || call.type;
+      const from = call.from;
+
+      this.logger.log(`📞 Call event: ${event} | call_id: ${callId} | from: ${from}`);
+
+      if (event === 'connect') {
+        // Incoming call with SDP offer
+        const sdpOffer = call.session?.sdp;
+        if (!sdpOffer) {
+          this.logger.error(`No SDP offer in connect event for ${callId}`);
+          return;
+        }
+
+        this.callingService
+          .handleIncomingCall(callId, from, sdpOffer)
+          .catch((err: Error) =>
+            this.logger.error(`Call handling failed: ${err.message}`, err.stack),
+          );
+      } else if (event === 'terminate') {
+        this.callingService
+          .handleCallEnd(callId)
+          .catch((err: Error) =>
+            this.logger.error(`Call cleanup failed: ${err.message}`),
+          );
+      } else {
+        this.logger.debug(`Unhandled call event: ${event}`);
+      }
     }
   }
 }

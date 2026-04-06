@@ -67,7 +67,7 @@ export class WhatsappService {
   }
 
   async sendLocationRequest(to: string): Promise<void> {
-    await fetch(whatsappConfig.apiUrl, {
+    const response = await fetch(whatsappConfig.apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,6 +89,11 @@ export class WhatsappService {
         },
       }),
     });
+
+    if (!response.ok) {
+      const error = await response.text();
+      this.logger.error(`Location request to ${to} failed: ${error}`);
+    }
   }
 
   async downloadMedia(

@@ -4,7 +4,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { ChatAnthropic } from '@langchain/anthropic';
+import { ChatOpenAI } from '@langchain/openai';
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import { createAgent } from 'langchain';
 import { AIMessage, BaseMessage, ToolMessage } from '@langchain/core/messages';
@@ -62,11 +62,17 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       `Loaded ${tools.length} tools: ${tools.map((t) => t.name).join(', ')}`,
     );
 
+    const baseUrl = process.env.LLM_BASE_URL || 'http://34.180.40.201:8081/v1';
+    // Strip trailing /models if present (ChatOpenAI appends its own paths)
+    const cleanBaseUrl = baseUrl.replace(/\/models\/?$/, '');
+
     this.agent = createAgent({
-      model: new ChatAnthropic({
-        model: 'claude-sonnet-4-5',
-        apiKey:
-          '',
+      model: new ChatOpenAI({
+        modelName: process.env.LLM_MODEL === 'default' ? 'Qwen/Qwen3-30B-A3B' : (process.env.LLM_MODEL || 'Qwen/Qwen3-30B-A3B'),
+        apiKey: process.env.LLM_API_KEY || 'dummy-key',
+        configuration: {
+          baseURL: cleanBaseUrl,
+        },
         maxTokens: 1024,
       }),
       tools,
