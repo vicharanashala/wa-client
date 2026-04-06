@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
+RUN curl -1sLf \
+    'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' \
+    | bash && \
+    apt-get update && apt-get install -y infisical
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -28,4 +33,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Start the application in production mode
-CMD ["npm", "run", "start:prod"]
+CMD ["sh", "-c", "infisical run --env=\"$INFISICAL_ENVIRONMENT\" --projectId=\"$INFISICAL_PROJECT_ID\" --path=\"$INFISICAL_SECRET_PATH\" -- npm run start:prod"]
