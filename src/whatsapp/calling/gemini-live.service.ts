@@ -8,7 +8,7 @@ import { McpToolsService } from './mcp-tools.service';
  */
 
 export interface GeminiLiveCallbacks {
-  onAudio: (pcmBase64: string) => void;
+  onAudio: (pcmBase64: string, sampleRate: number) => void;
   onText: (text: string) => void;
   onTurnComplete: () => void;
   onSetupComplete: () => void;
@@ -124,7 +124,11 @@ export class GeminiLiveSession {
             this.callbacks.onText(part.text);
           }
           if (part.inlineData) {
-            this.callbacks.onAudio(part.inlineData.data);
+            // Extract sample rate from mimeType (e.g. "audio/pcm;rate=24000")
+            const mimeType: string = part.inlineData.mimeType || '';
+            const rateMatch = mimeType.match(/rate=(\d+)/);
+            const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+            this.callbacks.onAudio(part.inlineData.data, sampleRate);
           }
         }
       }
@@ -203,6 +207,39 @@ export class GeminiLiveSession {
           ],
         },
       }),
+    );
+  }
+
+  /**
+   * Send a text prompt to Gemini Live. Gemini will speak the response.
+   * Useful for triggering a greeting at the start of a call.
+   */
+  sendText(text: string): void {
+    if (!this.isSetupComplete || this.ws?.readyState !== WebSocket.OPEN) return;
+
+    this.ws.send(
+      JSON.stringify({
+        clientContent: {
+          turns: [
+            {
+              role: 'user',
+              parts: [{ text }],
+            },
+          ],
+          turnComplete: true,
+        },
+      }),
+    );
+
+    this.logger.log(`Sent text prompt to Gemini: "${text.slice(0, 80)}"`);
+  }
+
+  /**
+   * Send the initial greeting prompt so Gemini speaks a welcome message.
+   */
+  sendGreeting(): void {
+    this.sendText(
+      'Greet the caller warmly in Hindi. Say something like: "Ajarsakha mein aapka swagat hai! Main aapki kya madad kar sakta hoon?" Keep it short and natural.',
     );
   }
 
