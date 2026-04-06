@@ -1,46 +1,31 @@
-# Use Node.js 18 LTS
-FROM node:18-alpine AS builder
+# Use standard Node 20 image (Debian-based) which has better support for compiling native C++ modules 
+# like @discordjs/opus and werift.
+FROM node:20-bookworm-slim
 
+# Install system dependencies needed to build native node modules
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package files
+# Copy package.json and package-lock.json first (for caching)
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install project dependencies
+RUN npm install
 
-# Copy source code
+# Copy the rest of the application code
 COPY . .
 
-# Build the application
+# Build the NestJS application
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS production
-
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
-
-# Create app user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
-
-WORKDIR /app
-
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
-
-USER nextjs
-
+# Expose the port your app runs on
 EXPOSE 3000
 
-ENV NODE_ENV=production
-ENV PORT=3000
-
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["dumb-init", "--"]
-
-# Start the application
-CMD ["node", "dist/main.js"]
+# Start the application in production mode
+CMD ["npm", "run", "start:prod"]
