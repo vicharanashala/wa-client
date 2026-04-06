@@ -8,6 +8,8 @@ import {
   HttpStatus,
   ForbiddenException,
   Logger,
+  RawBody,
+  Headers
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { AddUserTextMessageCommand } from './conversations/application/add-user-text-message/add-user-text-message.command';
@@ -16,6 +18,7 @@ import {
   AddUserVoiceMessageCommand
 } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
 import { CallingService } from './calling/calling.service';
+import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
 
@@ -154,9 +157,11 @@ export class WhatsappController {
   verify(
     @Query('hub.mode') mode: string,
     @Query('hub.challenge') challenge: string,
-    @Query('hub.verify_token') _token: string,
+    @Query('hub.verify_token') token: string, // ← remove underscore
   ): string {
-    if (mode === 'subscribe') {
+    const verifyToken = process.env.WEBHOOK_VERIFY_TOKEN;
+
+    if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Webhook verified');
       return challenge;
     }
@@ -165,9 +170,22 @@ export class WhatsappController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  receive(@Body() body: any): void {
-
+  receive(
+    @Headers('x-hub-signature-256') signature: string,
+    @RawBody() rawBody: Buffer, // ← add this
+    @Body() body: any,
+  ): void {
     this.logger.log('Webhook received');
+    // ── Signature Verification ──
+    const appSecret = process.env.META_APP_SECRET || '';
+    const expected =
+      'sha256=' +
+      crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
+
+    if (!signature || signature !== expected) {
+      this.logger.warn('Rejected webhook: invalid signature');
+      throw new ForbiddenException('Invalid signature');
+    }
 
     const change = body?.entry?.[0]?.changes?.[0];
     if (!change) return;
@@ -188,7 +206,6 @@ export class WhatsappController {
     if (!Array.isArray(messages)) return;
 
     for (const message of messages) {
-
       if (message.type === 'location') {
         const loc = (message as LocationMessage).location;
         this.commandBus
@@ -211,10 +228,16 @@ export class WhatsappController {
         const audioMsg = message as unknown as AudioMessage;
         if (audioMsg.audio.voice) {
           this.commandBus
-            .execute(new AddUserVoiceMessageCommand(audioMsg.from, audioMsg.audio.id, audioMsg.id))
+            .execute(
+              new AddUserVoiceMessageCommand(
+                audioMsg.from,
+                audioMsg.audio.id,
+                audioMsg.id,
+              ),
+            )
             .catch((err: Error) => {
               this.logger.error(`Voice message command failed: ${err.message}`);
-          })
+            });
         }
         continue;
       }
@@ -236,7 +259,9 @@ export class WhatsappController {
       );
 
       this.commandBus
-        .execute(new AddUserTextMessageCommand(phoneNumber, messageText, message.id))
+        .execute(
+          new AddUserTextMessageCommand(phoneNumber, messageText, message.id),
+        )
         .catch((err: Error) =>
           this.logger.error(
             `Command failed for ${phoneNumber}: ${err.message}`,
@@ -257,7 +282,9 @@ export class WhatsappController {
     // value.calls is an array of call events
     const calls = value.calls;
     if (!Array.isArray(calls)) {
-      this.logger.warn(`No calls array in webhook value. Keys: ${Object.keys(value).join(', ')}`);
+      this.logger.warn(
+        `No calls array in webhook value. Keys: ${Object.keys(value).join(', ')}`,
+      );
       return;
     }
 
@@ -267,7 +294,9 @@ export class WhatsappController {
       const event = call.event || call.type;
       const from = call.from;
 
-      this.logger.log(`📞 Call event: ${event} | call_id: ${callId} | from: ${from}`);
+      this.logger.log(
+        `📞 Call event: ${event} | call_id: ${callId} | from: ${from}`,
+      );
 
       if (event === 'connect') {
         // Incoming call with SDP offer
@@ -280,7 +309,10 @@ export class WhatsappController {
         this.callingService
           .handleIncomingCall(callId, from, sdpOffer)
           .catch((err: Error) =>
-            this.logger.error(`Call handling failed: ${err.message}`, err.stack),
+            this.logger.error(
+              `Call handling failed: ${err.message}`,
+              err.stack,
+            ),
           );
       } else if (event === 'terminate') {
         this.callingService
