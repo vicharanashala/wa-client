@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Infisical CLI
 RUN curl -1sLf \
-    'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' \
+    'https://artifacts-cli.infisical.com/setup.deb.sh' \
     | bash && \
     apt-get update && apt-get install -y infisical
 
