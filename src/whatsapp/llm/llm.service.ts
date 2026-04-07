@@ -37,10 +37,10 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
           transport: 'http',
           url: 'http://100.100.108.43:9006/mcp',
         },
-        pop: {
-          transport: 'http',
-          url: 'http://100.100.108.43:9002/mcp',
-        },
+        // pop: {
+        //   transport: 'http',
+        //   url: 'http://100.100.108.43:9002/mcp',
+        // },
         market: {
           transport: 'http',
           url: 'http://100.100.108.43:9022/mcp',
@@ -52,6 +52,10 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
         'faq-videos': {
           transport: 'http',
           url: 'http://100.100.108.43:9005/mcp',
+        },
+        reviewer_new :{
+          transport: 'http',
+          url: 'http://100.100.108.44:9007/mcp',
         },
       },
       onConnectionError: 'ignore', // skip failed servers instead of crashing

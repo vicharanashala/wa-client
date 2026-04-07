@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import {
   PendingQuestionModel,
   PendingQuestionModelSchema,
@@ -11,6 +12,7 @@ import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     MongooseModule.forFeature([
       { name: PendingQuestionModel.name, schema: PendingQuestionModelSchema },
     ]),

@@ -1,67 +1,47 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 
 /**
- * Polls the reviewer system every N hours (configurable via REVIEWER_POLL_INTERVAL_MS)
+ * Polls the reviewer system on a cron schedule (default: every 2 hours)
  * to check if pending questions have been answered by human experts.
  *
  * When an answer is found, it auto-sends a notification message to the user
  * on WhatsApp and marks the question as notified.
+ *
+ * Cron schedule can be customised via the REVIEWER_CRON_EXPRESSION env var.
+ * Default: "0 *​/2 * * *"  (every 2 hours, on the hour).
  */
 @Injectable()
-export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
+export class ReviewerPollingService {
   private readonly logger = new Logger(ReviewerPollingService.name);
-  private pollInterval: ReturnType<typeof setInterval> | null = null;
 
   /** Reviewer system REST API base URL (for checking question status) */
   private readonly reviewerApiBaseUrl: string;
-
-  /** Polling interval in milliseconds (default: 2 hours) */
-  private readonly pollIntervalMs: number;
 
   constructor(
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappService: WhatsappService,
   ) {
     this.reviewerApiBaseUrl =
-      process.env.REVIEWER_API_BASE_URL || 'http://100.100.108.43:9007/api';
-    this.pollIntervalMs = parseInt(
-      process.env.REVIEWER_POLL_INTERVAL_MS || '7200000',
-      10,
-    );
+      process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
   }
 
-  onModuleInit(): void {
-    this.logger.log(
-      `🔄 Starting reviewer polling every ${this.pollIntervalMs / 1000}s (${(this.pollIntervalMs / 3600000).toFixed(1)}h)`,
-    );
-
-    // Run an initial check shortly after startup (30s delay for services to settle)
-    setTimeout(() => {
-      this.pollReviewerSystem().catch((err) =>
-        this.logger.error(`Initial poll failed: ${err.message}`),
-      );
-    }, 30_000);
-
-    // Then poll at the configured interval
-    this.pollInterval = setInterval(() => {
-      this.pollReviewerSystem().catch((err) =>
-        this.logger.error(`Poll cycle failed: ${err.message}`),
-      );
-    }, this.pollIntervalMs);
-  }
-
-  onModuleDestroy(): void {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-      this.pollInterval = null;
-      this.logger.log('Reviewer polling stopped');
+  /**
+   * Cron-scheduled polling job.
+   * Runs every 2 hours by default (CronExpression.EVERY_2_HOURS).
+   * Override with env var REVIEWER_CRON_EXPRESSION if needed.
+   */
+  @Cron(process.env.REVIEWER_CRON_EXPRESSION || CronExpression.EVERY_2_HOURS, {
+    name: 'reviewer-polling',
+  })
+  async handleCron(): Promise<void> {
+    this.logger.log('🔄 Cron triggered: checking reviewer system for answers…');
+    try {
+      await this.pollReviewerSystem();
+    } catch (err: any) {
+      this.logger.error(`Poll cycle failed: ${err.message}`);
     }
   }
 
@@ -102,7 +82,7 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
       const result = statusMap.get(question.questionId);
       if (!result) continue;
 
-      if (result.status === 'answered' && result.answer) {
+      if (result.status === 'closed' && result.answer) {
         this.logger.log(
           `✅ Question ${question.questionId} answered! Notifying ${question.phoneNumber}`,
         );
@@ -163,13 +143,23 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
       throw new Error(`Batch check failed (${response.status}): ${errorText}`);
     }
 
-    const data = (await response.json()) as {
-      results: { question_id: string; status: string; answer?: string }[];
+    const body = (await response.json()) as {
+      success: boolean;
+      data: {
+        question_id: string;
+        status: string;
+        answer?: string | null;
+        sources?: { source: string; page?: string | null }[];
+        author?: string | null;
+      }[];
     };
 
     const map = new Map<string, { status: string; answer?: string }>();
-    for (const r of data.results) {
-      map.set(r.question_id, { status: r.status, answer: r.answer });
+    for (const r of body.data) {
+      map.set(r.question_id, {
+        status: r.status,
+        answer: r.answer ?? undefined,
+      });
     }
     return map;
   }

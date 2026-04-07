@@ -129,7 +129,8 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAdd
       try {
         // Parse the result to extract question_id
         const parsed = JSON.parse(result.result);
-        const questionId = parsed.question_id || parsed.questionId || parsed.id;
+        const questionId =
+          parsed.question_id || parsed.questionId || parsed.id || parsed._id;
 
         if (!questionId) {
           this.logger.warn(

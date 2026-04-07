@@ -155,11 +155,15 @@ export class WhatsappController {
 
   @Get('webhook')
   verify(
-    @Query('hub.mode') mode: string,
-    @Query('hub.challenge') challenge: string,
-    @Query('hub.verify_token') token: string, // ← remove underscore
+    @Query() query: Record<string, string>,
   ): string {
+    const mode = query['hub.mode'];
+    const challenge = query['hub.challenge'];
+    const token = query['hub.verify_token'];
     const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+
+    this.logger.debug(`Webhook verify: mode=${mode}, token=${token}, expected=${verifyToken}`);
+    this.logger.debug(`Full query: ${JSON.stringify(query)}`);
 
     if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Webhook verified');
