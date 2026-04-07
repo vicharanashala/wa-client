@@ -2,7 +2,6 @@ import { EventPublisher, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import {
   BotTextMessageAddedEvent,
   ConversationClearedEvent,
-  UserMessageAddedEvent,
   UserTextMessageAddedEvent,
 } from '../conversation.events';
 import { Logger } from '@nestjs/common';
@@ -18,7 +17,7 @@ import { PendingQuestionRepository } from '../../../pending-questions/pending-qu
 const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
 
 @EventsHandler(UserTextMessageAddedEvent)
-export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAddedEvent> {
+export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessageAddedEvent> {
   private readonly logger = new Logger(UserTextMessageAddedHandler.name);
 
   constructor(
@@ -56,7 +55,7 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAdd
     }
 
     // Convert stored messages → LangChain HumanMessage / AIMessage
-    const messages = toBaseMessages(conversation.messages);
+    const messages = toBaseMessages(conversation.messages.slice(-15));
 
     // Inject location context so LLM always knows the user's location
     if (conversation.location) {

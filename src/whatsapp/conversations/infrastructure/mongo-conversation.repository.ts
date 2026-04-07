@@ -20,6 +20,7 @@ export class MongoConversationRepository implements ConversationRepository {
       doc.messages,
       doc.location ?? undefined,
       doc.preferredLanguage ?? undefined,
+      doc.userDetailsSummary ?? undefined,
     );
   }
 
@@ -31,7 +32,12 @@ export class MongoConversationRepository implements ConversationRepository {
           $set: {
             messages: conversation.messages,
             ...(conversation.location && { location: conversation.location }),
-            ...(conversation.preferredLanguage && { preferredLanguage: conversation.preferredLanguage }),
+            ...(conversation.preferredLanguage && {
+              preferredLanguage: conversation.preferredLanguage,
+            }),
+            ...(conversation.userDetailsSummary && {
+              userDetailsSummary: conversation.userDetailsSummary,
+            }),
           },
         },
         { upsert: true, returnDocument: 'after' },

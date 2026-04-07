@@ -28,30 +28,25 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     this.mcpClient = new MultiServerMCPClient({
       mcpServers: {
-        // ← was `servers`, must be `mcpServers`
         reviewer: {
           transport: 'http',
-          url: 'http://100.100.108.43:9007/mcp',
+          url: 'http://100.100.108.44:9002/mcp',
         },
         golden: {
           transport: 'http',
-          url: 'http://100.100.108.43:9006/mcp',
+          url: 'http://100.100.108.44:9003/mcp',
         },
         pop: {
           transport: 'http',
-          url: 'http://100.100.108.43:9002/mcp',
+          url: 'http://100.100.108.44:9005/mcp',
         },
         market: {
           transport: 'http',
-          url: 'http://100.100.108.43:9022/mcp',
+          url: 'http://100.100.108.44:9006/mcp',
         },
         weather: {
           transport: 'http',
-          url: 'http://100.100.108.43:9004/mcp',
-        },
-        'faq-videos': {
-          transport: 'http',
-          url: 'http://100.100.108.43:9005/mcp',
+          url: 'http://100.100.108.44:9007/mcp',
         },
       },
       onConnectionError: 'ignore', // skip failed servers instead of crashing

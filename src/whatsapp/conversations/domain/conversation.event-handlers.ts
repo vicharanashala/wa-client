@@ -9,7 +9,6 @@ import {
   BotTextMessageAddedEvent,
   ConversationClearedEvent,
   ConversationCreatedEvent,
-  UserMessageAddedEvent,
   UserTextMessageAddedEvent,
 } from './conversation.events';
 import { WhatsappService } from '../../whatsapp-api/whatsapp.service';

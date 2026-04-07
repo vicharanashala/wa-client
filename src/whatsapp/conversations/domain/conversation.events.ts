@@ -75,3 +75,9 @@ export class PreferredLanguageSetEvent {
   ) {}
 }
 
+export class UserDetailsSummarySetEvent {
+  constructor(
+    public readonly phoneNumber: string,
+    public readonly userDetailsSummary: string,
+  ) {}
+}
