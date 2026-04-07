@@ -5,15 +5,6 @@ export class ConversationCreatedEvent {
   ) {}
 }
 
-export class UserMessageAddedEvent {
-  constructor(
-    public readonly phoneNumber: string,
-    public readonly content: string,
-    public readonly messageId: string,
-    public readonly timestamp: Date,
-  ) {}
-}
-
 export class UserTextMessageAddedEvent {
   constructor(
     public readonly phoneNumber: string,
