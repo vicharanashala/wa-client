@@ -14,6 +14,7 @@ import { LlmModule } from '../llm/llm.module';
 import { SetUserLocationHandler } from './application/set-user-location/set-user-location.command';
 import { SarvamModule } from '../sarvam-api/sarvam.module';
 import { AddUserVoiceMessageHandler } from './application/add-user-voice-message/add-user-voice-message.command';
+import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { AddUserVoiceMessageHandler } from './application/add-user-voice-message
     ]),
     WhatsappApiModule,
     LlmModule,
-    SarvamModule
+    SarvamModule,
+    PendingQuestionsModule,
   ],
   providers: [
     { provide: ConversationRepository, useClass: MongoConversationRepository },
@@ -35,3 +37,4 @@ import { AddUserVoiceMessageHandler } from './application/add-user-voice-message
   exports: [ConversationRepository],
 })
 export class ConversationModule {}
+

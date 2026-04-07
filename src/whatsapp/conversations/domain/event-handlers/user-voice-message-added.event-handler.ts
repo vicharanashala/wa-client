@@ -7,6 +7,10 @@ import { SarvamService } from '../../../sarvam-api/sarvam.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { toBaseMessages } from '../../../llm/message.mapper';
 import { HumanMessage } from '@langchain/core/messages';
+import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
+
+/** Name of the MCP tool that uploads questions to the reviewer system */
+const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
 
 @EventsHandler(UserVoiceMessageAddedEvent)
 export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMessageAddedEvent> {
@@ -18,6 +22,7 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
     private readonly llmService: LlmService,
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
+    private readonly pendingQuestionRepo: PendingQuestionRepository,
   ) {}
 
   async handle(event: UserVoiceMessageAddedEvent): Promise<void> {
@@ -64,6 +69,9 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
       conversation.addToolResult(tr.toolCallId, tr.toolName, tr.result);
     }
 
+    // ── Track reviewer uploads for async notification ──
+    await this.trackReviewerUploads(toolCalls, toolResults, event.phoneNumber);
+
     conversation.addBotTextMessage(reply);
     await this.conversationRepository.save(conversation);
     conversation.commit();
@@ -94,5 +102,67 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
     this.logger.log(
       `[${event.phoneNumber}] Sent voice reply (${conversation.preferredLanguage ?? 'default'})`,
     );
+  }
+
+  /**
+   * Scans tool calls/results for the reviewer upload tool.
+   * If found, extracts the question_id from the result and creates a
+   * pending question record so the polling service can track it.
+   */
+  private async trackReviewerUploads(
+    toolCalls: { toolCallId: string; toolName: string; input: string }[],
+    toolResults: { toolCallId: string; toolName: string; result: string }[],
+    phoneNumber: string,
+  ): Promise<void> {
+    const reviewerCalls = toolCalls.filter(
+      (tc) => tc.toolName === REVIEWER_UPLOAD_TOOL,
+    );
+
+    for (const call of reviewerCalls) {
+      const result = toolResults.find(
+        (tr) => tr.toolCallId === call.toolCallId,
+      );
+      if (!result) continue;
+
+      try {
+        const parsed = JSON.parse(result.result);
+        const questionId = parsed.question_id || parsed.questionId || parsed.id;
+
+        if (!questionId) {
+          this.logger.warn(
+            `[${phoneNumber}] Reviewer upload succeeded but no question_id in response: ${result.result}`,
+          );
+          continue;
+        }
+
+        let queryText = '';
+        try {
+          const inputParsed = JSON.parse(call.input);
+          queryText =
+            inputParsed.question ||
+            inputParsed.query ||
+            inputParsed.text ||
+            inputParsed.query_text ||
+            JSON.stringify(inputParsed);
+        } catch {
+          queryText = call.input;
+        }
+
+        await this.pendingQuestionRepo.create({
+          questionId,
+          phoneNumber,
+          queryText,
+          toolCallId: call.toolCallId,
+        });
+
+        this.logger.log(
+          `[${phoneNumber}] 📋 Pending question tracked: ${questionId} — "${queryText.slice(0, 60)}"`,
+        );
+      } catch (err: any) {
+        this.logger.error(
+          `[${phoneNumber}] Failed to track reviewer upload: ${err.message}`,
+        );
+      }
+    }
   }
 }
