@@ -126,7 +126,8 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
 
       try {
         const parsed = JSON.parse(result.result);
-        const questionId = parsed.question_id || parsed.questionId || parsed.id;
+        const questionId =
+          parsed.question_id || parsed.questionId || parsed.id || parsed._id;
 
         if (!questionId) {
           this.logger.warn(
