@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import configuration from './config/configuration';
-import { validateConfig } from './config/validate-config';
+import { validateConfig } from './config';
 import { AppConfigService } from './config/app-config.service';
 
 @Module({

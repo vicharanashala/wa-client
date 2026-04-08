@@ -27,6 +27,7 @@ export default () => {
     // This allows runtime overrides without changing the YAML file
     const mergedConfig = {
       ...config,
+      version: config.version, // Explicitly preserve version as string
       app: {
         ...config.app,
         environment:

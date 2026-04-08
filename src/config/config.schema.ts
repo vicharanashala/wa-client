@@ -441,8 +441,9 @@ export class LoggingConfig {
 
 // Root Configuration Schema
 export class ConfigSchema {
+  @IsOptional()
   @IsString()
-  version: string;
+  version?: string;
 
   @ValidateNested()
   @Type(() => AppConfig)

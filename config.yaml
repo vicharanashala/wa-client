@@ -4,7 +4,7 @@
 # This file contains non-secret configuration that can be committed to version control.
 # Secrets (API keys, tokens, credentials) should be in .env file.
 
-version: 1.0.0
+version: '1.0.0'
 
 # Application Settings
 app:
@@ -47,6 +47,9 @@ whatsapp:
 
 # LLM Configuration
 llm:
+  # LLM API Settings
+  baseUrl: 'http://34.180.40.201:8081/v1' # Can be overridden by LLM_BASE_URL env var
+
   # Model Settings
   defaultModel: 'Qwen/Qwen3-30B-A3B'
   maxTokens: 1024
@@ -238,14 +241,31 @@ reviewer:
   polling:
     enabled: true
     intervalMs: 7200000 # 2 hours (7200000 ms)
-    initialDelayMs: 30000 # 30 seconds initial delay
+    initialDelayMs: 30000 # 30 seconds initial delay (hardcoded in reviewer-polling.service.ts:46)
 
   api:
     # Default base URL (can be overridden by REVIEWER_API_BASE_URL env var)
     defaultBaseUrl: 'http://100.100.108.43:9007/api'
     endpoints:
+      # Batch check endpoint for multiple questions
+      checkStatus: '/questions/check-status'
+      # Individual question status endpoint
+      questionStatus: '/questions/{id}/status'
+      # Legacy endpoints (documented but not currently used)
       pendingQuestions: '/pending-questions'
       markReviewed: '/mark-reviewed'
+
+  # Notification message format (hardcoded in reviewer-polling.service.ts:217-228)
+  notificationFormat: |
+    ✅ *Your question has been reviewed by an expert!*
+
+    📌 *Your Question:*
+    "{queryText}"
+
+    💡 *Expert Answer:*
+    {answer}
+
+    ⚠️ This is a testing version. Please consult an expert before making farming decisions.
 
 # Conversation Settings
 conversation:
