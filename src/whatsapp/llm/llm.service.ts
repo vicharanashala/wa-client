@@ -29,14 +29,9 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     this.mcpClient = new MultiServerMCPClient({
       mcpServers: {
-        // ← was `servers`, must be `mcpServers`
-        reviewer: {
-          transport: 'http',
-          url: 'http://100.100.108.43:9007/mcp',
-        },
         golden: {
           transport: 'http',
-          url: 'http://100.100.108.43:9006/mcp',
+          url: 'http://100.100.108.44:9006/mcp',
         },
         // pop: {
         //   transport: 'http',
@@ -44,15 +39,15 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
         // },
         market: {
           transport: 'http',
-          url: 'http://100.100.108.43:9022/mcp',
+          url: 'http://100.100.108.44:9002/mcp',
         },
         weather: {
           transport: 'http',
-          url: 'http://100.100.108.43:9004/mcp',
+          url: 'http://100.100.108.44:9003/mcp',
         },
         'faq-videos': {
           transport: 'http',
-          url: 'http://100.100.108.43:9005/mcp',
+          url: 'http://100.100.108.44:9005/mcp',
         },
         // reviewer_new: duplicate of reviewer, commented to avoid tool conflicts
         reviewer_new :{
