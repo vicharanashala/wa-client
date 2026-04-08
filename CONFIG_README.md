@@ -210,11 +210,37 @@ LOG_LEVEL=debug npm run start:dev
 - Generation parameters (temperature, max tokens, etc.)
 - System prompt
 
-### 4. MCP Servers (`mcp`)
+### 4. MCP Servers (`mcp`) - **DYNAMIC**
 
-- Text-based MCP servers (for chat)
-- Voice-based MCP servers (for calls)
-- Protocol configuration
+MCP server configuration is **fully dynamic** - you can add any number of servers with custom names:
+
+```yaml
+mcp:
+  servers:
+    text:
+      reviewer:
+        url: 'http://100.100.108.44:9002/mcp'
+        enabled: true
+      # Add your own servers with any name:
+      my-custom-server:
+        url: 'http://my-server:9010/mcp'
+        enabled: true
+
+    voice:
+      golden:
+        url: 'http://100.100.108.43:9006/mcp'
+        enabled: true
+      # Add more voice servers:
+      another-tool:
+        url: 'http://voice-server:9050/mcp'
+        enabled: false
+```
+
+- **Text servers**: Used for text-based chat interactions
+- **Voice servers**: Used for Gemini Live voice call interactions
+- **Protocol configuration**: MCP protocol version and client info
+- **No code changes needed** when adding/removing servers
+- Each server requires: `url` (string) and `enabled` (boolean)
 
 ### 5. Audio Settings (`audio`)
 
