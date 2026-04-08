@@ -3,6 +3,14 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 
+// Define a type for the reviewer result to keep our signatures clean
+type ReviewerStatusResult = {
+  status: string;
+  answer?: string;
+  author?: string;
+  sources?: { source: string; page?: string | null }[];
+};
+
 /**
  * Polls the reviewer system on a cron schedule (default: every 2 hours)
  * to check if pending questions have been answered by human experts.
@@ -29,8 +37,7 @@ export class ReviewerPollingService {
   ) {
     this.reviewerApiBaseUrl =
       process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
-    this.reviewerApiKey =
-      process.env.REVIEWER_INTERNAL_API_KEY || '';
+    this.reviewerApiKey = process.env.REVIEWER_INTERNAL_API_KEY || '';
   }
 
   /**
@@ -71,7 +78,7 @@ export class ReviewerPollingService {
     const questionIds = pendingQuestions.map((q) => q.questionId);
 
     // Try batch endpoint first; fall back to individual checks
-    let statusMap: Map<string, { status: string; answer?: string }>;
+    let statusMap: Map<string, ReviewerStatusResult>;
 
     try {
       statusMap = await this.batchCheckStatus(questionIds);
@@ -103,6 +110,8 @@ export class ReviewerPollingService {
           const notificationMessage = this.formatNotification(
             question.queryText,
             result.answer,
+            result.author,
+            result.sources,
           );
 
           await this.whatsappService.sendTextMessage(
@@ -134,7 +143,7 @@ export class ReviewerPollingService {
    */
   private async batchCheckStatus(
     questionIds: string[],
-  ): Promise<Map<string, { status: string; answer?: string }>> {
+  ): Promise<Map<string, ReviewerStatusResult>> {
     const url = `${this.reviewerApiBaseUrl}/questions/check-status`;
 
     const response = await fetch(url, {
@@ -162,11 +171,13 @@ export class ReviewerPollingService {
       }[];
     };
 
-    const map = new Map<string, { status: string; answer?: string }>();
+    const map = new Map<string, ReviewerStatusResult>();
     for (const r of body.data) {
       map.set(r.question_id, {
         status: r.status,
         answer: r.answer ?? undefined,
+        author: r.author ?? undefined,
+        sources: r.sources ?? undefined,
       });
     }
     return map;
@@ -178,8 +189,8 @@ export class ReviewerPollingService {
    */
   private async individualCheckStatus(
     questionIds: string[],
-  ): Promise<Map<string, { status: string; answer?: string }>> {
-    const map = new Map<string, { status: string; answer?: string }>();
+  ): Promise<Map<string, ReviewerStatusResult>> {
+    const map = new Map<string, ReviewerStatusResult>();
 
     for (const id of questionIds) {
       try {
@@ -195,10 +206,7 @@ export class ReviewerPollingService {
           continue;
         }
 
-        const data = (await response.json()) as {
-          status: string;
-          answer?: string;
-        };
+        const data = (await response.json()) as ReviewerStatusResult;
         map.set(id, data);
       } catch (err: any) {
         this.logger.warn(`Status check for ${id} errored: ${err.message}`);
@@ -214,7 +222,18 @@ export class ReviewerPollingService {
    * Formats the WhatsApp notification message that gets sent when an
    * expert answer becomes available.
    */
-  private formatNotification(queryText: string, answer: string): string {
+  private formatNotification(
+    queryText: string,
+    answer: string,
+    author?: string,
+    sources?: { source: string; page?: string | null }[],
+  ): string {
+    const authorName = author || 'Expert';
+    const sourceLinks =
+      sources && sources.length > 0
+        ? sources.map((s) => `🔗 ${s.source}`)
+        : ['No sources provided.'];
+
     return [
       `✅ *Your question has been reviewed by an expert!*`,
       ``,
@@ -223,6 +242,11 @@ export class ReviewerPollingService {
       ``,
       `💡 *Expert Answer:*`,
       answer,
+      ``,
+      `👤 *Answered by:* ${authorName}`,
+      ``,
+      `📚 *Sources:*`,
+      ...sourceLinks,
       ``,
       `⚠️ This is a testing version. Please consult an expert before making farming decisions.`,
     ].join('\n');
