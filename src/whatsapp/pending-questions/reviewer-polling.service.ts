@@ -20,12 +20,17 @@ export class ReviewerPollingService {
   /** Reviewer system REST API base URL (for checking question status) */
   private readonly reviewerApiBaseUrl: string;
 
+  /** Internal API key for authenticating with the reviewer system */
+  private readonly reviewerApiKey: string;
+
   constructor(
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappService: WhatsappService,
   ) {
     this.reviewerApiBaseUrl =
       process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
+    this.reviewerApiKey =
+      process.env.REVIEWER_INTERNAL_API_KEY || '';
   }
 
   /**
@@ -134,7 +139,10 @@ export class ReviewerPollingService {
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-api-key': this.reviewerApiKey,
+      },
       body: JSON.stringify({ question_ids: questionIds }),
     });
 
@@ -176,7 +184,9 @@ export class ReviewerPollingService {
     for (const id of questionIds) {
       try {
         const url = `${this.reviewerApiBaseUrl}/questions/${id}/status`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: { 'x-internal-api-key': this.reviewerApiKey },
+        });
 
         if (!response.ok) {
           this.logger.warn(

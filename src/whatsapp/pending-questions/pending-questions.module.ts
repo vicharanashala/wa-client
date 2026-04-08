@@ -25,6 +25,6 @@ import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
     },
     ReviewerPollingService,
   ],
-  exports: [PendingQuestionRepository],
+  exports: [PendingQuestionRepository, ReviewerPollingService],
 })
 export class PendingQuestionsModule {}

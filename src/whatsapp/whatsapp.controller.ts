@@ -18,6 +18,7 @@ import {
   AddUserVoiceMessageCommand
 } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
 import { CallingService } from './calling/calling.service';
+import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -151,7 +152,15 @@ export class WhatsappController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly callingService: CallingService,
+    private readonly reviewerPollingService: ReviewerPollingService,
   ) {}
+
+  @Get('test-poll')
+  async triggerPollManually(): Promise<string> {
+    this.logger.log('🔥 Manual poll triggered via HTTP endpoint');
+    await this.reviewerPollingService.pollReviewerSystem();
+    return 'Polling triggered successfully! Check your server logs.';
+  }
 
   @Get('webhook')
   verify(

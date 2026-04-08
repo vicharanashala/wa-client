@@ -24,6 +24,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
 
   private mcpClient: MultiServerMCPClient;
   private agent: ReturnType<typeof createAgent>;
+  private tools: Awaited<ReturnType<MultiServerMCPClient['getTools']>> = [];
 
   async onModuleInit(): Promise<void> {
     this.mcpClient = new MultiServerMCPClient({
@@ -53,6 +54,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
           transport: 'http',
           url: 'http://100.100.108.43:9005/mcp',
         },
+        // reviewer_new: duplicate of reviewer, commented to avoid tool conflicts
         reviewer_new :{
           transport: 'http',
           url: 'http://100.100.108.44:9007/mcp',
@@ -61,9 +63,9 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       onConnectionError: 'ignore', // skip failed servers instead of crashing
     });
 
-    const tools = await this.mcpClient.getTools();
+    this.tools = await this.mcpClient.getTools();
     this.logger.log(
-      `Loaded ${tools.length} tools: ${tools.map((t) => t.name).join(', ')}`,
+      `Loaded ${this.tools.length} tools: ${this.tools.map((t) => t.name).join(', ')}`,
     );
 
     const baseUrl = process.env.LLM_BASE_URL || 'http://34.180.40.201:8081/v1';
@@ -77,9 +79,9 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
         configuration: {
           baseURL: cleanBaseUrl,
         },
-        maxTokens: 1024,
+        maxTokens: 4096,
       }),
-      tools,
+      tools: this.tools,
       systemPrompt: SYSTEM_PROMPT
     });
 
@@ -91,25 +93,74 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('MCP client closed');
   }
 
+  /**
+   * Directly invoke an MCP tool by name, bypassing the LLM.
+   * Used to force tool calls when the LLM doesn't cooperate.
+   */
+  async callTool(
+    toolName: string,
+    input: Record<string, any>,
+  ): Promise<string> {
+    const tool = this.tools.find((t) => t.name === toolName);
+    if (!tool) {
+      throw new Error(`Tool "${toolName}" not found among ${this.tools.length} loaded tools`);
+    }
+    this.logger.log(`🔧 Force-calling tool: ${toolName} with input: ${JSON.stringify(input)}`);
+    const result = await tool.invoke(input);
+    return typeof result === 'string' ? result : JSON.stringify(result);
+  }
+
 async generate(messages: BaseMessage[]): Promise<LlmResult> {
-  const result = await this.agent.invoke({ messages });
+  this.logger.log(`Sending ${messages.length} messages to LLM agent...`);
 
-  const toolCalls: LlmResult['toolCalls'] = [];
-const toolResults: LlmResult['toolResults'] = [];
-let reply = '';
-
-for (const msg of result.messages) {
-  // AIMessage with tool_calls = the LLM decided to call a tool
-  if (msg instanceof AIMessage && msg.tool_calls?.length) {
-    const aiMsg = msg as AIMessage;
-    for (const tc of aiMsg.tool_calls ?? []) {
-      toolCalls.push({
-        toolCallId: tc.id!,
-        toolName: tc.name,
-        input: JSON.stringify(tc.args),
-      });
+  let result: any;
+  const MAX_RETRIES = 2;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      result = await this.agent.invoke({ messages });
+      break; // success
+    } catch (err: any) {
+      const isEmptyOutputError =
+        err?.message?.includes('model output must contain either output text or tool calls') ||
+        err?.message?.includes('model output error');
+      if (isEmptyOutputError && attempt < MAX_RETRIES) {
+        this.logger.warn(`LLM returned empty output (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
+        continue;
+      }
+      // Last attempt or unrelated error — return safe fallback
+      this.logger.error(`LLM agent failed after ${attempt} attempt(s): ${err.message}`);
+      return {
+        reply: 'मुझे अभी आपकी बात समझने में थोड़ी दिक्कत हो रही है। कृपया दोबारा कोशिश करें।',
+        toolCalls: [],
+        toolResults: [],
+      };
     }
   }
+
+  this.logger.log(`Agent returned ${result.messages?.length} messages`);
+
+  const toolCalls: LlmResult['toolCalls'] = [];
+  const toolResults: LlmResult['toolResults'] = [];
+  let reply = '';
+
+  for (const msg of result.messages) {
+    // AIMessage with tool_calls = the LLM decided to call a tool
+    if (msg._getType() === 'ai') { // Check type dynamically just in case instanceof fails
+      const aiMsg = msg as AIMessage;
+      if (aiMsg.tool_calls?.length || aiMsg.additional_kwargs?.tool_calls?.length) {
+        this.logger.log(`🔧 Found tool calls in AI message!`);
+        const calls = aiMsg.tool_calls?.length ? aiMsg.tool_calls : aiMsg.additional_kwargs?.tool_calls;
+        for (const tc of (calls as any[]) ?? []) {
+          const toolName = tc.name || (tc.function && tc.function.name);
+          const input = tc.args ? JSON.stringify(tc.args) : (tc.function && tc.function.arguments);
+          toolCalls.push({
+            toolCallId: tc.id,
+            toolName: toolName,
+            input: typeof input === 'string' ? input : JSON.stringify(input || {}),
+          });
+        }
+      }
+    }
 
   // ToolMessage = the tool returned a result
   if (msg._getType() === 'tool') {
