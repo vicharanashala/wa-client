@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
 import {
   StateGraph,
   MessagesAnnotation,
@@ -68,21 +68,15 @@ Remember: The goal is to avoid uploading duplicate questions or non-questions to
 export class QuestionClassifierService {
   private readonly logger = new Logger(QuestionClassifierService.name);
   private classifierGraph: ReturnType<typeof this.createClassifierGraph>;
-  private llm: ChatOpenAI;
+  private llm: ChatAnthropic;
 
   constructor() {
-    const baseUrl = process.env.LLM_BASE_URL || 'http://34.180.40.201:8081/v1';
-    const cleanBaseUrl = baseUrl.replace(/\/models\/?$/, '');
-
-    this.llm = new ChatOpenAI({
+    this.llm = new ChatAnthropic({
       modelName:
         process.env.LLM_MODEL === 'default'
-          ? 'Qwen/Qwen3-30B-A3B'
-          : process.env.LLM_MODEL || 'Qwen/Qwen3-30B-A3B',
+          ? 'claude-3-5-sonnet-20240620'
+          : process.env.LLM_MODEL || 'claude-3-5-sonnet-20240620',
       apiKey: process.env.LLM_API_KEY || 'dummy-key',
-      configuration: {
-        baseURL: cleanBaseUrl,
-      },
       temperature: 0.1,
       maxTokens: 500,
     });
