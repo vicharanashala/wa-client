@@ -48,7 +48,7 @@ async function bootstrap() {
       `🚀 Redis: ${process.env.REDIS_HOST ? '✅ Configured' : '❌ Not configured'}`,
     );
     logger.log(
-      `📞 WhatsApp: ${process.env.META_ACCESS_TOKEN ? '✅ Configured' : '❌ Not configured'}`,
+      `📞 WhatsApp: ${process.env.WHATSAPP_ACCESS_TOKEN ? '✅ Configured' : '❌ Not configured'}`,
     );
   } catch (error) {
     logger.error('Failed to start application', error);
