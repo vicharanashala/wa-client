@@ -24,45 +24,49 @@ export interface QuestionClassification {
     | 'new_question'
     | 'acknowledgment'
     | 'other';
+  extractedDetails?: {
+    improved_question: string;
+    state_name: string;
+    crop: string;
+  };
 }
 
 const CLASSIFIER_SYSTEM_PROMPT = `You are a question classification expert for an agricultural advisory system.
 
-Your task is to analyze user messages in the context of their conversation history and determine if the current message represents a NEW UNIQUE QUESTION that requires expert review.
+Your task is to analyze user messages in the context of their conversation history and determine if the current message represents a GENUINE NEW UNIQUE QUESTION that requires expert review.
 
 CLASSIFICATION RULES:
 
 1. **NEW UNIQUE QUESTION** (isUniqueQuestion = true):
-   - The user is asking about a specific agricultural problem, crop disease, pest issue, or farming technique
-   - The question introduces a NEW topic not covered in recent conversation
-   - The question requires expert knowledge or detailed agricultural guidance
-   - Examples: "My tomato plants have yellow leaves", "How to control aphids on cotton?", "Best fertilizer for wheat in Rabi season?"
+   - Asking about a specific agricultural problem, crop disease, pest issue, or farming technique.
+   - The question introduces a NEW topic.
+   - Requires expert knowledge or detailed agricultural guidance.
 
 2. **NOT A UNIQUE QUESTION** (isUniqueQuestion = false):
-   - Greetings and pleasantries: "Hi", "Hello", "Good morning", "How are you?"
-   - Follow-up questions: "What about the dosage?", "And the timing?", "Can you explain more?"
-   - Clarifications on previous answers: "I didn't understand that", "What do you mean by that?"
-   - Acknowledgments: "Thanks", "OK", "Got it", "I understand"
-   - Simple confirmations or status updates: "Yes", "No", "Done"
-   - Repetitions of the same question asked recently (within last 3-5 messages)
+   - Greetings, pleasantries ("Hi", "Hello")
+   - General non-farming queries (e.g. "What is farming?", "Weather today")
+   - Follow-up questions to an ongoing topic
+   - Clarifications, Acknowledgments, Confirmations
+   - Repetitions of recently asked questions
 
-3. **CONTEXT ANALYSIS**:
-   - Check the last 5-10 messages to understand conversation flow
-   - If the user is continuing discussion on the SAME topic → NOT a new question
-   - If the user switches to a DIFFERENT agricultural topic → NEW question
-   - Consider whether the current message can be answered using context from recent messages
+3. **CONTEXT EXTRACTION** (If isUniqueQuestion = true):
+   - You must extract the user's context (e.g., crop, state) and write an improved_question in English that combines all details into a complete query.
+   - If a field is not mentioned, use "General".
 
 RESPONSE FORMAT:
 You must respond with a valid JSON object in this exact format:
 {
   "isUniqueQuestion": true or false,
   "reasoning": "Brief explanation",
-  "questionType": "greeting" | "followup" | "clarification" | "new_question" | "acknowledgment" | "other"
+  "questionType": "greeting" | "followup" | "clarification" | "new_question" | "acknowledgment" | "other",
+  "extractedDetails": {
+    "improved_question": "If isUniqueQuestion is true, write a detailed English translation including all context. Else use 'General'",
+    "state_name": "State mentioned (e.g. Himachal Pradesh) else 'General'",
+    "crop": "Crop mentioned (e.g. Paddy) else 'General'"
+  }
 }
 
-IMPORTANT: Return ONLY the JSON object, nothing else. No markdown, no extra text.
-
-Remember: The goal is to avoid uploading duplicate questions or non-questions to the expert review system while ensuring all genuine new agricultural queries are captured.`;
+IMPORTANT: Return ONLY the JSON object, nothing else. No markdown, no extra text.`;
 
 @Injectable()
 export class QuestionClassifierService {
@@ -153,11 +157,13 @@ export class QuestionClassifierService {
         typeof obj.isUniqueQuestion === 'boolean' &&
         typeof obj.reasoning === 'string'
       ) {
-        return Ok({
+        const classificationObj: QuestionClassification = {
           isUniqueQuestion: obj.isUniqueQuestion,
           reasoning: obj.reasoning || 'No reasoning provided',
           questionType: this.validateQuestionType(obj.questionType),
-        });
+          extractedDetails: obj.extractedDetails,
+        };
+        return Ok(classificationObj);
       }
       return Err(new Error('Invalid classification structure'));
     });

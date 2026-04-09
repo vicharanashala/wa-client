@@ -1,5 +1,5 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { UserTextMessageAddedEvent } from '../conversation.events';
+import { UserTextMessageAddedEvent, UserVoiceMessageAddedEvent } from '../conversation.events';
 import { Logger } from '@nestjs/common';
 import { ConversationRepository } from '../../infrastructure/conversation.repository';
 import { LlmService } from '../../../llm/llm.service';
@@ -10,8 +10,8 @@ import { Result, Ok, Err, Option, Some, None } from 'oxide.ts';
 
 const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
 
-@EventsHandler(UserTextMessageAddedEvent)
-export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextMessageAddedEvent> {
+@EventsHandler(UserTextMessageAddedEvent, UserVoiceMessageAddedEvent)
+export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextMessageAddedEvent | UserVoiceMessageAddedEvent> {
   private readonly logger = new Logger(IntelligentQuestionUploadHandler.name);
 
   constructor(
@@ -21,7 +21,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     private readonly pendingQuestionRepo: PendingQuestionRepository,
   ) {}
 
-  async handle(event: UserTextMessageAddedEvent): Promise<void> {
+  async handle(event: UserTextMessageAddedEvent | UserVoiceMessageAddedEvent): Promise<void> {
     const conversation = await Option(
       this.conversationRepository.findByPhone(event.phoneNumber),
     ).into();
@@ -31,9 +31,10 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     }
 
     const messages = toBaseMessages(conversation.messages.slice(-15));
+    const messageContent = 'content' in event ? event.content : event.transcript;
 
     const classification = await this.questionClassifier.classifyMessage(
-      event.content,
+      messageContent,
       messages,
     );
 
@@ -43,7 +44,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     );
 
     if (classification.isUniqueQuestion) {
-      await this.uploadQuestionToReviewer(event);
+      await this.uploadQuestionToReviewer(event, classification);
     } else {
       this.logger.log(
         `[${event.phoneNumber}] Skipping upload (${classification.questionType})`,
@@ -52,16 +53,19 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
   }
 
   private async uploadQuestionToReviewer(
-    event: UserTextMessageAddedEvent,
+    event: UserTextMessageAddedEvent | UserVoiceMessageAddedEvent,
+    classification: any,
   ): Promise<void> {
+    const messageContent = 'content' in event ? event.content : event.transcript;
+    const details = classification.extractedDetails || {};
     const input = {
-      question: event.content,
-      state_name: 'General',
-      crop: 'General',
+      question: details.improved_question && details.improved_question !== 'General' ? details.improved_question : messageContent,
+      state_name: details.state_name || 'General',
+      crop: details.crop || 'General',
       details: {
-        state: 'General',
+        state: details.state_name || 'General',
         district: 'General',
-        crop: 'General',
+        crop: details.crop || 'General',
         season: 'General',
         domain: 'General',
       },
@@ -74,7 +78,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     uploadResult.isOk()
       ? this.handleUploadSuccess(
           event.phoneNumber,
-          event.content,
+          messageContent,
           uploadResult.unwrap(),
         )
       : this.handleUploadError(event.phoneNumber, uploadResult.unwrapErr());
