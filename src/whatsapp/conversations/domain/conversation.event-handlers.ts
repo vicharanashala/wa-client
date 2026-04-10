@@ -9,7 +9,6 @@ import {
   BotTextMessageAddedEvent,
   ConversationClearedEvent,
   ConversationCreatedEvent,
-  UserMessageAddedEvent,
   UserTextMessageAddedEvent,
 } from './conversation.events';
 import { WhatsappService } from '../../whatsapp-api/whatsapp.service';
@@ -20,6 +19,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import { UserTextMessageAddedHandler } from './event-handlers/user-text-message-added.event-handler';
 import { BotTextMessageAddedHandler } from './event-handlers/bot-text-message-added.event-handler';
 import { UserVoiceMessageAddedHandler } from './event-handlers/user-voice-message-added.event-handler';
+import { IntelligentQuestionUploadHandler } from './event-handlers/intelligent-question-upload.event-handler';
 
 @EventsHandler(ConversationCreatedEvent)
 export class ConversationCreatedHandler implements IEventHandler<ConversationCreatedEvent> {
@@ -29,7 +29,6 @@ export class ConversationCreatedHandler implements IEventHandler<ConversationCre
     this.logger.log(`New conversation started for ${event.phoneNumber}`);
   }
 }
-
 
 @EventsHandler(ConversationClearedEvent)
 export class ConversationClearedHandler implements IEventHandler<ConversationClearedEvent> {
@@ -43,6 +42,7 @@ export class ConversationClearedHandler implements IEventHandler<ConversationCle
 export const ConversationEventHandlers = [
   ConversationCreatedHandler,
   UserTextMessageAddedHandler,
+  IntelligentQuestionUploadHandler,
   UserVoiceMessageAddedHandler,
   BotTextMessageAddedHandler,
   ConversationClearedHandler,

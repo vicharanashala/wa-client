@@ -18,6 +18,7 @@ import {
   AddUserVoiceMessageCommand
 } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
 import { CallingService } from './calling/calling.service';
+import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -151,15 +152,27 @@ export class WhatsappController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly callingService: CallingService,
+    private readonly reviewerPollingService: ReviewerPollingService,
   ) {}
+
+  @Get('test-poll')
+  async triggerPollManually(): Promise<string> {
+    this.logger.log('🔥 Manual poll triggered via HTTP endpoint');
+    await this.reviewerPollingService.pollReviewerSystem();
+    return 'Polling triggered successfully! Check your server logs.';
+  }
 
   @Get('webhook')
   verify(
-    @Query('hub.mode') mode: string,
-    @Query('hub.challenge') challenge: string,
-    @Query('hub.verify_token') token: string, // ← remove underscore
+    @Query() query: Record<string, string>,
   ): string {
+    const mode = query['hub.mode'];
+    const challenge = query['hub.challenge'];
+    const token = query['hub.verify_token'];
     const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+
+    this.logger.debug(`Webhook verify: mode=${mode}, token=${token}, expected=${verifyToken}`);
+    this.logger.debug(`Full query: ${JSON.stringify(query)}`);
 
     if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Webhook verified');

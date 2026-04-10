@@ -1,24 +1,15 @@
 import { EventPublisher, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import {
-  BotTextMessageAddedEvent,
-  ConversationClearedEvent,
-  UserMessageAddedEvent,
-  UserTextMessageAddedEvent,
-} from '../conversation.events';
+import { UserTextMessageAddedEvent } from '../conversation.events';
 import { Logger } from '@nestjs/common';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
-import { ConversationCreatedHandler } from '../conversation.event-handlers';
 import { ConversationRepository } from '../../infrastructure/conversation.repository';
 import { LlmService } from '../../../llm/llm.service';
 import { toBaseMessages } from '../../../llm/message.mapper';
 import { HumanMessage } from '@langchain/core/messages';
-import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
-
-/** Name of the MCP tool that uploads questions to the reviewer system */
-const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
+import { Result } from 'oxide.ts';
 
 @EventsHandler(UserTextMessageAddedEvent)
-export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAddedEvent> {
+export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessageAddedEvent> {
   private readonly logger = new Logger(UserTextMessageAddedHandler.name);
 
   constructor(
@@ -26,7 +17,6 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAdd
     private readonly eventPublisher: EventPublisher,
     private readonly llmService: LlmService,
     private readonly whatsappService: WhatsappService,
-    private readonly pendingQuestionRepo: PendingQuestionRepository,
   ) {}
 
   async handle(event: UserTextMessageAddedEvent): Promise<void> {
@@ -34,31 +24,61 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAdd
       `[${event.phoneNumber}] User: "${event.content.slice(0, 60)}"`,
     );
 
-    try {
-      await this.whatsappService.showTyping(event.messageId);
-    } catch (err) {
-      this.logger.warn(`showTyping failed for ${event.messageId}: ${err}`);
-    }
+    await this.showTypingIndicator(event.messageId, event.phoneNumber);
 
     const conversation = await this.conversationRepository.findByPhone(
       event.phoneNumber,
     );
+
     if (!conversation) {
-      this.logger.warn(`No conversation found for ${event.phoneNumber}, skipping`);
+      this.logger.warn(
+        `No conversation found for ${event.phoneNumber}, skipping`,
+      );
       return;
     }
 
-    // Ask for location once if not yet provided
     if (!conversation.hasLocation) {
-      this.logger.log(`[${event.phoneNumber}] No location yet, sending location request`);
+      this.logger.log(
+        `[${event.phoneNumber}] No location yet, sending location request`,
+      );
       await this.whatsappService.sendLocationRequest(event.phoneNumber);
       return;
     }
 
-    // Convert stored messages → LangChain HumanMessage / AIMessage
-    const messages = toBaseMessages(conversation.messages);
+    const messages = this.buildMessageHistory(conversation);
 
-    // Inject location context so LLM always knows the user's location
+    this.eventPublisher.mergeObjectContext(conversation);
+
+    const { reply, toolCalls, toolResults } =
+      await this.llmService.generate(messages);
+
+    this.storeToolInteractions(conversation, toolCalls, toolResults);
+
+    conversation.addBotTextMessage(reply);
+    await this.conversationRepository.save(conversation);
+
+    conversation.commit();
+
+    await this.sendReply(event.phoneNumber, reply, event.messageId);
+  }
+
+  private async showTypingIndicator(
+    messageId: string,
+    phoneNumber: string,
+  ): Promise<void> {
+    const result = await Result.safe(
+      this.whatsappService.showTyping(messageId),
+    );
+
+    result.isErr() &&
+      this.logger.warn(
+        `[${phoneNumber}] showTyping failed: ${result.unwrapErr().message}`,
+      );
+  }
+
+  private buildMessageHistory(conversation: any): any[] {
+    const messages = toBaseMessages(conversation.messages.slice(-15));
+
     if (conversation.location) {
       const { latitude, longitude, address } = conversation.location;
       messages.unshift(
@@ -68,107 +88,29 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserMessageAdd
       );
     }
 
-    this.eventPublisher.mergeObjectContext(conversation);
+    return messages;
+  }
 
-    // Generate reply using full typed message history
-    const { reply, toolCalls, toolResults } =
-      await this.llmService.generate(messages);
-
-    // Store tool calls
+  private storeToolInteractions(
+    conversation: any,
+    toolCalls: any[],
+    toolResults: any[],
+  ): void {
     for (const tc of toolCalls) {
       conversation.addToolCall(tc.toolCallId, tc.toolName, tc.input);
     }
 
-    // Store tool results
     for (const tr of toolResults) {
       conversation.addToolResult(tr.toolCallId, tr.toolName, tr.result);
     }
-
-    // ── Track reviewer uploads for async notification ──
-    await this.trackReviewerUploads(toolCalls, toolResults, event.phoneNumber);
-
-    // Store bot reply via aggregate domain method
-    conversation.addBotTextMessage(reply);
-    await this.conversationRepository.save(conversation);
-
-    // Fires BotMessageAddedEvent → BotMessageAddedHandler → WhatsApp send
-    conversation.commit();
-
-    await this.whatsappService.sendTextMessage(
-      event.phoneNumber,
-      reply,
-      event.messageId
-    );
-    this.logger.log(
-      `[${event.phoneNumber}] Sent: "${reply.slice(0, 60)}"`,
-    );
   }
 
-  /**
-   * Scans tool calls/results for the reviewer upload tool.
-   * If found, extracts the question_id from the result and creates a
-   * pending question record so the polling service can track it.
-   */
-  private async trackReviewerUploads(
-    toolCalls: { toolCallId: string; toolName: string; input: string }[],
-    toolResults: { toolCallId: string; toolName: string; result: string }[],
+  private async sendReply(
     phoneNumber: string,
+    reply: string,
+    messageId: string,
   ): Promise<void> {
-    // Find tool calls that targeted the reviewer upload tool
-    const reviewerCalls = toolCalls.filter(
-      (tc) => tc.toolName === REVIEWER_UPLOAD_TOOL,
-    );
-
-    for (const call of reviewerCalls) {
-      // Find the matching result
-      const result = toolResults.find(
-        (tr) => tr.toolCallId === call.toolCallId,
-      );
-      if (!result) continue;
-
-      try {
-        // Parse the result to extract question_id
-        const parsed = JSON.parse(result.result);
-        const questionId = parsed.question_id || parsed.questionId || parsed.id;
-
-        if (!questionId) {
-          this.logger.warn(
-            `[${phoneNumber}] Reviewer upload succeeded but no question_id in response: ${result.result}`,
-          );
-          continue;
-        }
-
-        // Extract the query text from the tool call input
-        let queryText = '';
-        try {
-          const inputParsed = JSON.parse(call.input);
-          queryText =
-            inputParsed.question ||
-            inputParsed.query ||
-            inputParsed.text ||
-            inputParsed.query_text ||
-            JSON.stringify(inputParsed);
-        } catch {
-          queryText = call.input;
-        }
-
-        // Create pending question record
-        await this.pendingQuestionRepo.create({
-          questionId,
-          phoneNumber,
-          queryText,
-          toolCallId: call.toolCallId,
-        });
-
-        this.logger.log(
-          `[${phoneNumber}] 📋 Pending question tracked: ${questionId} — "${queryText.slice(0, 60)}"`,
-        );
-      } catch (err: any) {
-        this.logger.error(
-          `[${phoneNumber}] Failed to track reviewer upload: ${err.message}`,
-        );
-      }
-    }
+    await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
+    this.logger.log(`[${phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
   }
 }
-

@@ -7,6 +7,7 @@ import {
   PreferredLanguageSetEvent,
   ToolCallAddedEvent,
   ToolResultAddedEvent,
+  UserDetailsSummarySetEvent,
   UserTextMessageAddedEvent,
   UserVoiceMessageAddedEvent,
 } from './conversation.events';
@@ -70,6 +71,9 @@ interface ConversationProps {
 
   /** User's preferred language code (e.g., 'en', 'es') */
   preferredLanguage?: string;
+
+  /** Summary of user details gathered during the conversation */
+  userDetailsSummary?: string;
 
   /** Timestamp when the conversation was created */
   createdAt: Date;
@@ -149,6 +153,7 @@ export class Conversation extends AggregateRoot {
    * @param messages - The list of messages to restore
    * @param location - Optional location data
    * @param preferredLanguage - Optional preferred language code
+   * @param userDetailsSummary - Optional user details summary string
    * @returns A restored Conversation instance
    *
    * @example
@@ -157,7 +162,8 @@ export class Conversation extends AggregateRoot {
    *   '+1234567890',
    *   messagesFromDb,
    *   { latitude: 40.7128, longitude: -74.0060, address: 'New York, NY' },
-   *   'en'
+   *   'en',
+   *   'User is a software developer interested in AI'
    * );
    * ```
    */
@@ -166,6 +172,7 @@ export class Conversation extends AggregateRoot {
     messages: Message[],
     location?: { latitude: number; longitude: number; address?: string },
     preferredLanguage?: string,
+    userDetailsSummary?: string,
   ): Conversation {
     return new Conversation({
       phoneNumber,
@@ -173,6 +180,7 @@ export class Conversation extends AggregateRoot {
       createdAt: new Date(),
       location,
       preferredLanguage,
+      userDetailsSummary,
     });
   }
 
@@ -210,6 +218,14 @@ export class Conversation extends AggregateRoot {
    */
   get location() {
     return this.props.location;
+  }
+
+  /**
+   * Gets the user details summary.
+   * @returns The user details summary string or undefined if not set
+   */
+  get userDetailsSummary(): string | undefined {
+    return this.props.userDetailsSummary;
   }
 
   /**
@@ -325,6 +341,41 @@ export class Conversation extends AggregateRoot {
    */
   private onPreferredLanguageSetEvent(event: PreferredLanguageSetEvent): void {
     this.props.preferredLanguage = event.languageCode;
+  }
+
+  /**
+   * Sets the user details summary for this conversation.
+   *
+   * This can be used to store a summary of user information gathered during the conversation.
+   *
+   * @param userDetailsSummary - Summary string containing user details
+   *
+   * @example
+   * ```typescript
+   * conversation.setUserDetailsSummary('User is a software developer interested in AI and machine learning');
+   * ```
+   */
+  public setUserDetailsSummary(userDetailsSummary: string): void {
+    this.apply(
+      new UserDetailsSummarySetEvent(
+        this.props.phoneNumber,
+        userDetailsSummary,
+      ),
+    );
+  }
+
+  /**
+   * Handles the user details summary set event.
+   *
+   * Updates the conversation's user details summary.
+   *
+   * @param event - The user details summary set event
+   * @internal
+   */
+  private onUserDetailsSummarySetEvent(
+    event: UserDetailsSummarySetEvent,
+  ): void {
+    this.props.userDetailsSummary = event.userDetailsSummary;
   }
 
   /**

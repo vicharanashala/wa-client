@@ -10,6 +10,48 @@ export class WhatsappService {
     text: string,
     replyToMessageId?: string,
   ): Promise<void> {
+    const MAX_LENGTH = 4000;
+
+    if (text.length <= MAX_LENGTH) {
+      await this.sendSingleTextMessage(to, text, replyToMessageId);
+      return;
+    }
+
+    let currentIndex = 0;
+    while (currentIndex < text.length) {
+      let breakIndex = currentIndex + MAX_LENGTH;
+
+      if (breakIndex < text.length) {
+        // Try to break at a newline to keep formatting clean
+        const lastNewline = text.lastIndexOf('\n', breakIndex);
+        if (lastNewline > currentIndex + MAX_LENGTH - 1000) {
+          breakIndex = lastNewline;
+        } else {
+          // If no good newline, try keeping words intact
+          const lastSpace = text.lastIndexOf(' ', breakIndex);
+          if (lastSpace > currentIndex) {
+            breakIndex = lastSpace;
+          }
+        }
+      }
+
+      const chunk = text.slice(currentIndex, breakIndex).trim();
+
+      if (chunk.length > 0) {
+        await this.sendSingleTextMessage(to, chunk, replyToMessageId);
+        // Small delay to ensure messages arrive in sequential order
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      currentIndex = breakIndex;
+    }
+  }
+
+  private async sendSingleTextMessage(
+    to: string,
+    text: string,
+    replyToMessageId?: string,
+  ): Promise<void> {
     const response = await fetch(whatsappConfig.apiUrl, {
       method: 'POST',
       headers: {

@@ -1,67 +1,59 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 
+// Define a type for the reviewer result to keep our signatures clean
+type ReviewerStatusResult = {
+  status: string;
+  answer?: string;
+  author?: string;
+  sources?: { source: string; page?: string | null }[];
+};
+
 /**
- * Polls the reviewer system every N hours (configurable via REVIEWER_POLL_INTERVAL_MS)
+ * Polls the reviewer system on a cron schedule (default: every 2 hours)
  * to check if pending questions have been answered by human experts.
  *
  * When an answer is found, it auto-sends a notification message to the user
  * on WhatsApp and marks the question as notified.
+ *
+ * Cron schedule can be customised via the REVIEWER_CRON_EXPRESSION env var.
+ * Default: "0 *​/2 * * *"  (every 2 hours, on the hour).
  */
 @Injectable()
-export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
+export class ReviewerPollingService {
   private readonly logger = new Logger(ReviewerPollingService.name);
-  private pollInterval: ReturnType<typeof setInterval> | null = null;
 
   /** Reviewer system REST API base URL (for checking question status) */
   private readonly reviewerApiBaseUrl: string;
 
-  /** Polling interval in milliseconds (default: 2 hours) */
-  private readonly pollIntervalMs: number;
+  /** Internal API key for authenticating with the reviewer system */
+  private readonly reviewerApiKey: string;
 
   constructor(
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappService: WhatsappService,
   ) {
     this.reviewerApiBaseUrl =
-      process.env.REVIEWER_API_BASE_URL || 'http://100.100.108.43:9007/api';
-    this.pollIntervalMs = parseInt(
-      process.env.REVIEWER_POLL_INTERVAL_MS || '7200000',
-      10,
-    );
+      process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
+    this.reviewerApiKey = process.env.REVIEWER_INTERNAL_API_KEY || '';
   }
 
-  onModuleInit(): void {
-    this.logger.log(
-      `🔄 Starting reviewer polling every ${this.pollIntervalMs / 1000}s (${(this.pollIntervalMs / 3600000).toFixed(1)}h)`,
-    );
-
-    // Run an initial check shortly after startup (30s delay for services to settle)
-    setTimeout(() => {
-      this.pollReviewerSystem().catch((err) =>
-        this.logger.error(`Initial poll failed: ${err.message}`),
-      );
-    }, 30_000);
-
-    // Then poll at the configured interval
-    this.pollInterval = setInterval(() => {
-      this.pollReviewerSystem().catch((err) =>
-        this.logger.error(`Poll cycle failed: ${err.message}`),
-      );
-    }, this.pollIntervalMs);
-  }
-
-  onModuleDestroy(): void {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-      this.pollInterval = null;
-      this.logger.log('Reviewer polling stopped');
+  /**
+   * Cron-scheduled polling job.
+   * Runs every 2 hours by default (CronExpression.EVERY_2_HOURS).
+   * Override with env var REVIEWER_CRON_EXPRESSION if needed.
+   */
+  @Cron(process.env.REVIEWER_CRON_EXPRESSION || CronExpression.EVERY_2_HOURS, {
+    name: 'reviewer-polling',
+  })
+  async handleCron(): Promise<void> {
+    this.logger.log('🔄 Cron triggered: checking reviewer system for answers…');
+    try {
+      await this.pollReviewerSystem();
+    } catch (err: any) {
+      this.logger.error(`Poll cycle failed: ${err.message}`);
     }
   }
 
@@ -86,7 +78,7 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
     const questionIds = pendingQuestions.map((q) => q.questionId);
 
     // Try batch endpoint first; fall back to individual checks
-    let statusMap: Map<string, { status: string; answer?: string }>;
+    let statusMap: Map<string, ReviewerStatusResult>;
 
     try {
       statusMap = await this.batchCheckStatus(questionIds);
@@ -102,7 +94,7 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
       const result = statusMap.get(question.questionId);
       if (!result) continue;
 
-      if (result.status === 'answered' && result.answer) {
+      if (result.status === 'closed' && result.answer) {
         this.logger.log(
           `✅ Question ${question.questionId} answered! Notifying ${question.phoneNumber}`,
         );
@@ -118,6 +110,8 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
           const notificationMessage = this.formatNotification(
             question.queryText,
             result.answer,
+            result.author,
+            result.sources,
           );
 
           await this.whatsappService.sendTextMessage(
@@ -149,12 +143,15 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
    */
   private async batchCheckStatus(
     questionIds: string[],
-  ): Promise<Map<string, { status: string; answer?: string }>> {
+  ): Promise<Map<string, ReviewerStatusResult>> {
     const url = `${this.reviewerApiBaseUrl}/questions/check-status`;
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-api-key': this.reviewerApiKey,
+      },
       body: JSON.stringify({ question_ids: questionIds }),
     });
 
@@ -163,13 +160,25 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
       throw new Error(`Batch check failed (${response.status}): ${errorText}`);
     }
 
-    const data = (await response.json()) as {
-      results: { question_id: string; status: string; answer?: string }[];
+    const body = (await response.json()) as {
+      success: boolean;
+      data: {
+        question_id: string;
+        status: string;
+        answer?: string | null;
+        sources?: { source: string; page?: string | null }[];
+        author?: string | null;
+      }[];
     };
 
-    const map = new Map<string, { status: string; answer?: string }>();
-    for (const r of data.results) {
-      map.set(r.question_id, { status: r.status, answer: r.answer });
+    const map = new Map<string, ReviewerStatusResult>();
+    for (const r of body.data) {
+      map.set(r.question_id, {
+        status: r.status,
+        answer: r.answer ?? undefined,
+        author: r.author ?? undefined,
+        sources: r.sources ?? undefined,
+      });
     }
     return map;
   }
@@ -180,13 +189,15 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
    */
   private async individualCheckStatus(
     questionIds: string[],
-  ): Promise<Map<string, { status: string; answer?: string }>> {
-    const map = new Map<string, { status: string; answer?: string }>();
+  ): Promise<Map<string, ReviewerStatusResult>> {
+    const map = new Map<string, ReviewerStatusResult>();
 
     for (const id of questionIds) {
       try {
         const url = `${this.reviewerApiBaseUrl}/questions/${id}/status`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: { 'x-internal-api-key': this.reviewerApiKey },
+        });
 
         if (!response.ok) {
           this.logger.warn(
@@ -195,10 +206,7 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
 
-        const data = (await response.json()) as {
-          status: string;
-          answer?: string;
-        };
+        const data = (await response.json()) as ReviewerStatusResult;
         map.set(id, data);
       } catch (err: any) {
         this.logger.warn(`Status check for ${id} errored: ${err.message}`);
@@ -214,7 +222,18 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
    * Formats the WhatsApp notification message that gets sent when an
    * expert answer becomes available.
    */
-  private formatNotification(queryText: string, answer: string): string {
+  private formatNotification(
+    queryText: string,
+    answer: string,
+    author?: string,
+    sources?: { source: string; page?: string | null }[],
+  ): string {
+    const authorName = author || 'Expert';
+    const sourceLinks =
+      sources && sources.length > 0
+        ? sources.map((s) => `🔗 ${s.source}`)
+        : ['No sources provided.'];
+
     return [
       `✅ *Your question has been reviewed by an expert!*`,
       ``,
@@ -223,6 +242,11 @@ export class ReviewerPollingService implements OnModuleInit, OnModuleDestroy {
       ``,
       `💡 *Expert Answer:*`,
       answer,
+      ``,
+      `👤 *Answered by:* ${authorName}`,
+      ``,
+      `📚 *Sources:*`,
+      ...sourceLinks,
       ``,
       `⚠️ This is a testing version. Please consult an expert before making farming decisions.`,
     ].join('\n');
