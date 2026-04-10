@@ -44,7 +44,19 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     );
 
     if (classification.isUniqueQuestion) {
-      await this.uploadQuestionToReviewer(event, classification);
+      const crop = classification.extractedDetails?.crop;
+      const state = classification.extractedDetails?.state_name;
+
+      const hasCrop = !!(crop && crop.toLowerCase() !== 'general' && crop.trim() !== '');
+      const hasState = !!(state && state.toLowerCase() !== 'general' && state.trim() !== '');
+
+      if (hasCrop && hasState) {
+        await this.uploadQuestionToReviewer(event, classification);
+      } else {
+        this.logger.log(
+          `[${event.phoneNumber}] Skipping force upload. Missing crop or state. Letting main LLM ask user. Details: ${JSON.stringify(classification.extractedDetails)}`,
+        );
+      }
     } else {
       this.logger.log(
         `[${event.phoneNumber}] Skipping upload (${classification.questionType})`,
@@ -64,7 +76,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
       crop: details.crop || 'General',
       details: {
         state: details.state_name || 'General',
-        district: 'General',
+        district: details.district_name || 'General',
         crop: details.crop || 'General',
         season: 'General',
         domain: 'General',

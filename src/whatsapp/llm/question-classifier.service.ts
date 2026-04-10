@@ -27,6 +27,7 @@ export interface QuestionClassification {
   extractedDetails?: {
     improved_question: string;
     state_name: string;
+    district_name: string;
     crop: string;
   };
 }
@@ -50,7 +51,7 @@ CLASSIFICATION RULES:
    - Repetitions of recently asked questions
 
 3. **CONTEXT EXTRACTION** (If isUniqueQuestion = true):
-   - You must extract the user's context (e.g., crop, state) and write an improved_question in English that combines all details into a complete query.
+   - You must extract the user's context (e.g., crop, state, district) and write an improved_question in English that combines all details into a complete query.
    - If a field is not mentioned, use "General".
 
 RESPONSE FORMAT:
@@ -62,6 +63,7 @@ You must respond with a valid JSON object in this exact format:
   "extractedDetails": {
     "improved_question": "If isUniqueQuestion is true, write a detailed English translation including all context. Else use 'General'",
     "state_name": "State mentioned (e.g. Himachal Pradesh) else 'General'",
+    "district_name": "District mentioned (e.g. Kangra) else 'General'",
     "crop": "Crop mentioned (e.g. Paddy) else 'General'"
   }
 }
@@ -78,8 +80,8 @@ export class QuestionClassifierService {
     this.llm = new ChatAnthropic({
       modelName:
         process.env.LLM_MODEL === 'default'
-          ? 'claude-3-5-sonnet-20240620'
-          : process.env.LLM_MODEL || 'claude-3-5-sonnet-20240620',
+          ? 'claude-sonnet-4-5-20250929'
+          : process.env.LLM_MODEL || 'claude-sonnet-4-5-20250929',
       apiKey: process.env.LLM_API_KEY || 'dummy-key',
       temperature: 0.1,
       maxTokens: 500,
@@ -104,10 +106,17 @@ export class QuestionClassifierService {
 
       const llmResult = await Result.safe(this.llm.invoke(messages));
 
-      const classification = llmResult
-        .andThen((result) => this.extractContent(result))
-        .andThen((content) => this.parseClassification(content))
-        .unwrapOr(this.defaultClassification());
+      const extractResult = llmResult.andThen((result) => this.extractContent(result));
+      if (extractResult.isErr()) {
+         this.logger.error(`Extraction Error: ${extractResult.unwrapErr().message}`);
+      }
+
+      const parseResult = extractResult.andThen((content) => this.parseClassification(content));
+      if (parseResult.isErr()) {
+         this.logger.error(`Parsing Error: ${parseResult.unwrapErr().message}`);
+      }
+
+      const classification = parseResult.unwrapOr(this.defaultClassification());
 
       this.logger.log(
         `Classification result: ${JSON.stringify(classification)}`,
@@ -153,19 +162,29 @@ export class QuestionClassifierService {
     const parsed = Result.safe(() => JSON.parse(jsonStr));
 
     const fromParsed = parsed.andThen((obj) => {
+      let isUnique = obj.isUniqueQuestion;
+      if (typeof isUnique === 'string') {
+        isUnique = isUnique.trim().toLowerCase() === 'true';
+      }
+
       if (
-        typeof obj.isUniqueQuestion === 'boolean' &&
+        typeof isUnique === 'boolean' &&
         typeof obj.reasoning === 'string'
       ) {
         const classificationObj: QuestionClassification = {
-          isUniqueQuestion: obj.isUniqueQuestion,
+          isUniqueQuestion: isUnique,
           reasoning: obj.reasoning || 'No reasoning provided',
           questionType: this.validateQuestionType(obj.questionType),
-          extractedDetails: obj.extractedDetails,
+          extractedDetails: obj.extractedDetails || {
+            improved_question: 'General',
+            state_name: 'General',
+            district_name: 'General',
+            crop: 'General'
+          },
         };
         return Ok(classificationObj);
       }
-      return Err(new Error('Invalid classification structure'));
+      return Err(new Error('Invalid classification structure: ' + JSON.stringify(obj)));
     });
 
     return fromParsed
