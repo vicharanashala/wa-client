@@ -81,3 +81,11 @@ export class UserDetailsSummarySetEvent {
     public readonly userDetailsSummary: string,
   ) {}
 }
+
+export class ReviewerUploadRequestedEvent {
+  constructor(
+    public readonly phoneNumber: string,
+    public readonly queryText: string,
+    public readonly payload: any,
+  ) {}
+}

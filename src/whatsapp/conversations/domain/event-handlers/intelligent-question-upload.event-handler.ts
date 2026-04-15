@@ -19,7 +19,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     private readonly llmService: LlmService,
     private readonly questionClassifier: QuestionClassifierService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
-  ) {}
+  ) { }
 
   async handle(event: UserTextMessageAddedEvent | UserVoiceMessageAddedEvent): Promise<void> {
     const conversation = await Option(
@@ -40,7 +40,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
 
     this.logger.log(
       `[${event.phoneNumber}] Classification: ${classification.isUniqueQuestion ? 'UNIQUE' : 'NOT_UNIQUE'} ` +
-        `(${classification.questionType}) - ${classification.reasoning}`,
+      `(${classification.questionType}) - ${classification.reasoning}`,
     );
 
     if (classification.isUniqueQuestion) {
@@ -89,10 +89,10 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
 
     uploadResult.isOk()
       ? this.handleUploadSuccess(
-          event.phoneNumber,
-          messageContent,
-          uploadResult.unwrap(),
-        )
+        event.phoneNumber,
+        messageContent,
+        uploadResult.unwrap(),
+      )
       : this.handleUploadError(event.phoneNumber, uploadResult.unwrapErr());
   }
 
@@ -121,8 +121,8 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     questionId.isSome()
       ? await this.saveQuestionId(phoneNumber, queryText, questionId.unwrap())
       : this.logger.warn(
-          `[${phoneNumber}] No question_id found in result: ${result.slice(0, 100)}`,
-        );
+        `[${phoneNumber}] No question_id found in result: ${result.slice(0, 100)}`,
+      );
   }
 
   private async saveQuestionId(
@@ -142,8 +142,8 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     createResult.isOk()
       ? this.logger.log(`[${phoneNumber}] Tracked pending question: ${id}`)
       : this.logger.error(
-          `[${phoneNumber}] Failed to track question: ${createResult.unwrapErr().message}`,
-        );
+        `[${phoneNumber}] Failed to track question: ${createResult.unwrapErr().message}`,
+      );
   }
 
   private extractQuestionId(result: string): Option<string> {
@@ -197,8 +197,8 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
 
     const genericIdMatch = Option(
       result.match(/id\s*[:=]\s*['"]?([a-zA-Z0-9_-]+)['"]?/i) ||
-        result.match(/"id"\s*:\s*["']?([a-zA-Z0-9_-]+)["']?/i) ||
-        result.match(/question_id\s*[:=]\s*['"]?([a-zA-Z0-9_-]+)['"]?/i),
+      result.match(/"id"\s*:\s*["']?([a-zA-Z0-9_-]+)["']?/i) ||
+      result.match(/question_id\s*[:=]\s*['"]?([a-zA-Z0-9_-]+)['"]?/i),
     );
 
     return genericIdMatch.isSome()

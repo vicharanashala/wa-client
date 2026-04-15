@@ -23,7 +23,7 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
-  ) {}
+  ) { }
 
   async handle(event: UserVoiceMessageAddedEvent): Promise<void> {
     this.logger.debug(

@@ -17,7 +17,7 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessag
     private readonly eventPublisher: EventPublisher,
     private readonly llmService: LlmService,
     private readonly whatsappService: WhatsappService,
-  ) {}
+  ) { }
 
   async handle(event: UserTextMessageAddedEvent): Promise<void> {
     this.logger.debug(
