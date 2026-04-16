@@ -135,6 +135,64 @@ export class ReviewerPollingService {
     }
   }
 
+  /**
+   * Process an answer received via a real-time webhook instead of polling.
+   */
+  async processWebhookAnswer(payload: {
+    question_id: string;
+    status: string;
+    answer?: string;
+    author?: string;
+    sources?: { source: string; page?: string | null }[];
+  }): Promise<void> {
+    const { question_id, status, answer, author, sources } = payload;
+    
+    if (status !== 'closed' || !answer) {
+      this.logger.warn(`Webhook received for question ${question_id} but status is '${status}' or answer is missing`);
+      return;
+    }
+
+    const question = await this.pendingQuestionRepo.findByQuestionId(question_id);
+    if (!question) {
+      this.logger.warn(`Webhook received for unknown question ID: ${question_id}`);
+      return;
+    }
+
+    if (question.status === 'notified') {
+      this.logger.log(`Question ${question_id} has already been answered and notified.`);
+      return;
+    }
+
+    this.logger.log(`✅ Webhook received: Question ${question_id} answered! Notifying ${question.phoneNumber}`);
+
+    try {
+      // Mark as answered
+      await this.pendingQuestionRepo.markAnswered(question_id, answer);
+
+      // Send notification
+      const notificationMessage = this.formatNotification(
+        question.queryText,
+        answer,
+        author,
+        sources,
+      );
+
+      await this.whatsappService.sendTextMessage(
+        question.phoneNumber,
+        notificationMessage,
+      );
+
+      // Mark as notified
+      await this.pendingQuestionRepo.markNotified(question_id);
+
+      this.logger.log(`📤 Notification sent to ${question.phoneNumber} for question ${question_id}`);
+    } catch (sendErr: any) {
+      this.logger.error(
+        `Failed to notify ${question.phoneNumber} for question ${question_id} via webhook: ${sendErr.message}`,
+      );
+    }
+  }
+
   // ── Reviewer System API Calls ──────────────────────────────────────────
 
   /**
@@ -228,6 +286,15 @@ export class ReviewerPollingService {
     author?: string,
     sources?: { source: string; page?: string | null }[],
   ): string {
+    let parsedQuestion = queryText;
+    try {
+      const parsedData = JSON.parse(queryText);
+      if (parsedData && parsedData.question) {
+        parsedQuestion = parsedData.question;
+      }
+    } catch (err) {
+    }
+
     const authorName = author || 'Expert';
     const sourceLinks =
       sources && sources.length > 0
@@ -238,7 +305,7 @@ export class ReviewerPollingService {
       `✅ *Your question has been reviewed by an expert!*`,
       ``,
       `📌 *Your Question:*`,
-      `"${queryText}"`,
+      `"${parsedQuestion}"`,
       ``,
       `💡 *Expert Answer:*`,
       answer,

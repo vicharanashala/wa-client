@@ -162,6 +162,28 @@ export class WhatsappController {
     return 'Polling triggered successfully! Check your server logs.';
   }
 
+  @Post('reviewer-webhook')
+  @HttpCode(HttpStatus.OK)
+  async handleReviewerWebhook(
+    @Headers('x-internal-api-key') apiKey: string,
+    @Body() body: any,
+  ): Promise<string> {
+    const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
+    if (!expectedKey || apiKey !== expectedKey) {
+      this.logger.warn('Unauthorized access attempt to reviewer webhook');
+      throw new ForbiddenException('Invalid API Key');
+    }
+
+    this.logger.log(`📥 Received webhook from reviewer system for question: ${body.question_id}`);
+    
+    // Process the webhook in the background so we don't block the response
+    this.reviewerPollingService.processWebhookAnswer(body).catch((err) => {
+      this.logger.error(`Failed to process webhook for question ${body.question_id}: ${err.message}`);
+    });
+
+    return 'OK';
+  }
+
   @Get('webhook')
   verify(
     @Query() query: Record<string, string>,

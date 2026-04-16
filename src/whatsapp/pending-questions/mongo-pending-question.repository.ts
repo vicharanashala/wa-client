@@ -37,6 +37,10 @@ export class MongoPendingQuestionRepository
       .exec();
   }
 
+  async findByQuestionId(questionId: string): Promise<PendingQuestionModel | null> {
+    return this.model.findOne({ questionId }).lean().exec();
+  }
+
   async markAnswered(questionId: string, answer: string): Promise<void> {
     await this.model
       .updateOne(
