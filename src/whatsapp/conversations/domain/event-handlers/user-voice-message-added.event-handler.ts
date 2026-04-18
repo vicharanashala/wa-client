@@ -42,7 +42,7 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
       return;
     }
 
-    const messages = toBaseMessages(conversation.messages);
+    const messages = toBaseMessages(conversation.messages.slice(-15));
 
     if (conversation.location) {
       const { latitude, longitude, address } = conversation.location;

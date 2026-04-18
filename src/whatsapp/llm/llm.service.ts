@@ -200,20 +200,35 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
 
   private async invokeAgentWithRetry(messages: BaseMessage[]): Promise<any | null> {
     let result: any;
-    const maxRetries = 2;
+    const maxRetries = 3;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         result = await this.agent.invoke({ messages });
         return result;
       } catch (err: any) {
-        const isEmptyOutputError =
-          err?.message?.includes('model output must contain either output text or tool calls') ||
-          err?.message?.includes('model output error');
-        if (isEmptyOutputError && attempt < maxRetries) {
-          this.logger.warn(`LLM returned empty output (attempt ${attempt}/${maxRetries}), retrying...`);
+        const errorMsg = err?.message || String(err);
+        this.logger.error(
+          `LLM agent error (attempt ${attempt}/${maxRetries}): ${errorMsg}`,
+        );
+
+        const isNonRecoverable =
+          errorMsg.includes('prompt is too long') ||
+          errorMsg.includes('context_length_exceeded') ||
+          errorMsg.includes('invalid_api_key');
+
+        if (isNonRecoverable) {
+          this.logger.error('Non-recoverable error, skipping retries.');
+          return null;
+        }
+
+        if (attempt < maxRetries) {
+          const delayMs = attempt * 1000;
+          this.logger.warn(`Retrying in ${delayMs}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
           continue;
         }
-        this.logger.error(`LLM agent failed after ${attempt} attempt(s)`);
+
+        this.logger.error(`LLM agent failed after ${maxRetries} attempt(s)`);
         return null;
       }
     }
