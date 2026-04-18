@@ -22,15 +22,21 @@ export class WhatsappService {
       let breakIndex = currentIndex + MAX_LENGTH;
 
       if (breakIndex < text.length) {
-        // Try to break at a newline to keep formatting clean
-        const lastNewline = text.lastIndexOf('\n', breakIndex);
-        if (lastNewline > currentIndex + MAX_LENGTH - 1000) {
-          breakIndex = lastNewline;
+        // Try to break at a double newline (paragraph) first
+        const lastDoubleNewline = text.lastIndexOf('\n\n', breakIndex);
+        if (lastDoubleNewline > currentIndex + MAX_LENGTH - 1500) {
+          breakIndex = lastDoubleNewline;
         } else {
-          // If no good newline, try keeping words intact
-          const lastSpace = text.lastIndexOf(' ', breakIndex);
-          if (lastSpace > currentIndex) {
-            breakIndex = lastSpace;
+          // Try to break at a newline to keep formatting clean
+          const lastNewline = text.lastIndexOf('\n', breakIndex);
+          if (lastNewline > currentIndex + MAX_LENGTH - 1000) {
+            breakIndex = lastNewline;
+          } else {
+            // If no good newline, try keeping words intact
+            const lastSpace = text.lastIndexOf(' ', breakIndex);
+            if (lastSpace > currentIndex) {
+              breakIndex = lastSpace;
+            }
           }
         }
       }

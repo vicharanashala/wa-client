@@ -81,7 +81,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       model: new ChatAnthropic({
         modelName: process.env.LLM_MODEL === 'default' ? 'claude-sonnet-4-5-20250929' : (process.env.LLM_MODEL || 'claude-sonnet-4-5-20250929'),
         apiKey: process.env.LLM_API_KEY || 'dummy-key',
-        maxTokens: 4096,
+        maxTokens: 8192,
       }),
       tools: this.tools,
       systemPrompt: SYSTEM_PROMPT
