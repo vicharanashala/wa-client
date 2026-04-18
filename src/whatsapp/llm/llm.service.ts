@@ -155,7 +155,47 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
 
     parsed.reply = this.normalizeWhatsappFormatting(parsed.reply);
     parsed.reply = this.promoteSoilCitationToTop(parsed.reply);
+    parsed.reply = this.appendReviewerNotification(parsed, preferredLanguage);
     return parsed;
+  }
+
+  private appendReviewerNotification(parsed: LlmResult, preferredLanguage: ResponseLanguage): string {
+    const calledReviewer = parsed.toolCalls.some(tc => tc.toolName === 'upload_question_to_reviewer_system') || 
+                           parsed.toolResults.some(tr => tr.toolName === 'upload_question_to_reviewer_system');
+
+    let reply = parsed.reply;
+    if (calledReviewer) {
+      let msg = '';
+      if (reply.match(/[\u0A00-\u0A7F]/)) {
+        msg = 'ਤੁਹਾਡਾ ਸੁਨੇਹਾ ਖੇਤੀਬਾੜੀ ਮਾਹਰ (Agriculture Expert) ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ ਜਲਦੀ ਹੀ ਇੱਕ ਜਵਾਬ ਮਿਲੇਗਾ।';
+      } else if (reply.match(/[\u0A80-\u0AFF]/)) {
+        msg = 'તમારો પ્રશ્ન કૃષિ નિષ્ણાત (Agriculture Expert) ને મોકલવામાં આવ્યો છે. તમને ટૂંક સમયમાં જ એક જવાબ મળશે.';
+      } else if (reply.match(/[\u0980-\u09FF]/)) {
+        msg = 'আপনার বার্তা কৃষি বিশেষজ্ঞের (Agriculture Expert) কাছে পাঠানো হয়েছে। আপনি শীঘ্রই একটি উত্তর পাবেন।';
+      } else if (reply.match(/[\u0B80-\u0BFF]/)) {
+        msg = 'உங்கள் செய்தி வேளாண் நிபுணருக்கு (Agriculture Expert) அனுப்பப்பட்டுள்ளது. விரைவில் உங்களுக்கு பதில் கிடைக்கும்.';
+      } else if (reply.match(/[\u0C00-\u0C7F]/)) {
+        msg = 'మీ సందేశం వ్యవసాయ నిపుణులకు (Agriculture Expert) పంపబడింది. మీరు త్వరలో సమాధానం అందుకుంటారు.';
+      } else if (reply.match(/[\u0C80-\u0CFF]/)) {
+        msg = 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಕೃಷಿ ತಜ್ಞರಿಗೆ (Agriculture Expert) ಕಳುಹಿಸಲಾಗಿದೆ. ನೀವು ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರವನ್ನು ಪಡೆಯುತ್ತೀರಿ.';
+      } else if (reply.match(/[\u0D00-\u0D7F]/)) {
+        msg = 'നിങ്ങളുടെ സന്ദേശം കൃഷി വിദഗ്ദ്ധന് (Agriculture Expert) അയച്ചിട്ടുണ്ട്. നിങ്ങൾക്ക് ഉടൻ തന്നെ മറുപടി ലഭിക്കും.';
+      } else if (reply.match(/[\u0B00-\u0B7F]/)) {
+        msg = 'ଆପଣଙ୍କର ବାର୍ତ୍ତା କୃଷି ବିଶେଷଜ୍ଞଙ୍କ (Agriculture Expert) ନିକଟକୁ ପଠାଯାଇଛି | ଆପଣ ଶୀଘ୍ର ଏକ ଉତ୍ତର ପାଇବେ |';
+      } else if (reply.match(/[\u0900-\u097F]/)) {
+        msg = 'आपका प्रश्न कृषि विशेषज्ञ (Agriculture Expert) को भेज दिया गया है। आपको जल्द ही इसका उत्तर मिलेगा।';
+      } else {
+        msg = 'Your message has been forwarded to the Agriculture Expert. You will receive a response shortly.';
+      }
+      
+      const disclaimer = '⚠️ This is a testing version. Please consult an expert before making farming decisions.';
+      if (reply.includes(disclaimer)) {
+        reply = reply.replace(disclaimer, `${msg}\n\n${disclaimer}`);
+      } else {
+        reply = `${reply}\n\n${msg}`;
+      }
+    }
+    return reply;
   }
 
   private async invokeAgentWithRetry(messages: BaseMessage[]): Promise<any | null> {
@@ -332,13 +372,13 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
   ): string {
     if (preferredLanguage === 'english') {
       return strict
-        ? 'CRITICAL LANGUAGE RULE: Reply in English only. Do not use Hindi or Devanagari script anywhere in the reply.'
+        ? 'CRITICAL LANGUAGE RULE: Reply in English only. Do not use Hindi or any regional Indian script anywhere in the reply.'
         : 'Language rule: reply fully in English only.';
     }
     if (preferredLanguage === 'devanagari') {
       return strict
-        ? 'CRITICAL LANGUAGE RULE: Reply only in the same Devanagari language/script as the user. Do not switch to English paragraphs.'
-        : 'Language rule: reply in the same Devanagari script as the user.';
+        ? 'CRITICAL LANGUAGE RULE: Reply only in the same regional language/script as the user. Do not switch to English paragraphs.'
+        : 'Language rule: reply in the same regional script as the user.';
     }
     return '';
   }
@@ -352,11 +392,11 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     const text = this.messageContentToText(latestHuman.content);
     if (!text) return 'unknown';
 
-    const devanagariChars = (text.match(/[\u0900-\u097F]/g) || []).length;
+    const indianChars = (text.match(/[\u0900-\u0D7F]/g) || []).length;
     const latinChars = (text.match(/[A-Za-z]/g) || []).length;
 
-    if (latinChars > 0 && devanagariChars === 0) return 'english';
-    if (devanagariChars > latinChars) return 'devanagari';
+    if (latinChars > 0 && indianChars === 0) return 'english';
+    if (indianChars > latinChars) return 'devanagari';
     return 'unknown';
   }
 
@@ -366,7 +406,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
   ): boolean {
     if (!reply) return false;
     if (preferredLanguage === 'english') {
-      return /[\u0900-\u097F]/.test(reply);
+      return /[\u0900-\u0D7F]/.test(reply);
     }
     return false;
   }
