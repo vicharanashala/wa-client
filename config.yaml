@@ -156,6 +156,9 @@ mcp:
       weather:
         url: 'http://100.100.108.44:9007/mcp'
         enabled: true
+      govt-schemes:
+        url: 'http://100.100.108.44:9009/mcp'
+        enabled: true
       # Add more servers as needed:
       # custom-server:
       #   url: 'http://your-custom-server:9008/mcp'
@@ -180,6 +183,9 @@ mcp:
         enabled: true
       golden-n:
         url: 'http://100.100.108.43:9023/mcp'
+        enabled: true
+      govt-schemes:
+        url: 'http://100.100.108.44:9009/mcp'
         enabled: true
       # Add more servers as needed:
       # another-server:

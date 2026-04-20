@@ -29,6 +29,10 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     'get_crops',
     'get_fertilizer_dosage',
   ];
+  private static readonly GOVT_SCHEMES_TOOLS = [
+    'govt_schemes',
+    'get_scheme_details',
+  ];
 
   private mcpClient: MultiServerMCPClient;
   private agent: ReturnType<typeof createAgent>;
@@ -64,6 +68,10 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
         reviewer_new: {
           transport: 'http',
           url: 'http://100.100.108.44:9007/mcp',
+        },
+        'govt-schemes': {
+          transport: 'http',
+          url: process.env.MCP_GOVT_SCHEMES_URL || 'http://100.100.108.44:9009/mcp',
         },
       },
       onConnectionError: 'ignore',
@@ -153,7 +161,29 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    if (
+      this.shouldForceGovtSchemesToolChain(messages) &&
+      !this.hasGovtSchemesToolInteraction(parsed)
+    ) {
+      this.logger.warn(
+        'Government scheme intent detected but no govt_schemes tool interaction was made.',
+      );
+      const forcedGovtSchemesMessages = [
+        ...languageConstrainedMessages,
+        new HumanMessage(
+          'PRIORITY INSTRUCTION: This user is asking about government schemes. You MUST call govt_schemes first (use state="All" when state is unknown), then use get_scheme_details for specific scheme detail requests. Never expose slug values in the user-facing response. Ask only 3-4 essential profile fields first when user profile is missing.',
+        ),
+      ];
+      const forcedGovtSchemesResult = await this.invokeAgentWithRetry(
+        forcedGovtSchemesMessages,
+      );
+      if (forcedGovtSchemesResult) {
+        parsed = this.parseAgentResult(forcedGovtSchemesResult);
+      }
+    }
+
     parsed.reply = this.normalizeWhatsappFormatting(parsed.reply);
+    parsed.reply = this.removeGovernmentSchemeSlugLeak(parsed.reply);
     parsed.reply = this.promoteSoilCitationToTop(parsed.reply);
     parsed.reply = this.appendReviewerNotification(parsed, preferredLanguage);
     return parsed;
@@ -326,6 +356,31 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  private shouldForceGovtSchemesToolChain(messages: BaseMessage[]): boolean {
+    const latestHuman = [...messages]
+      .reverse()
+      .find((msg) => msg._getType() === 'human');
+    const text = this.messageContentToText(latestHuman?.content).toLowerCase();
+    if (!text) return false;
+
+    return (
+      /(government scheme|govt scheme|scheme for me|yojana|subsidy|welfare scheme|eligible scheme)/i.test(
+        text,
+      ) || /tell me about .*scheme/i.test(text)
+    );
+  }
+
+  private hasGovtSchemesToolInteraction(result: LlmResult): boolean {
+    const allToolNames = [
+      ...result.toolCalls.map((t) => t.toolName || ''),
+      ...result.toolResults.map((t) => t.toolName || ''),
+    ];
+
+    return allToolNames.some((name) =>
+      LlmService.GOVT_SCHEMES_TOOLS.includes(name),
+    );
+  }
+
   private logSoilToolAvailability(): void {
     const availableToolNames = new Set(this.tools.map((t) => t.name));
     const missingTools = LlmService.REQUIRED_SOIL_TOOLS.filter(
@@ -357,6 +412,18 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     normalized = normalized.replace(/\n{3,}/g, '\n\n');
 
     return normalized.trim();
+  }
+
+  private removeGovernmentSchemeSlugLeak(text: string): string {
+    if (!text) return text;
+
+    let sanitized = text.replace(
+      /\s*\((?:scheme\s*)?slug\s*:\s*[^)]+\)/gi,
+      '',
+    );
+    sanitized = sanitized.replace(/\bslug\s*:\s*[\w-]+/gi, '');
+    sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
+    return sanitized.trim();
   }
 
   private promoteSoilCitationToTop(text: string): string {

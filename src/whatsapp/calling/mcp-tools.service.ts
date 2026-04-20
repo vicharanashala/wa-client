@@ -27,6 +27,8 @@ export class McpToolsService implements OnModuleInit {
     weather: 'http://100.100.108.43:9004/mcp',
     'faq-videos': 'http://100.100.108.43:9005/mcp',
     'golden-n': 'http://100.100.108.43:9023/mcp',
+    'govt-schemes':
+      process.env.MCP_GOVT_SCHEMES_URL || 'http://100.100.108.44:9009/mcp',
   };
 
   private toolToServer: Record<string, string> = {};
