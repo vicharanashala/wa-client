@@ -43,23 +43,27 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       mcpServers: {
         golden: {
           transport: 'http',
-          url: 'http://100.100.108.43:9006/mcp',
+          url: 'http://100.100.108.44:9005/mcp',
         },
         pop: {
           transport: 'http',
-          url: 'http://100.100.108.43:9002/mcp',
+          url: 'http://100.100.108.44:9012/mcp',
         },
-        market: {
+        agmarknet: {
           transport: 'http',
-          url: 'http://100.100.108.43:9022/mcp',
+          url: process.env.MCP_AGMARKNET_URL || 'http://100.100.108.44:9006/mcp',
+        },
+        enam: {
+          transport: 'http',
+          url: process.env.MCP_ENAM_URL || 'http://100.100.108.44:9002/mcp',
         },
         weather: {
           transport: 'http',
-          url: 'http://100.100.108.43:9004/mcp',
+          url: 'http://100.100.108.44:9003/mcp',
         },
         'faq-videos': {
           transport: 'http',
-          url: 'http://100.100.108.43:9005/mcp',
+          url: 'http://100.100.108.44:9010/mcp',
         },
         soilhealth: {
           transport: 'http',

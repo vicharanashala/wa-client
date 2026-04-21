@@ -132,19 +132,22 @@ mcp:
   servers:
     text:
       reviewer:
-        url: 'http://100.100.108.44:9002/mcp'
+        url: 'http://100.100.108.44:9007/mcp'
         enabled: true
       golden:
-        url: 'http://100.100.108.44:9003/mcp'
-        enabled: true
-      pop:
         url: 'http://100.100.108.44:9005/mcp'
         enabled: true
-      market:
+      pop:
+        url: 'http://100.100.108.44:9012/mcp'
+        enabled: true
+      agmarknet:
         url: 'http://100.100.108.44:9006/mcp'
         enabled: true
+      enam:
+        url: 'http://100.100.108.44:9002/mcp'
+        enabled: true
       weather:
-        url: 'http://100.100.108.44:9007/mcp'
+        url: 'http://100.100.108.44:9003/mcp'
         enabled: true
       govt-schemes:
         url: 'http://100.100.108.44:9009/mcp'
@@ -153,22 +156,25 @@ mcp:
     # MCP Servers for Voice Call (Gemini Live) interactions
     voice:
       golden:
-        url: 'http://100.100.108.43:9006/mcp'
+        url: 'http://100.100.108.44:9005/mcp'
         enabled: true
       pop:
-        url: 'http://100.100.108.43:9002/mcp'
+        url: 'http://100.100.108.44:9012/mcp'
         enabled: true
-      market:
-        url: 'http://100.100.108.43:9022/mcp'
+      agmarknet:
+        url: 'http://100.100.108.44:9006/mcp'
+        enabled: true
+      enam:
+        url: 'http://100.100.108.44:9002/mcp'
         enabled: true
       weather:
-        url: 'http://100.100.108.43:9004/mcp'
+        url: 'http://100.100.108.44:9003/mcp'
         enabled: true
       faq-videos:
-        url: 'http://100.100.108.43:9005/mcp'
+        url: 'http://100.100.108.44:9010/mcp'
         enabled: true
       golden-n:
-        url: 'http://100.100.108.43:9023/mcp'
+        url: 'http://100.100.108.44:9023/mcp'
         enabled: true
       govt-schemes:
         url: 'http://100.100.108.44:9009/mcp'
@@ -215,7 +221,7 @@ gemini:
 
     # System Instruction for Voice Calls
     systemInstruction: |
-      You are a helpful assistant for Indian farmers. You have access to multiple tools for crop prices, weather, FAQs, and more. Use the appropriate tool when the user asks relevant questions. Keep answers short and crisp. Respond in the same language the user speaks.
+      You are a helpful assistant for Indian farmers. You have access to multiple tools for crop prices, weather, FAQs, and more. Use the appropriate tool when the user asks relevant questions. Keep answers short and crisp. Respond in the same language the user speaks. For Mandi prices, you MUST search using agmarknet tools first; if the data is not found, only then fallback to enam tools.
 
     # Greeting Prompt (sent on call start)
     greetingPrompt: "Greet the caller warmly in Hindi. Say something like: 'Ajarsakha mein aapka swagat hai! Main aapki kya madad kar sakta hoon?' Keep it short and natural."
@@ -233,7 +239,7 @@ reviewer:
 
   api:
     # Default base URL (can be overridden by REVIEWER_API_BASE_URL env var)
-    defaultBaseUrl: 'http://100.100.108.43:9007/api'
+    defaultBaseUrl: 'http://100.100.108.44:9007/api'
     endpoints:
       pendingQuestions: '/pending-questions'
       markReviewed: '/mark-reviewed'

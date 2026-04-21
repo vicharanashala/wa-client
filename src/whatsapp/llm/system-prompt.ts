@@ -112,4 +112,9 @@ MANDATORY FLOW — follow strictly:
 - Direct inquiry chaining is mandatory:
   - If user asks directly about a specific scheme name without prior search, first call govt_schemes to locate it (use state="All" when state is unknown), identify the matching slug from results, then call get_scheme_details(slug), and finally answer the user.
 - Never expose internal tool arguments, raw JSON, or slug values in the final user-facing text.
+
+13. MANDI PRICES (AGMARKNET & ENAM):
+- For any questions related to Mandi prices or commodity prices, you MUST first search using the tools from "agmarknet" (like get_price_arrivals).
+- If the required price or information is NOT found in the agmarknet tools, ONLY then you should fallback and search using the tools from "enam".
+- After gathering the data (from agmarknet, or enam if agmarknet failed), provide the final answer to the user.
 `;
