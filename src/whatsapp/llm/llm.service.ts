@@ -185,6 +185,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     parsed.reply = this.normalizeWhatsappFormatting(parsed.reply);
     parsed.reply = this.removeGovernmentSchemeSlugLeak(parsed.reply);
     parsed.reply = this.promoteSoilCitationToTop(parsed.reply);
+    parsed.reply = this.appendGovtSchemesCitation(parsed, preferredLanguage);
     parsed.reply = this.appendReviewerNotification(parsed, preferredLanguage);
     return parsed;
   }
@@ -226,6 +227,77 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       }
     }
     return reply;
+  }
+
+  private appendGovtSchemesCitation(
+    parsed: LlmResult,
+    preferredLanguage: ResponseLanguage,
+  ): string {
+    const calledGovtSchemesTool =
+      parsed.toolCalls.some((tc) => LlmService.GOVT_SCHEMES_TOOLS.includes(tc.toolName)) ||
+      parsed.toolResults.some((tr) => LlmService.GOVT_SCHEMES_TOOLS.includes(tr.toolName));
+
+    if (!calledGovtSchemesTool) {
+      return parsed.reply;
+    }
+
+    const sourceUrl =
+      'https://www.myscheme.gov.in/search/category/Agriculture,Rural%20%26%20Environment';
+    if (parsed.reply.includes(sourceUrl)) {
+      return parsed.reply;
+    }
+
+    const citation = this.getGovtSchemesCitationLine(parsed.reply, preferredLanguage);
+    return this.insertBeforeDisclaimer(parsed.reply, citation);
+  }
+
+  private getGovtSchemesCitationLine(
+    reply: string,
+    preferredLanguage: ResponseLanguage,
+  ): string {
+    const sourceUrl =
+      'https://www.myscheme.gov.in/search/category/Agriculture,Rural%20%26%20Environment';
+
+    if (reply.match(/[\u0A00-\u0A7F]/)) {
+      return `📚 ਸਰੋਤ: ਇਹ ਜਾਣਕਾਰੀ MyScheme ਸਰਕਾਰੀ ਪੋਰਟਲ ਤੋਂ ਲਈ ਗਈ ਹੈ: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0A80-\u0AFF]/)) {
+      return `📚 સ્રોત: આ માહિતી MyScheme સરકારી પોર્ટલ પરથી લેવામાં આવી છે: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0980-\u09FF]/)) {
+      return `📚 উৎস: এই তথ্য MyScheme সরকারি পোর্টাল থেকে নেওয়া হয়েছে: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0B80-\u0BFF]/)) {
+      return `📚 மூலம்: இந்த தகவல் MyScheme அரசு போர்டலில் இருந்து பெறப்பட்டுள்ளது: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0C00-\u0C7F]/)) {
+      return `📚 మూలం: ఈ సమాచారం MyScheme ప్రభుత్వ పోర్టల్ నుండి తీసుకోబడింది: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0C80-\u0CFF]/)) {
+      return `📚 ಮೂಲ: ಈ ಮಾಹಿತಿ MyScheme ಸರ್ಕಾರಿ ಪೋರ್ಟಲ್‌ನಿಂದ ಪಡೆಯಲಾಗಿದೆ: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0D00-\u0D7F]/)) {
+      return `📚 ഉറവിടം: ഈ വിവരം MyScheme സർക്കാർ പോർട്ടലിൽ നിന്ന് എടുത്തതാണ്: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0B00-\u0B7F]/)) {
+      return `📚 ଉତ୍ସ: ଏହି ସୂଚନା MyScheme ସରକାରୀ ପୋର୍ଟାଲରୁ ନିଆଯାଇଛି: ${sourceUrl}`;
+    }
+    if (reply.match(/[\u0900-\u097F]/) || preferredLanguage === 'devanagari') {
+      return `📚 स्रोत: यह जानकारी MyScheme सरकारी पोर्टल से ली गई है: ${sourceUrl}`;
+    }
+
+    return `📚 Source: This information is sourced from the MyScheme government portal: ${sourceUrl}`;
+  }
+
+  private insertBeforeDisclaimer(reply: string, lineToInsert: string): string {
+    if (!lineToInsert) return reply;
+    const disclaimer =
+      '⚠️ This is a testing version. Please consult an expert before making farming decisions.';
+
+    if (reply.includes(disclaimer)) {
+      return reply.replace(disclaimer, `${lineToInsert}\n\n${disclaimer}`);
+    }
+    return `${reply}\n\n${lineToInsert}`.trim();
   }
 
   private async invokeAgentWithRetry(messages: BaseMessage[]): Promise<any | null> {
