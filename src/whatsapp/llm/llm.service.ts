@@ -24,14 +24,14 @@ type ResponseLanguage = 'english' | 'devanagari' | 'unknown';
 export class LlmService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(LlmService.name);
   private static readonly REQUIRED_SOIL_TOOLS = [
-    'get_states',
-    'get_districts',
-    'get_crops',
-    'get_fertilizer_dosage',
+    'soilhealth__get_states',
+    'soilhealth__get_districts',
+    'soilhealth__get_crops',
+    'soilhealth__get_fertilizer_dosage',
   ];
   private static readonly GOVT_SCHEMES_TOOLS = [
-    'govt_schemes',
-    'get_scheme_details',
+    'govt-schemes__govt_schemes',
+    'govt-schemes__get_scheme_details',
   ];
 
   private mcpClient: MultiServerMCPClient;
@@ -79,6 +79,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
         },
       },
       onConnectionError: 'ignore',
+      prefixToolNameWithServerName: true,
     });
 
     const rawTools = await this.mcpClient.getTools();
@@ -175,7 +176,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
       const forcedGovtSchemesMessages = [
         ...languageConstrainedMessages,
         new HumanMessage(
-          'PRIORITY INSTRUCTION: This user is asking about government schemes. You MUST call govt_schemes first (use state="All" when state is unknown), then use get_scheme_details for specific scheme detail requests. Never expose slug values in the user-facing response. Ask only 3-4 essential profile fields first when user profile is missing.',
+          'PRIORITY INSTRUCTION: This user is asking about government schemes. You MUST call govt-schemes__govt_schemes first (use state="All" when state is unknown), then use govt-schemes__get_scheme_details for specific scheme detail requests. Never expose slug values in the user-facing response. Ask only 3-4 essential profile fields first when user profile is missing.',
         ),
       ];
       const forcedGovtSchemesResult = await this.invokeAgentWithRetry(
@@ -195,8 +196,8 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
   }
 
   private appendReviewerNotification(parsed: LlmResult, preferredLanguage: ResponseLanguage): string {
-    const calledReviewer = parsed.toolCalls.some(tc => tc.toolName === 'upload_question_to_reviewer_system') || 
-                           parsed.toolResults.some(tr => tr.toolName === 'upload_question_to_reviewer_system');
+    const calledReviewer = parsed.toolCalls.some(tc => tc.toolName === 'reviewer_new__upload_question_to_reviewer_system') || 
+                           parsed.toolResults.some(tr => tr.toolName === 'reviewer_new__upload_question_to_reviewer_system');
 
     let reply = parsed.reply;
     if (calledReviewer) {
