@@ -21,6 +21,7 @@ export class MongoConversationRepository implements ConversationRepository {
       doc.location ?? undefined,
       doc.preferredLanguage ?? undefined,
       doc.userDetailsSummary ?? undefined,
+      doc.threadId ?? undefined,
     );
   }
 
@@ -37,6 +38,9 @@ export class MongoConversationRepository implements ConversationRepository {
             }),
             ...(conversation.userDetailsSummary && {
               userDetailsSummary: conversation.userDetailsSummary,
+            }),
+            ...(conversation.threadId && {
+              threadId: conversation.threadId,
             }),
           },
         },

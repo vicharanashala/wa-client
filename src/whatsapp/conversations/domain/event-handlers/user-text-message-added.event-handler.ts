@@ -7,6 +7,7 @@ import { LlmService } from '../../../llm/llm.service';
 import { toBaseMessages } from '../../../llm/message.mapper';
 import { HumanMessage } from '@langchain/core/messages';
 import { Result } from 'oxide.ts';
+import { AegraService } from '../../../aegra/aegra.service';
 
 @EventsHandler(UserTextMessageAddedEvent)
 export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessageAddedEvent> {
@@ -17,6 +18,7 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessag
     private readonly eventPublisher: EventPublisher,
     private readonly llmService: LlmService,
     private readonly whatsappService: WhatsappService,
+    private readonly aegraService: AegraService,
   ) { }
 
   async handle(event: UserTextMessageAddedEvent): Promise<void> {
@@ -49,6 +51,7 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessag
 
     this.eventPublisher.mergeObjectContext(conversation);
 
+    /*
     const { reply, toolCalls, toolResults } =
       await this.llmService.generate(messages);
 
@@ -60,6 +63,38 @@ export class UserTextMessageAddedHandler implements IEventHandler<UserTextMessag
     conversation.commit();
 
     await this.sendReply(event.phoneNumber, reply, event.messageId);
+    */
+
+    try {
+      if (!conversation.threadId) {
+        this.logger.log(`[${event.phoneNumber}] No thread ID found. Creating a new thread on Aegra.`);
+        const threadId = await this.aegraService.createThread(event.phoneNumber);
+        conversation.setThreadId(threadId);
+        await this.conversationRepository.save(conversation);
+        this.logger.log(`[${event.phoneNumber}] Thread created: ${threadId}`);
+      }
+
+      // Include location in message if needed. Since Aegra might just need the input string:
+      let messageToSend = event.content;
+      if (conversation.location) {
+        const { latitude, longitude, address } = conversation.location;
+        messageToSend = `[My location: latitude ${latitude}, longitude ${longitude}${address ? `, address: ${address}` : ''}] ${event.content}`;
+      }
+
+      const reply = await this.aegraService.sendMessageAndWait(
+        conversation.threadId!,
+        messageToSend
+      );
+
+      conversation.addBotTextMessage(reply);
+      await this.conversationRepository.save(conversation);
+      conversation.commit();
+
+      await this.sendReply(event.phoneNumber, reply, event.messageId);
+    } catch (error: any) {
+      this.logger.error(`[${event.phoneNumber}] Failed to process message with Aegra: ${error.message}`);
+      await this.sendReply(event.phoneNumber, 'I am currently experiencing issues connecting to my brain. Please try again later.', event.messageId);
+    }
   }
 
   private async showTypingIndicator(

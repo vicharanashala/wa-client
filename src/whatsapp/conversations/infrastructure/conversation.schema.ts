@@ -53,6 +53,9 @@ export class ConversationModel {
 
   @Prop({ default: null })
   userDetailsSummary?: string;
+
+  @Prop({ default: null })
+  threadId?: string;
 }
 
 export const ConversationModelSchema =

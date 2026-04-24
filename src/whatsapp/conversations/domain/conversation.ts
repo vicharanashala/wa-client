@@ -10,6 +10,7 @@ import {
   UserDetailsSummarySetEvent,
   UserTextMessageAddedEvent,
   UserVoiceMessageAddedEvent,
+  ThreadIdSetEvent,
 } from './conversation.events';
 
 /**
@@ -77,6 +78,9 @@ interface ConversationProps {
 
   /** Timestamp when the conversation was created */
   createdAt: Date;
+
+  /** Aegra Server Thread ID for stateful conversation tracking */
+  threadId?: string;
 }
 
 /**
@@ -173,6 +177,7 @@ export class Conversation extends AggregateRoot {
     location?: { latitude: number; longitude: number; address?: string },
     preferredLanguage?: string,
     userDetailsSummary?: string,
+    threadId?: string,
   ): Conversation {
     return new Conversation({
       phoneNumber,
@@ -181,6 +186,7 @@ export class Conversation extends AggregateRoot {
       location,
       preferredLanguage,
       userDetailsSummary,
+      threadId,
     });
   }
 
@@ -234,6 +240,35 @@ export class Conversation extends AggregateRoot {
    */
   get hasLocation(): boolean {
     return !!this.props.location;
+  }
+
+  /**
+   * Gets the thread ID for the Aegra server.
+   * @returns The thread ID string or undefined if not set
+   */
+  get threadId(): string | undefined {
+    return this.props.threadId;
+  }
+
+  /**
+   * Sets the thread ID for this conversation.
+   *
+   * @param threadId - The thread ID string
+   */
+  public setThreadId(threadId: string): void {
+    this.apply(
+      new ThreadIdSetEvent(this.props.phoneNumber, threadId),
+    );
+  }
+
+  /**
+   * Handles the thread ID set event.
+   *
+   * @param event - The thread ID set event
+   * @internal
+   */
+  private onThreadIdSetEvent(event: ThreadIdSetEvent): void {
+    this.props.threadId = event.threadId;
   }
 
   /**

@@ -15,6 +15,7 @@ import { SetUserLocationHandler } from './application/set-user-location/set-user
 import { SarvamModule } from '../sarvam-api/sarvam.module';
 import { AddUserVoiceMessageHandler } from './application/add-user-voice-message/add-user-voice-message.command';
 import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
+import { AegraService } from '../aegra/aegra.service';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { PendingQuestionsModule } from '../pending-questions/pending-questions.m
     AddUserTextMessageHandler,
     SetUserLocationHandler,
     AddUserVoiceMessageHandler,
+    AegraService,
     ...ConversationEventHandlers,
   ],
   exports: [ConversationRepository],

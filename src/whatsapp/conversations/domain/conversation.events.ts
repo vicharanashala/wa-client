@@ -89,3 +89,10 @@ export class ReviewerUploadRequestedEvent {
     public readonly payload: any,
   ) {}
 }
+
+export class ThreadIdSetEvent {
+  constructor(
+    public readonly phoneNumber: string,
+    public readonly threadId: string,
+  ) {}
+}

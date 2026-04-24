@@ -33,6 +33,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     const messages = toBaseMessages(conversation.messages.slice(-15));
     const messageContent = 'content' in event ? event.content : event.transcript;
 
+    /*
     const classification = await this.questionClassifier.classifyMessage(
       messageContent,
       messages,
@@ -62,6 +63,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
         `[${event.phoneNumber}] Skipping upload (${classification.questionType})`,
       );
     }
+    */
   }
 
   private async uploadQuestionToReviewer(

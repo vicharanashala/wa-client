@@ -8,6 +8,7 @@ import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { toBaseMessages } from '../../../llm/message.mapper';
 import { HumanMessage } from '@langchain/core/messages';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
+import { AegraService } from '../../../aegra/aegra.service';
 
 /** Name of the MCP tool that uploads questions to the reviewer system */
 const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
@@ -23,6 +24,7 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
+    private readonly aegraService: AegraService,
   ) { }
 
   async handle(event: UserVoiceMessageAddedEvent): Promise<void> {
@@ -55,6 +57,7 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
 
     this.eventPublisher.mergeObjectContext(conversation);
 
+    /*
     const { reply, toolCalls, toolResults } =
       await this.llmService.generate(messages);
 
@@ -93,11 +96,75 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
       reply,
       event.messageId,
     );
+    */
+    /*
     this.logger.log(`[${event.phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
 
     this.logger.log(
       `[${event.phoneNumber}] Sent voice reply (${conversation.preferredLanguage ?? 'default'})`,
     );
+    */
+
+    try {
+      if (!conversation.threadId) {
+        this.logger.log(`[${event.phoneNumber}] No thread ID found. Creating a new thread on Aegra.`);
+        const threadId = await this.aegraService.createThread(event.phoneNumber);
+        conversation.setThreadId(threadId);
+        await this.conversationRepository.save(conversation);
+        this.logger.log(`[${event.phoneNumber}] Thread created: ${threadId}`);
+      }
+
+      // Include location in message if needed. Since Aegra might just need the input string:
+      let messageToSend = event.transcript;
+      if (conversation.location) {
+        const { latitude, longitude, address } = conversation.location;
+        messageToSend = `[My location: latitude ${latitude}, longitude ${longitude}${address ? `, address: ${address}` : ''}] ${event.transcript}`;
+      }
+
+      const reply = await this.aegraService.sendMessageAndWait(
+        conversation.threadId!,
+        messageToSend
+      );
+
+      conversation.addBotTextMessage(reply);
+      await this.conversationRepository.save(conversation);
+      conversation.commit();
+
+      const audioBuffer = await this.sarvamService.synthesize(
+        reply,
+        conversation.preferredLanguage ?? null,
+      );
+
+      const mediaId = await this.whatsappService.uploadMedia(
+        audioBuffer,
+        'audio/ogg',
+      );
+
+      await this.whatsappService.sendVoiceMessage(
+        event.phoneNumber,
+        mediaId,
+        event.messageId,
+      );
+
+      await this.whatsappService.sendTextMessage(
+        event.phoneNumber,
+        reply,
+        event.messageId,
+      );
+
+      this.logger.log(`[${event.phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
+      this.logger.log(
+        `[${event.phoneNumber}] Sent voice reply (${conversation.preferredLanguage ?? 'default'})`,
+      );
+
+    } catch (error: any) {
+      this.logger.error(`[${event.phoneNumber}] Failed to process voice message with Aegra: ${error.message}`);
+      await this.whatsappService.sendTextMessage(
+        event.phoneNumber, 
+        'I am currently experiencing issues connecting to my brain. Please try again later.', 
+        event.messageId
+      );
+    }
   }
 
   /**
