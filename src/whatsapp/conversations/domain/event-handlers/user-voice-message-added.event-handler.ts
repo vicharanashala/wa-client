@@ -10,7 +10,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 
 /** Name of the MCP tool that uploads questions to the reviewer system */
-const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
+const REVIEWER_UPLOAD_TOOL = 'reviewer_new__upload_question_to_reviewer_system';
 
 @EventsHandler(UserVoiceMessageAddedEvent)
 export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMessageAddedEvent> {

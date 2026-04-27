@@ -8,7 +8,7 @@ import { toBaseMessages } from '../../../llm/message.mapper';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { Result, Ok, Err, Option, Some, None } from 'oxide.ts';
 
-const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
+const REVIEWER_UPLOAD_TOOL = 'reviewer_new__upload_question_to_reviewer_system';
 
 @EventsHandler(UserTextMessageAddedEvent, UserVoiceMessageAddedEvent)
 export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextMessageAddedEvent | UserVoiceMessageAddedEvent> {
