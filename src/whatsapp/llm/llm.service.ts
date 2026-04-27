@@ -77,6 +77,10 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
           transport: 'http',
           url: process.env.MCP_GOVT_SCHEMES_URL || 'http://100.100.108.44:9009/mcp',
         },
+        'chemical-checker': {
+          transport: 'http',
+          url: process.env.MCP_CHEMICAL_CHECKER_URL || 'http://100.100.108.44:9101/mcp',
+        },
       },
       onConnectionError: 'ignore',
       prefixToolNameWithServerName: true,
