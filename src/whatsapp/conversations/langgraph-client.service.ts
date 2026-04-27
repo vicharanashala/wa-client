@@ -21,12 +21,12 @@ export class LangGraphClientService implements OnModuleInit {
   private assistantId: string;
 
   onModuleInit(): void {
-    const apiUrl = process.env.LANGGRAPH_BASE_URL;
-    this.assistantId = process.env.LANGGRAPH_ASSISTANT_ID ?? '';
+    const apiUrl = process.env.AEGRA_BASE_URL;
+    this.assistantId = process.env.AEGRA_ASSISTANT_ID ?? '';
 
     if (!this.assistantId) {
       this.logger.error(
-        'LANGGRAPH_ASSISTANT_ID env var is not set. Conversation routing will fail.',
+        'AEGRA_ASSISTANT_ID env var is not set. Conversation routing will fail.',
       );
     }
 
