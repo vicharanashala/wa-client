@@ -3,6 +3,7 @@ import { UserTextMessageAddedEvent, UserVoiceMessageAddedEvent } from '../conver
 import { Logger } from '@nestjs/common';
 import { ConversationRepository } from '../../infrastructure/conversation.repository';
 import { LlmService } from '../../../llm/llm.service';
+import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { QuestionClassifierService } from '../../../llm/question-classifier.service';
 import { toBaseMessages } from '../../../llm/message.mapper';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
@@ -17,6 +18,7 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
   constructor(
     private readonly conversationRepository: ConversationRepository,
     private readonly llmService: LlmService,
+    private readonly whatsappService: WhatsappService,
     private readonly questionClassifier: QuestionClassifierService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
   ) { }
@@ -88,23 +90,50 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     );
 
     uploadResult.isOk()
-      ? this.handleUploadSuccess(
+      ? await this.handleUploadSuccess(
         event.phoneNumber,
         messageContent,
         uploadResult.unwrap(),
+        details.user_language || 'english',
       )
       : this.handleUploadError(event.phoneNumber, uploadResult.unwrapErr());
   }
 
-  private handleUploadSuccess(
+  private async handleUploadSuccess(
     phoneNumber: string,
     queryText: string,
     result: string,
-  ): void {
+    userLanguage: string,
+  ): Promise<void> {
     this.logger.log(
       `[${phoneNumber}] Uploaded to reviewer: ${result.slice(0, 100)}`,
     );
-    this.trackReviewerUpload(phoneNumber, queryText, result);
+    await this.trackReviewerUpload(phoneNumber, queryText, result);
+    
+    let msg = 'Your message has been forwarded to the Agriculture Expert. You will receive a response shortly.';
+    const lang = userLanguage.toLowerCase().trim();
+    
+    if (lang === 'punjabi') {
+      msg = 'ਤੁਹਾਡਾ ਸੁਨੇਹਾ ਖੇਤੀਬਾੜੀ ਮਾਹਰ (Agriculture Expert) ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ ਜਲਦੀ ਹੀ ਇੱਕ ਜਵਾਬ ਮਿਲੇਗਾ।';
+    } else if (lang === 'gujarati') {
+      msg = 'તમારો પ્રશ્ન કૃષિ નિષ્ણાત (Agriculture Expert) ને મોકલવામાં આવ્યો છે. તમને ટૂંક સમયમાં જ એક જવાબ મળશે.';
+    } else if (lang === 'bengali') {
+      msg = 'আপনার বার্তা কৃষি বিশেষজ্ঞের (Agriculture Expert) কাছে পাঠানো হয়েছে। আপনি শীঘ্রই একটি উত্তর পাবেন।';
+    } else if (lang === 'tamil') {
+      msg = 'உங்கள் செய்தி வேளாண் நிபுணருக்கு (Agriculture Expert) அனுப்பப்பட்டுள்ளது. விரைவில் உங்களுக்கு பதில் கிடைக்கும்.';
+    } else if (lang === 'telugu') {
+      msg = 'మీ సందేశం వ్యవసాయ నిపుణులకు (Agriculture Expert) పంపబడింది. మీరు త్వరలో సమాధానం అందుకుంటారు.';
+    } else if (lang === 'kannada') {
+      msg = 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಕೃಷಿ ತಜ್ಞರಿಗೆ (Agriculture Expert) ಕಳುಹಿಸಲಾಗಿದೆ. ನೀವು ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರವನ್ನು ಪಡೆಯುತ್ತೀರಿ.';
+    } else if (lang === 'malayalam') {
+      msg = 'നിങ്ങളുടെ സന്ദേശം കൃഷി വിദഗ്ദ്ധന് (Agriculture Expert) അയച്ചിട്ടുണ്ട്. നിങ്ങൾക്ക് ഉടൻ തന്നെ മറുപടി ലഭിക്കും.';
+    } else if (lang === 'odia') {
+      msg = 'ଆପଣଙ୍କର ବାର୍ତ୍ତା କୃଷି ବିଶେଷଜ୍ଞଙ୍କ (Agriculture Expert) ନିକଟକୁ ପଠାଯାଇଛି | ଆପଣ ଶୀଘ୍ର ଏକ ଉତ୍ତର ପାଇବେ |';
+    } else if (lang === 'hindi') {
+      msg = 'आपका प्रश्न कृषि विशेषज्ञ (Agriculture Expert) को भेज दिया गया है। आपको जल्द ही इसका उत्तर मिलेगा।';
+    }
+
+    await Result.safe(this.whatsappService.sendTextMessage(phoneNumber, msg));
   }
 
   private handleUploadError(phoneNumber: string, error: Error): void {

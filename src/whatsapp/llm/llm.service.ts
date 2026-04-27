@@ -96,7 +96,7 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
         apiKey: process.env.LLM_API_KEY || 'dummy-key',
         maxTokens: 8192,
       }),
-      tools: this.tools,
+      tools: this.tools.filter(t => t.name !== 'reviewer_new__upload_question_to_reviewer_system'),
       systemPrompt: SYSTEM_PROMPT
     });
 
@@ -191,48 +191,10 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
     parsed.reply = this.removeGovernmentSchemeSlugLeak(parsed.reply);
     parsed.reply = this.promoteSoilCitationToTop(parsed.reply);
     parsed.reply = this.appendGovtSchemesCitation(parsed, preferredLanguage);
-    parsed.reply = this.appendReviewerNotification(parsed, preferredLanguage);
     return parsed;
   }
 
-  private appendReviewerNotification(parsed: LlmResult, preferredLanguage: ResponseLanguage): string {
-    const calledReviewer = parsed.toolCalls.some(tc => tc.toolName === 'reviewer_new__upload_question_to_reviewer_system') || 
-                           parsed.toolResults.some(tr => tr.toolName === 'reviewer_new__upload_question_to_reviewer_system');
 
-    let reply = parsed.reply;
-    if (calledReviewer) {
-      let msg = '';
-      if (reply.match(/[\u0A00-\u0A7F]/)) {
-        msg = 'ਤੁਹਾਡਾ ਸੁਨੇਹਾ ਖੇਤੀਬਾੜੀ ਮਾਹਰ (Agriculture Expert) ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ ਜਲਦੀ ਹੀ ਇੱਕ ਜਵਾਬ ਮਿਲੇਗਾ।';
-      } else if (reply.match(/[\u0A80-\u0AFF]/)) {
-        msg = 'તમારો પ્રશ્ન કૃષિ નિષ્ણાત (Agriculture Expert) ને મોકલવામાં આવ્યો છે. તમને ટૂંક સમયમાં જ એક જવાબ મળશે.';
-      } else if (reply.match(/[\u0980-\u09FF]/)) {
-        msg = 'আপনার বার্তা কৃষি বিশেষজ্ঞের (Agriculture Expert) কাছে পাঠানো হয়েছে। আপনি শীঘ্রই একটি উত্তর পাবেন।';
-      } else if (reply.match(/[\u0B80-\u0BFF]/)) {
-        msg = 'உங்கள் செய்தி வேளாண் நிபுணருக்கு (Agriculture Expert) அனுப்பப்பட்டுள்ளது. விரைவில் உங்களுக்கு பதில் கிடைக்கும்.';
-      } else if (reply.match(/[\u0C00-\u0C7F]/)) {
-        msg = 'మీ సందేశం వ్యవసాయ నిపుణులకు (Agriculture Expert) పంపబడింది. మీరు త్వరలో సమాధానం అందుకుంటారు.';
-      } else if (reply.match(/[\u0C80-\u0CFF]/)) {
-        msg = 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಕೃಷಿ ತಜ್ಞರಿಗೆ (Agriculture Expert) ಕಳುಹಿಸಲಾಗಿದೆ. ನೀವು ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರವನ್ನು ಪಡೆಯುತ್ತೀರಿ.';
-      } else if (reply.match(/[\u0D00-\u0D7F]/)) {
-        msg = 'നിങ്ങളുടെ സന്ദേശം കൃഷി വിദഗ്ദ്ധന് (Agriculture Expert) അയച്ചിട്ടുണ്ട്. നിങ്ങൾക്ക് ഉടൻ തന്നെ മറുപടി ലഭിക്കും.';
-      } else if (reply.match(/[\u0B00-\u0B7F]/)) {
-        msg = 'ଆପଣଙ୍କର ବାର୍ତ୍ତା କୃଷି ବିଶେଷଜ୍ଞଙ୍କ (Agriculture Expert) ନିକଟକୁ ପଠାଯାଇଛି | ଆପଣ ଶୀଘ୍ର ଏକ ଉତ୍ତର ପାଇବେ |';
-      } else if (reply.match(/[\u0900-\u097F]/)) {
-        msg = 'आपका प्रश्न कृषि विशेषज्ञ (Agriculture Expert) को भेज दिया गया है। आपको जल्द ही इसका उत्तर मिलेगा।';
-      } else {
-        msg = 'Your message has been forwarded to the Agriculture Expert. You will receive a response shortly.';
-      }
-      
-      const disclaimer = '⚠️ This is a testing version. Please consult an expert before making farming decisions.';
-      if (reply.includes(disclaimer)) {
-        reply = reply.replace(disclaimer, `${msg}\n\n${disclaimer}`);
-      } else {
-        reply = `${reply}\n\n${msg}`;
-      }
-    }
-    return reply;
-  }
 
   private appendGovtSchemesCitation(
     parsed: LlmResult,
@@ -531,13 +493,13 @@ export class LlmService implements OnModuleInit, OnModuleDestroy {
   ): string {
     if (preferredLanguage === 'english') {
       return strict
-        ? 'CRITICAL LANGUAGE RULE: Reply in English only. Do not use Hindi or any regional Indian script anywhere in the reply.'
-        : 'Language rule: reply fully in English only.';
+        ? 'CRITICAL LANGUAGE RULE: Identify the ACTUAL SPOKEN LANGUAGE of the user. If the user is speaking an Indian language using English letters (e.g., Hinglish), you MUST reply in that Indian language using its native script (e.g., Hindi in Devanagari). If they are speaking pure English, reply in English.'
+        : 'Language rule: Identify the spoken language. If Indian language in English letters, reply in its native script. If pure English, reply in English.';
     }
     if (preferredLanguage === 'devanagari') {
       return strict
-        ? 'CRITICAL LANGUAGE RULE: Reply only in the same regional language/script as the user. Do not switch to English paragraphs.'
-        : 'Language rule: reply in the same regional script as the user.';
+        ? 'CRITICAL LANGUAGE RULE: Identify the ACTUAL SPOKEN LANGUAGE of the user. If the user wrote English words using Indian script letters, you MUST reply in English. Otherwise, reply in the same regional language and script.'
+        : 'Language rule: Identify the spoken language. If English words in Indian script, reply in English. Otherwise, reply in the regional language and script.';
     }
     return '';
   }

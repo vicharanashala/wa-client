@@ -29,6 +29,7 @@ export interface QuestionClassification {
     state_name: string;
     district_name: string;
     crop: string;
+    user_language: string;
   };
 }
 
@@ -64,7 +65,8 @@ You must respond with a valid JSON object in this exact format:
     "improved_question": "If isUniqueQuestion is true, write a detailed English translation including all context. Else use 'General'",
     "state_name": "State mentioned (e.g. Himachal Pradesh) else 'General'",
     "district_name": "District mentioned (e.g. Kangra) else 'General'",
-    "crop": "Crop mentioned (e.g. Paddy) else 'General'"
+    "crop": "Crop mentioned (e.g. Paddy) else 'General'",
+    "user_language": "The native language the user is speaking in (e.g. 'hindi', 'punjabi', 'tamil', 'english', etc.). If they write Hindi in English letters (Hinglish), return 'hindi'."
   }
 }
 
@@ -179,7 +181,8 @@ export class QuestionClassifierService {
             improved_question: 'General',
             state_name: 'General',
             district_name: 'General',
-            crop: 'General'
+            crop: 'General',
+            user_language: 'english'
           },
         };
         return Ok(classificationObj);
