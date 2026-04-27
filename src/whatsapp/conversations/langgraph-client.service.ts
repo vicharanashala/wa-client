@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Client } from '@langchain/langgraph-sdk';
-
+import { Client} from '@langchain/langgraph-sdk';
 export interface SendMessageResult {
   reply: string;
 }
@@ -11,7 +10,8 @@ export interface SendMessageResult {
  * Design decisions:
  * - One thread per phone number; thread_id === phone number.
  * - Threads are created idempotently (`if_exists: "do_nothing"`).
- * - Messages are sent as streaming runs; we collect the last AI message.
+ * - Runs are executed via client.runs.wait() — blocks until the graph
+ *   finishes and returns the final state directly, no stream parsing needed.
  * - LANGGRAPH_BASE_URL and LANGGRAPH_ASSISTANT_ID come from env vars.
  */
 @Injectable()
@@ -52,9 +52,8 @@ export class LangGraphClientService implements OnModuleInit {
 
   /**
    * Send a human message on the user's thread and return the agent's reply.
-   *
-   * @param phoneNumber - Used as thread_id.
-   * @param content     - The human message text to send.
+   * Uses client.runs.wait() to block until the run completes, then extracts
+   * the last AI message from the returned state.
    */
   async sendMessage(
     phoneNumber: string,
@@ -62,25 +61,19 @@ export class LangGraphClientService implements OnModuleInit {
   ): Promise<SendMessageResult> {
     const threadId = await this.ensureThread(phoneNumber);
 
-    const messages = [{ role: 'human', content }];
-
-    const streamResponse = this.client.runs.stream(
+    const output = await this.client.runs.wait(
       threadId,
       this.assistantId,
       {
-        input: { messages },
-        streamMode: 'messages',
+        input: { messages: [{ role: 'human', content }] },
       },
     );
 
-
-
-    return this.collectReply(streamResponse, phoneNumber);
+    return { reply: this.extractReply(output, phoneNumber) };
   }
 
   /**
    * Send a location update as a human message on the user's thread.
-   * Formats the location into the message the agent can understand.
    */
   async sendLocation(
     phoneNumber: string,
@@ -93,68 +86,32 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
-   * Collect the last AI text from a streaming run response.
+   * Extract the last AI text content from the final run output.
+   * client.runs.wait() returns the graph's output state directly.
    */
-  private async collectReply(
-    streamResponse: AsyncIterable<any>,
-    phoneNumber: string,
-  ): Promise<SendMessageResult> {
-    let reply = '';
+  private extractReply(output: any, phoneNumber: string): string {
+    const messages: any[] = output?.messages ?? [];
+    this.logger.debug(messages);
+    const lastAi = [...messages].reverse().find((m) => m.type === 'ai');
 
-    try {
-      for await (const chunk of streamResponse) {
-        if (chunk.event === 'messages/partial' || chunk.event === 'messages/complete') {
-          const data = chunk.data;
-          if (Array.isArray(data)) {
-            for (const msg of data) {
-              if (
-                msg.type === 'ai' &&
-                typeof msg.content === 'string' &&
-                msg.content.trim()
-              ) {
-                reply = msg.content.trim();
-              } else if (
-                msg.type === 'ai' &&
-                Array.isArray(msg.content)
-              ) {
-                const text = msg.content
-                  .filter((b: any) => b?.type === 'text')
-                  .map((b: any) => String(b.text ?? ''))
-                  .join('');
-                if (text.trim()) reply = text.trim();
-              }
-            }
-          }
-        }
-
-        // values event carries the full state — use messages array as fallback
-        if (chunk.event === 'values' && chunk.data?.messages) {
-          const msgs: any[] = chunk.data.messages;
-          const lastAi = [...msgs].reverse().find((m) => m.type === 'ai');
-          if (lastAi) {
-            if (typeof lastAi.content === 'string' && lastAi.content.trim()) {
-              reply = lastAi.content.trim();
-            } else if (Array.isArray(lastAi.content)) {
-              const text = lastAi.content
-                .filter((b: any) => b?.type === 'text')
-                .map((b: any) => String(b.text ?? ''))
-                .join('');
-              if (text.trim()) reply = text.trim();
-            }
-          }
-        }
-      }
-    } catch (err: any) {
-      this.logger.error(
-        `[${phoneNumber}] Stream error: ${err?.message ?? String(err)}`,
-      );
+    if (!lastAi) {
+      this.logger.warn(`[${phoneNumber}] No AI message found in run output`);
+      return 'I could not process your request right now. Please try again.';
     }
 
-    if (!reply) {
-      this.logger.warn(`[${phoneNumber}] No AI reply extracted from stream`);
-      reply = 'I could not process your request right now. Please try again.';
+    if (typeof lastAi.content === 'string' && lastAi.content.trim()) {
+      return lastAi.content.trim();
     }
 
-    return { reply };
+    if (Array.isArray(lastAi.content)) {
+      const text = lastAi.content
+        .filter((b: any) => b?.type === 'text')
+        .map((b: any) => String(b.text ?? ''))
+        .join('');
+      if (text.trim()) return text.trim();
+    }
+
+    this.logger.warn(`[${phoneNumber}] AI message had no extractable text`);
+    return 'I could not process your request right now. Please try again.';
   }
 }
