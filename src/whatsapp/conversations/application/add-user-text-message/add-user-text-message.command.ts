@@ -1,41 +1,47 @@
-import { ConversationRepository } from '../../infrastructure/conversation.repository';
-import {
-  CommandHandler,
-  EventBus,
-  EventPublisher,
-  ICommandHandler,
-} from '@nestjs/cqrs';
-import { Conversation } from '../../domain/conversation';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
+import { LangGraphClientService } from '../../langgraph-client.service';
+import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
+import { Result } from 'oxide.ts';
 
 export class AddUserTextMessageCommand {
   constructor(
     public readonly phoneNumber: string,
     public readonly content: string,
-    public readonly messageId: string
+    public readonly messageId: string,
   ) {}
 }
 
-
 @CommandHandler(AddUserTextMessageCommand)
-export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMessageCommand> {
+export class AddUserTextMessageHandler
+  implements ICommandHandler<AddUserTextMessageCommand>
+{
+  private readonly logger = new Logger(AddUserTextMessageHandler.name);
+
   constructor(
-    private readonly conversationRepository: ConversationRepository,
-    private readonly eventPublisher: EventPublisher,
+    private readonly langGraph: LangGraphClientService,
+    private readonly whatsappService: WhatsappService,
   ) {}
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
     const { phoneNumber, content, messageId } = command;
 
-    const conversation =
-      (await this.conversationRepository.findByPhone(phoneNumber)) ??
-      Conversation.create(phoneNumber);
+    this.logger.debug(`[${phoneNumber}] User text: "${content.slice(0, 60)}"`);
 
-    this.eventPublisher.mergeObjectContext(conversation);
+    // Show typing indicator (non-fatal)
+    const typingResult = await Result.safe(
+      this.whatsappService.showTyping(messageId),
+    );
+    typingResult.isErr() &&
+      this.logger.warn(
+        `[${phoneNumber}] showTyping failed: ${typingResult.unwrapErr().message}`,
+      );
 
-    conversation.addUserTextMessage(content, messageId);
+    // Send message to LangGraph; thread is created/reused automatically
+    const { reply } = await this.langGraph.sendMessage(phoneNumber, content);
 
-    await this.conversationRepository.save(conversation);
-
-    conversation.commit();
+    // Send the AI reply back to the user
+    await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
+    this.logger.log(`[${phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
   }
 }

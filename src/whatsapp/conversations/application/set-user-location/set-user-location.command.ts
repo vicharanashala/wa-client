@@ -1,13 +1,7 @@
-// set-user-location.command.ts
-import {
-  CommandHandler,
-  EventBus,
-  EventPublisher,
-  ICommandHandler,
-} from '@nestjs/cqrs';
-import { ConversationRepository } from '../../infrastructure/conversation.repository';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
+import { LangGraphClientService } from '../../langgraph-client.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
-import { Conversation } from '../../domain/conversation';
 
 export class SetUserLocationCommand {
   constructor(
@@ -19,34 +13,36 @@ export class SetUserLocationCommand {
   ) {}
 }
 
-// set-user-location.handler.ts
 @CommandHandler(SetUserLocationCommand)
-export class SetUserLocationHandler implements ICommandHandler<SetUserLocationCommand> {
+export class SetUserLocationHandler
+  implements ICommandHandler<SetUserLocationCommand>
+{
+  private readonly logger = new Logger(SetUserLocationHandler.name);
+
   constructor(
-    private readonly conversationRepository: ConversationRepository,
+    private readonly langGraph: LangGraphClientService,
     private readonly whatsappService: WhatsappService,
-    private readonly eventPublisher: EventPublisher
   ) {}
 
   async execute(command: SetUserLocationCommand): Promise<void> {
     const { phoneNumber, messageId, latitude, longitude, address } = command;
 
-    const conversation =
-      (await this.conversationRepository.findByPhone(phoneNumber)) ??
-      Conversation.create(phoneNumber);
-
-    this.eventPublisher.mergeObjectContext(conversation);
-
-    conversation.setLocation(latitude, longitude, address);
-    await this.conversationRepository.save(conversation);
-
-    conversation.commit();
-
-    // Acknowledge and prompt them to continue
-    await this.whatsappService.markAsRead(messageId);
-    await this.whatsappService.sendTextMessage(
-      phoneNumber,
-      'Thank you! Location saved. You can now ask your farming question.',
+    this.logger.debug(
+      `[${phoneNumber}] Location received: ${latitude},${longitude}${address ? ` (${address})` : ''}`,
     );
+
+    // Acknowledge receipt first
+    await this.whatsappService.markAsRead(messageId);
+
+    // Forward location to LangGraph as a human message
+    const { reply } = await this.langGraph.sendLocation(
+      phoneNumber,
+      latitude,
+      longitude,
+      address,
+    );
+
+    await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
+    this.logger.log(`[${phoneNumber}] Sent location-reply: "${reply.slice(0, 60)}"`);
   }
 }

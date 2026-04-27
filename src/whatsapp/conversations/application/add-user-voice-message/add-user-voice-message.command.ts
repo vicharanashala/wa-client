@@ -1,6 +1,6 @@
-import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
-import { Conversation } from '../../domain/conversation';
-import { ConversationRepository } from '../../infrastructure/conversation.repository';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
+import { LangGraphClientService } from '../../langgraph-client.service';
 import { SarvamService } from '../../../sarvam-api/sarvam.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 
@@ -13,44 +13,59 @@ export class AddUserVoiceMessageCommand {
 }
 
 @CommandHandler(AddUserVoiceMessageCommand)
-export class AddUserVoiceMessageHandler implements ICommandHandler<AddUserVoiceMessageCommand> {
+export class AddUserVoiceMessageHandler
+  implements ICommandHandler<AddUserVoiceMessageCommand>
+{
+  private readonly logger = new Logger(AddUserVoiceMessageHandler.name);
+
   constructor(
-    private readonly conversationRepository: ConversationRepository,
+    private readonly langGraph: LangGraphClientService,
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
-    private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute(command: AddUserVoiceMessageCommand): Promise<void> {
     const { phoneNumber, mediaId, messageId } = command;
 
-    // 1. Download audio from WhatsApp
+    // 1. Show typing indicator
+    await this.whatsappService.showTyping(messageId);
+
+    // 2. Download audio from WhatsApp
     const { buffer, mimeType } =
       await this.whatsappService.downloadMedia(mediaId);
 
-    // 2. Transcribe to English + detect language
+    // 3. Transcribe to English + detect language
     const { transcript, languageCode } =
       await this.sarvamService.transcribeToEnglish(buffer, mimeType);
 
-    // 4. Store voice message with transcript (audioStorageUrl = undefined for now)
-    const conversation =
-      (await this.conversationRepository.findByPhone(phoneNumber)) ??
-      Conversation.create(phoneNumber);
-
-      this.eventPublisher.mergeObjectContext(conversation);
-
-    if (languageCode) {
-      conversation.setPreferredLanguage(languageCode);
-    }
-
-    conversation.addUserVoiceMessage(
-      transcript,
-      messageId,
-      undefined,
+    this.logger.debug(
+      `[${phoneNumber}] Voice transcribed: "${transcript.slice(0, 60)}" (lang=${languageCode})`,
     );
 
-    await this.conversationRepository.save(conversation);
+    // 4. Send transcript to LangGraph; thread reused by phone number
+    const { reply } = await this.langGraph.sendMessage(phoneNumber, transcript);
 
-    conversation.commit(); // fires UserVoiceMessageAddedEvent
+    // 5. Synthesize voice reply and send audio + text
+    const audioBuffer = await this.sarvamService.synthesize(
+      reply,
+      languageCode ?? null,
+    );
+
+    const uploadedMediaId = await this.whatsappService.uploadMedia(
+      audioBuffer,
+      'audio/ogg',
+    );
+
+    await this.whatsappService.sendVoiceMessage(
+      phoneNumber,
+      uploadedMediaId,
+      messageId,
+    );
+
+    await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
+
+    this.logger.log(
+      `[${phoneNumber}] Sent voice+text reply (lang=${languageCode ?? 'default'}): "${reply.slice(0, 60)}"`,
+    );
   }
 }
