@@ -110,27 +110,27 @@ export class IntelligentQuestionUploadHandler implements IEventHandler<UserTextM
     );
     await this.trackReviewerUpload(phoneNumber, queryText, result);
     
-    let msg = 'Your message has been forwarded to the Agriculture Expert. You will receive a response shortly.';
+    let msg = 'Your message has been forwarded to the Agriculture Expert. We will review it and send you the answer within two hours.';
     const lang = userLanguage.toLowerCase().trim();
     
     if (lang === 'punjabi') {
-      msg = 'ਤੁਹਾਡਾ ਸੁਨੇਹਾ ਖੇਤੀਬਾੜੀ ਮਾਹਰ (Agriculture Expert) ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ ਜਲਦੀ ਹੀ ਇੱਕ ਜਵਾਬ ਮਿਲੇਗਾ।';
+      msg = 'ਤੁਹਾਡਾ ਸੁਨੇਹਾ ਖੇਤੀਬਾੜੀ ਮਾਹਰ (Agriculture Expert) ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਅਸੀਂ ਇਸਦੀ ਸਮੀਖਿਆ ਕਰਾਂਗੇ ਅਤੇ ਦੋ ਘੰਟਿਆਂ ਵਿੱਚ ਜਵਾਬ ਭੇਜਾਂਗੇ।';
     } else if (lang === 'gujarati') {
-      msg = 'તમારો પ્રશ્ન કૃષિ નિષ્ણાત (Agriculture Expert) ને મોકલવામાં આવ્યો છે. તમને ટૂંક સમયમાં જ એક જવાબ મળશે.';
+      msg = 'તમારો પ્રશ્ન કૃષિ નિષ્ણાત (Agriculture Expert) ને મોકલવામાં આવ્યો છે. અમે તેની સમીક્ષા કરીશું અને બે કલાકની અંદર જવાબ મોકલીશું.';
     } else if (lang === 'bengali') {
-      msg = 'আপনার বার্তা কৃষি বিশেষজ্ঞের (Agriculture Expert) কাছে পাঠানো হয়েছে। আপনি শীঘ্রই একটি উত্তর পাবেন।';
+      msg = 'আপনার বার্তা কৃষি বিশেষজ্ঞের (Agriculture Expert) কাছে পাঠানো হয়েছে। আমরা এটি পর্যালোচনা করব এবং দুই ঘণ্টার মধ্যে উত্তর পাঠাব।';
     } else if (lang === 'tamil') {
-      msg = 'உங்கள் செய்தி வேளாண் நிபுணருக்கு (Agriculture Expert) அனுப்பப்பட்டுள்ளது. விரைவில் உங்களுக்கு பதில் கிடைக்கும்.';
+      msg = 'உங்கள் செய்தி வேளாண் நிபுணருக்கு (Agriculture Expert) அனுப்பப்பட்டுள்ளது. நாங்கள் இதை ஆய்வு செய்து இரண்டு மணி நேரத்திற்குள் பதில் அனுப்புவோம்.';
     } else if (lang === 'telugu') {
-      msg = 'మీ సందేశం వ్యవసాయ నిపుణులకు (Agriculture Expert) పంపబడింది. మీరు త్వరలో సమాధానం అందుకుంటారు.';
+      msg = 'మీ సందేశం వ్యవసాయ నిపుణులకు (Agriculture Expert) పంపబడింది. మేము దీన్ని సమీక్షించి రెండు గంటల్లో సమాధానం పంపుతాము.';
     } else if (lang === 'kannada') {
-      msg = 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಕೃಷಿ ತಜ್ಞರಿಗೆ (Agriculture Expert) ಕಳುಹಿಸಲಾಗಿದೆ. ನೀವು ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರವನ್ನು ಪಡೆಯುತ್ತೀರಿ.';
+      msg = 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಕೃಷಿ ತಜ್ಞರಿಗೆ (Agriculture Expert) ಕಳುಹಿಸಲಾಗಿದೆ. ನಾವು ಇದನ್ನು ಪರಿಶೀಲಿಸಿ ಎರಡು ಗಂಟೆಗಳಲ್ಲಿ ಉತ್ತರ ಕಳುಹಿಸುತ್ತೇವೆ.';
     } else if (lang === 'malayalam') {
-      msg = 'നിങ്ങളുടെ സന്ദേശം കൃഷി വിദഗ്ദ്ധന് (Agriculture Expert) അയച്ചിട്ടുണ്ട്. നിങ്ങൾക്ക് ഉടൻ തന്നെ മറുപടി ലഭിക്കും.';
+      msg = 'നിങ്ങളുടെ സന്ദേശം കൃഷി വിദഗ്ദ്ധന് (Agriculture Expert) അയച്ചിട്ടുണ്ട്. ഞങ്ങൾ ഇത് അവലോകനം ചെയ്ത് രണ്ട് മണിക്കൂറിനുള്ളിൽ മറുപടി അയക്കും.';
     } else if (lang === 'odia') {
-      msg = 'ଆପଣଙ୍କର ବାର୍ତ୍ତା କୃଷି ବିଶେଷଜ୍ଞଙ୍କ (Agriculture Expert) ନିକଟକୁ ପଠାଯାଇଛି | ଆପଣ ଶୀଘ୍ର ଏକ ଉତ୍ତର ପାଇବେ |';
+      msg = 'ଆପଣଙ୍କର ବାର୍ତ୍ତା କୃଷି ବିଶେଷଜ୍ଞଙ୍କ (Agriculture Expert) ନିକଟକୁ ପଠାଯାଇଛି। ଆମେ ଏହାର ସମୀକ୍ଷା କରିବୁ ଏବଂ ଦୁଇ ଘଣ୍ଟା ମଧ୍ୟରେ ଉତ୍ତର ପଠାଇବୁ।';
     } else if (lang === 'hindi') {
-      msg = 'आपका प्रश्न कृषि विशेषज्ञ (Agriculture Expert) को भेज दिया गया है। आपको जल्द ही इसका उत्तर मिलेगा।';
+      msg = 'आपका प्रश्न कृषि विशेषज्ञ (Agriculture Expert) को भेज दिया गया है। हम इसकी समीक्षा करेंगे और दो घंटे के अंदर आपको उत्तर भेजेंगे।';
     }
 
     await Result.safe(this.whatsappService.sendTextMessage(phoneNumber, msg));
