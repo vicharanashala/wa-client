@@ -10,7 +10,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 
 /** Name of the MCP tool that uploads questions to the reviewer system */
-const REVIEWER_UPLOAD_TOOL = 'upload_question_to_reviewer_system';
+const REVIEWER_UPLOAD_TOOL = 'reviewer_new__upload_question_to_reviewer_system';
 
 @EventsHandler(UserVoiceMessageAddedEvent)
 export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMessageAddedEvent> {
@@ -23,7 +23,7 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
-  ) {}
+  ) { }
 
   async handle(event: UserVoiceMessageAddedEvent): Promise<void> {
     this.logger.debug(
@@ -42,10 +42,8 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
       return;
     }
 
-    // Build message history from DB
-    const messages = toBaseMessages(conversation.messages);
+    const messages = toBaseMessages(conversation.messages.slice(-15));
 
-    // Inject location context
     if (conversation.location) {
       const { latitude, longitude, address } = conversation.location;
       messages.unshift(
@@ -57,7 +55,6 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
 
     this.eventPublisher.mergeObjectContext(conversation);
 
-    // Generate reply from LLM
     const { reply, toolCalls, toolResults } =
       await this.llmService.generate(messages);
 
@@ -69,35 +66,34 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
       conversation.addToolResult(tr.toolCallId, tr.toolName, tr.result);
     }
 
-    // ── Track reviewer uploads for async notification ──
     await this.trackReviewerUploads(toolCalls, toolResults, event.phoneNumber);
 
     conversation.addBotTextMessage(reply);
     await this.conversationRepository.save(conversation);
     conversation.commit();
 
-    // Convert reply to speech in user's detected language
     const audioBuffer = await this.sarvamService.synthesize(
       reply,
       conversation.preferredLanguage ?? null,
     );
 
-    // Upload to WhatsApp and send as voice note
     const mediaId = await this.whatsappService.uploadMedia(
       audioBuffer,
       'audio/ogg',
     );
 
-    await this.whatsappService.sendVoiceMessage(event.phoneNumber, mediaId, event.messageId);
+    await this.whatsappService.sendVoiceMessage(
+      event.phoneNumber,
+      mediaId,
+      event.messageId,
+    );
 
     await this.whatsappService.sendTextMessage(
       event.phoneNumber,
       reply,
       event.messageId,
     );
-    this.logger.log(
-      `[${event.phoneNumber}] Sent: "${reply.slice(0, 60)}"`,
-    );
+    this.logger.log(`[${event.phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
 
     this.logger.log(
       `[${event.phoneNumber}] Sent voice reply (${conversation.preferredLanguage ?? 'default'})`,
@@ -126,7 +122,8 @@ export class UserVoiceMessageAddedHandler implements IEventHandler<UserVoiceMess
 
       try {
         const parsed = JSON.parse(result.result);
-        const questionId = parsed.question_id || parsed.questionId || parsed.id;
+        const questionId =
+          parsed.question_id || parsed.questionId || parsed.id || parsed._id;
 
         if (!questionId) {
           this.logger.warn(

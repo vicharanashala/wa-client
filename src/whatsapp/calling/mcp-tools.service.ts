@@ -21,12 +21,15 @@ export class McpToolsService implements OnModuleInit {
   private readonly logger = new Logger(McpToolsService.name);
 
   private readonly MCP_SERVERS: Record<string, string> = {
-    golden: 'http://100.100.108.43:9006/mcp',
-    pop: 'http://100.100.108.43:9002/mcp',
-    market: 'http://100.100.108.43:9022/mcp',
-    weather: 'http://100.100.108.43:9004/mcp',
-    'faq-videos': 'http://100.100.108.43:9005/mcp',
-    'golden-n': 'http://100.100.108.43:9023/mcp',
+    golden: 'http://100.100.108.44:9005/mcp',
+    pop: 'http://100.100.108.44:9012/mcp',
+    agmarknet: process.env.MCP_AGMARKNET_URL || 'http://100.100.108.44:9006/mcp',
+    enam: process.env.MCP_ENAM_URL || 'http://100.100.108.44:9002/mcp',
+    weather: 'http://100.100.108.44:9003/mcp',
+    'faq-videos': 'http://100.100.108.44:9010/mcp',
+    'golden-n': 'http://100.100.108.44:9023/mcp',
+    'govt-schemes':
+      process.env.MCP_GOVT_SCHEMES_URL || 'http://100.100.108.44:9009/mcp',
   };
 
   private toolToServer: Record<string, string> = {};

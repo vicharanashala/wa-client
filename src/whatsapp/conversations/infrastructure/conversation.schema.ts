@@ -50,6 +50,9 @@ export class ConversationModel {
 
   @Prop({ default: null })
   preferredLanguage?: string;
+
+  @Prop({ default: null })
+  userDetailsSummary?: string;
 }
 
 export const ConversationModelSchema =

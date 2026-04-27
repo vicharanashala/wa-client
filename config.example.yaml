@@ -1,0 +1,293 @@
+# WhatsApp Client Configuration
+# Version: 1.0.0
+#
+# This file contains non-secret configuration that can be committed to version control.
+# Secrets (API keys, tokens, credentials) should be in .env file.
+
+version: 1.0.0
+
+# Application Settings
+app:
+  name: 'WhatsApp AI Assistant'
+  environment: 'development' # development, production, test
+  port: 3000
+  logLevel: 'debug' # error, warn, info, debug
+
+# WhatsApp Meta Business API Configuration
+whatsapp:
+  api:
+    version: 'v18.0'
+    baseUrl: 'https://graph.facebook.com'
+
+  # Message Templates
+  messages:
+    locationRequest: 'To give you accurate farming advice, please share your location once.'
+    disclaimer: '⚠️ This is a testing version. Please consult an expert before making farming decisions.'
+    clearSuccess: '✅ Conversation history cleared! We can start fresh.'
+    helpMessage: |
+      🤖 *WhatsApp AI Assistant*
+
+      Available commands:
+      • Just send any message to chat with me
+      • **/clear** - Clear conversation history
+      • **/help** - Show this help message
+
+      I can help with questions, conversations, and more!
+    fallbackResponse: 'Sorry, I encountered an issue. Please try again.'
+    expertAnswerNotification: |
+      ✅ *Your question has been reviewed by an expert!*
+
+      📌 *Your Question:*
+      "{queryText}"
+
+      💡 *Expert Answer:*
+      {answer}
+
+      ⚠️ This is a testing version. Please consult an expert before making farming decisions.
+
+# LLM Configuration
+llm:
+  # Model Settings
+  defaultModel: 'Qwen/Qwen3-30B-A3B'
+  maxTokens: 1024
+  temperature: 0.7
+  presencePenalty: 0.6
+  frequencyPenalty: 0.0
+
+  # System Prompt for Text-based Chat
+  systemPrompt: |
+    You are AjraSakha, an AI agricultural expert helping Indian farmers via WhatsApp (text and voice).
+
+    Your responses must feel natural, simple, and conversational — like a helpful farming expert speaking directly to a farmer.
+
+    GENERAL RESPONSE STYLE:
+    - Use simple, farmer-friendly language.
+    - Keep sentences short and clear.
+    - Do NOT use headings, titles, or section labels (like "Solution:", "Steps:", etc.).
+    - Do NOT use markdown, tables, or formatting symbols.
+    - Do NOT use bullet points or numbered lists.
+    - Write in plain flowing sentences, broken into short lines.
+    - You may use very light emojis in text (like ✅ ⚠️ 📌), but responses must still sound natural if read aloud.
+
+    MANDATORY FLOW — follow strictly:
+
+    1. UPLOAD QUERY:
+    - Translate user question to English if needed.
+    - Call upload_question_to_reviewer_system with the English question.
+    - Skip only for greetings like Hi, Hello, Thanks, Bye, OK, Yes, No.
+
+    2. LOCATION:
+    - If latitude and longitude are missing, ask for pincode.
+    - Use get_current_weather with pincode to get location details.
+    - Mention naturally: Weather data is from IMD.
+
+    3. IDENTIFY CROP AND STATE:
+    - If missing, ask the user politely before continuing.
+
+    4. FETCH DATA (strict order):
+    - Reviewer dataset first.
+    - Then Golden Dataset.
+    - Then Package of Practices.
+    - Combine all relevant information.
+
+    5. FAQ VIDEO:
+    - If clearly useful, suggest:
+      "You can search on YouTube for [topic]."
+    - Give actual link ONLY if user explicitly asks for it.
+
+    6. RESPONSE STRUCTURE:
+    - Start with a direct answer.
+    - Then explain in simple, conversational sentences.
+    - Do not structure the answer with labels or sections.
+
+    7. SOURCES (MANDATORY):
+    - Mention sources in natural language at the end.
+    - Do NOT include URLs by default.
+    - Provide URLs ONLY if the user explicitly asks.
+
+    8. LANGUAGE:
+    - Reply in the same language and script as the user.
+    - Use simple local words.
+    - Write chemical names in the same script.
+
+    9. SCOPE:
+    - Only Indian agriculture topics.
+    - If outside scope, say:
+      "I can only help with farming questions in India."
+
+    10. DISCLAIMER (MANDATORY — LAST LINE):
+    ⚠️ This is a testing version. Please consult an expert before making farming decisions.
+
+# MCP (Model Context Protocol) Configuration
+mcp:
+  protocol:
+    version: '2024-11-05'
+
+  client:
+    name: 'wa-calling-client'
+    version: '1.0.0'
+    onConnectionError: 'ignore'
+
+  # MCP Servers for Text-based LLM interactions
+  servers:
+    text:
+      reviewer:
+        url: 'http://100.100.108.44:9007/mcp'
+        enabled: true
+      golden:
+        url: 'http://100.100.108.44:9005/mcp'
+        enabled: true
+      pop:
+        url: 'http://100.100.108.44:9012/mcp'
+        enabled: true
+      agmarknet:
+        url: 'http://100.100.108.44:9006/mcp'
+        enabled: true
+      enam:
+        url: 'http://100.100.108.44:9002/mcp'
+        enabled: true
+      weather:
+        url: 'http://100.100.108.44:9003/mcp'
+        enabled: true
+      govt-schemes:
+        url: 'http://100.100.108.44:9009/mcp'
+        enabled: true
+
+    # MCP Servers for Voice Call (Gemini Live) interactions
+    voice:
+      golden:
+        url: 'http://100.100.108.44:9005/mcp'
+        enabled: true
+      pop:
+        url: 'http://100.100.108.44:9012/mcp'
+        enabled: true
+      agmarknet:
+        url: 'http://100.100.108.44:9006/mcp'
+        enabled: true
+      enam:
+        url: 'http://100.100.108.44:9002/mcp'
+        enabled: true
+      weather:
+        url: 'http://100.100.108.44:9003/mcp'
+        enabled: true
+      faq-videos:
+        url: 'http://100.100.108.44:9010/mcp'
+        enabled: true
+      golden-n:
+        url: 'http://100.100.108.44:9023/mcp'
+        enabled: true
+      govt-schemes:
+        url: 'http://100.100.108.44:9009/mcp'
+        enabled: true
+
+# Audio/Voice Configuration
+audio:
+  # Opus Codec Settings
+  opus:
+    sampleRate: 48000
+    channels: 1
+    frameDurationMs: 20
+    payloadType: 111
+    bitrate: 24000
+
+  # Gemini Audio Settings
+  gemini:
+    sampleRate: 16000 # For Gemini Live input (PCM)
+    defaultSampleRate: 24000 # Default output sample rate
+
+# Sarvam AI Configuration (STT/TTS)
+sarvam:
+  baseUrl: 'https://api.sarvam.ai'
+
+  # Speech-to-Text Settings
+  stt:
+    model: 'saaras:v3'
+    mode: 'codemix' # codemix or standard
+    defaultLanguage: 'unknown' # Auto-detect
+
+  # Text-to-Speech Settings
+  tts:
+    model: 'bulbul:v3'
+    outputCodec: 'opus'
+    sampleRate: 16000
+    textChunkSize: 2500 # Max characters per TTS request
+
+# Gemini Live Configuration (for Voice Calls)
+gemini:
+  live:
+    wsUrl: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent'
+    model: 'models/gemini-2.5-flash-native-audio-latest'
+    responseModalities: ['AUDIO']
+
+    # System Instruction for Voice Calls
+    systemInstruction: |
+      You are a helpful assistant for Indian farmers. You have access to multiple tools for crop prices, weather, FAQs, and more. Use the appropriate tool when the user asks relevant questions. Keep answers short and crisp. Respond in the same language the user speaks. For Mandi prices, you MUST search using agmarknet tools first; if the data is not found, only then fallback to enam tools.
+
+    # Greeting Prompt (sent on call start)
+    greetingPrompt: "Greet the caller warmly in Hindi. Say something like: 'Ajarsakha mein aapka swagat hai! Main aapki kya madad kar sakta hoon?' Keep it short and natural."
+
+    # Call Configuration
+    maxCallDurationSeconds: 300 # 5 minutes
+    silenceTimeoutSeconds: 10
+
+# Reviewer System Configuration
+reviewer:
+  polling:
+    enabled: true
+    intervalMs: 7200000 # 2 hours (7200000 ms)
+    initialDelayMs: 30000 # 30 seconds initial delay
+
+  api:
+    # Default base URL (can be overridden by REVIEWER_API_BASE_URL env var)
+    defaultBaseUrl: 'http://100.100.108.44:9007/api'
+    endpoints:
+      pendingQuestions: '/pending-questions'
+      markReviewed: '/mark-reviewed'
+
+# Conversation Settings
+conversation:
+  messageHistoryLimit: 15 # Number of messages to keep in context
+  enableContextMemory: true
+  maxContextLength: 4096
+
+# Database Configuration
+database:
+  mongodb:
+    # Connection options (URI comes from env var MONGO_URI)
+    options:
+      retryWrites: true
+      w: 'majority'
+
+  redis:
+    # Redis options (host, port, password from env vars)
+    options:
+      maxRetriesPerRequest: 3
+      enableReadyCheck: true
+      lazyConnect: false
+
+# Feature Flags
+features:
+  enableVoiceCalls: true
+  enableTextChat: true
+  enableReviewerPolling: true
+  enableLocationServices: true
+  enableMcpTools: true
+  enableCaching: false # Redis caching
+
+# Rate Limiting
+rateLimit:
+  enabled: false
+  windowMs: 60000 # 1 minute
+  maxRequests: 30 # Max requests per window per user
+
+# Logging Configuration
+logging:
+  format: 'json' # json or text
+  includeTimestamp: true
+  includeContext: true
+  levels:
+    default: 'info'
+    whatsapp: 'debug'
+    llm: 'debug'
+    mcp: 'info'
+    calling: 'debug'

@@ -18,6 +18,7 @@ import {
   AddUserVoiceMessageCommand
 } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
 import { CallingService } from './calling/calling.service';
+import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -151,15 +152,49 @@ export class WhatsappController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly callingService: CallingService,
+    private readonly reviewerPollingService: ReviewerPollingService,
   ) {}
+
+  @Get('test-poll')
+  async triggerPollManually(): Promise<string> {
+    this.logger.log('🔥 Manual poll triggered via HTTP endpoint');
+    await this.reviewerPollingService.pollReviewerSystem();
+    return 'Polling triggered successfully! Check your server logs.';
+  }
+
+  @Post('reviewer-webhook')
+  @HttpCode(HttpStatus.OK)
+  async handleReviewerWebhook(
+    @Headers('x-internal-api-key') apiKey: string,
+    @Body() body: any,
+  ): Promise<string> {
+    const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
+    if (!expectedKey || apiKey !== expectedKey) {
+      this.logger.warn('Unauthorized access attempt to reviewer webhook');
+      throw new ForbiddenException('Invalid API Key');
+    }
+
+    this.logger.log(`📥 Received webhook from reviewer system for question: ${body.question_id}`);
+    
+    // Process the webhook in the background so we don't block the response
+    this.reviewerPollingService.processWebhookAnswer(body).catch((err) => {
+      this.logger.error(`Failed to process webhook for question ${body.question_id}: ${err.message}`);
+    });
+
+    return 'OK';
+  }
 
   @Get('webhook')
   verify(
-    @Query('hub.mode') mode: string,
-    @Query('hub.challenge') challenge: string,
-    @Query('hub.verify_token') token: string, // ← remove underscore
+    @Query() query: Record<string, string>,
   ): string {
+    const mode = query['hub.mode'];
+    const challenge = query['hub.challenge'];
+    const token = query['hub.verify_token'];
     const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+
+    this.logger.debug(`Webhook verify: mode=${mode}, token=${token}, expected=${verifyToken}`);
+    this.logger.debug(`Full query: ${JSON.stringify(query)}`);
 
     if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Webhook verified');
