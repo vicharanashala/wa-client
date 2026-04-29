@@ -51,6 +51,29 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
+   * Returns true if the thread's state already has a location set.
+   * Reads the `location` field from AjraSakhaState directly.
+   * Returns false if the thread doesn't exist yet or has no state.
+   */
+  async hasLocation(phoneNumber: string): Promise<boolean> {
+    await this.ensureThread(phoneNumber);
+    try {
+      const state = await this.client.threads.getState(phoneNumber);
+      const location = (state?.values as any)?.location;
+      return !!(
+        location &&
+        (location.latitude != null || location.city || location.state)
+      );
+    } catch (err: any) {
+      // Thread exists but has no checkpoint yet (no runs executed), or server restarted
+      this.logger.debug(
+        `[${phoneNumber}] getState returned error (treating as no location): ${err?.message}`,
+      );
+      return false;
+    }
+  }
+
+  /**
    * Send a human message on the user's thread and return the agent's reply.
    * Uses client.runs.wait() to block until the run completes, then extracts
    * the last AI message from the returned state.
@@ -73,16 +96,39 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
-   * Send a location update as a human message on the user's thread.
+   * Sets the location on the thread by running the graph with the location
+   * injected directly into the input. This ensures a proper checkpoint exists
+   * before we try to read state, avoiding 404s on empty threads.
    */
-  async sendLocation(
+  async updateLocation(
     phoneNumber: string,
     latitude: number,
     longitude: number,
     address?: string,
-  ): Promise<SendMessageResult> {
-    const locationText = `My location: latitude ${latitude}, longitude ${longitude}${address ? `, address: ${address}` : ''}.`;
-    return this.sendMessage(phoneNumber, locationText);
+  ): Promise<void> {
+    await this.ensureThread(phoneNumber);
+
+    // Run the graph with the location passed as input so it creates a
+    // checkpoint and the `location` field is populated in state.
+    await this.client.runs.wait(
+      phoneNumber,
+      this.assistantId,
+      {
+        input: {
+          location: {
+            latitude,
+            longitude,
+            address: address ?? null,
+            city: null,
+            state: null,
+          },
+        },
+      },
+    );
+
+    this.logger.log(
+      `[${phoneNumber}] Location set via run: ${latitude},${longitude}`,
+    );
   }
 
   /**

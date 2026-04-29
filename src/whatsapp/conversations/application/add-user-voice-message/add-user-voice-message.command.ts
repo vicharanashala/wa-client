@@ -30,6 +30,14 @@ export class AddUserVoiceMessageHandler
     // 1. Show typing indicator
     await this.whatsappService.showTyping(messageId);
 
+    // Gate: require location before proceeding
+    const hasLocation = await this.langGraph.hasLocation(phoneNumber);
+    if (!hasLocation) {
+      this.logger.log(`[${phoneNumber}] No location in thread state — requesting location`);
+      await this.whatsappService.sendLocationRequest(phoneNumber);
+      return;
+    }
+
     // 2. Download audio from WhatsApp
     const { buffer, mimeType } =
       await this.whatsappService.downloadMedia(mediaId);

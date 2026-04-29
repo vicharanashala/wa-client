@@ -31,18 +31,17 @@ export class SetUserLocationHandler
       `[${phoneNumber}] Location received: ${latitude},${longitude}${address ? ` (${address})` : ''}`,
     );
 
-    // Acknowledge receipt first
+    // Acknowledge receipt
     await this.whatsappService.markAsRead(messageId);
 
-    // Forward location to LangGraph as a human message
-    const { reply } = await this.langGraph.sendLocation(
-      phoneNumber,
-      latitude,
-      longitude,
-      address,
-    );
+    // Write location directly into the thread state — not as a message
+    await this.langGraph.updateLocation(phoneNumber, latitude, longitude, address);
 
-    await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
-    this.logger.log(`[${phoneNumber}] Sent location-reply: "${reply.slice(0, 60)}"`);
+    await this.whatsappService.sendTextMessage(
+      phoneNumber,
+      'Thank you! Location saved. You can now ask your farming question.',
+      messageId,
+    );
+    this.logger.log(`[${phoneNumber}] Location saved to thread state`);
   }
 }
