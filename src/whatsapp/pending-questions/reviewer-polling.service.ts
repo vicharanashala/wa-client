@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
@@ -22,7 +22,7 @@ type ReviewerStatusResult = {
  * Default: "0 *​/2 * * *"  (every 2 hours, on the hour).
  */
 @Injectable()
-export class ReviewerPollingService {
+export class ReviewerPollingService implements OnModuleInit {
   private readonly logger = new Logger(ReviewerPollingService.name);
 
   /** Reviewer system REST API base URL (for checking question status) */
@@ -38,6 +38,17 @@ export class ReviewerPollingService {
     this.reviewerApiBaseUrl =
       process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
     this.reviewerApiKey = process.env.REVIEWER_INTERNAL_API_KEY || '';
+  }
+
+  onModuleInit(): void {
+    const cronExpr =
+      process.env.REVIEWER_CRON_EXPRESSION || CronExpression.EVERY_2_HOURS;
+    this.logger.log(
+      `🕐 Reviewer polling cron job ACTIVE — schedule: "${cronExpr}"`,
+    );
+    this.logger.log(
+      `🔗 Reviewer API base URL: ${this.reviewerApiBaseUrl}`,
+    );
   }
 
   /**

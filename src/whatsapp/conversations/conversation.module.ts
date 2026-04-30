@@ -6,12 +6,14 @@ import { SetUserLocationHandler } from './application/set-user-location/set-user
 import { AddUserVoiceMessageHandler } from './application/add-user-voice-message/add-user-voice-message.command';
 import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 import { SarvamModule } from '../sarvam-api/sarvam.module';
+import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
 
 @Module({
   imports: [
     CqrsModule,
     WhatsappApiModule,
     SarvamModule,
+    PendingQuestionsModule,
   ],
   providers: [
     LangGraphClientService,

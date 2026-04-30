@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { LangGraphClientService } from '../../langgraph-client.service';
 import { SarvamService } from '../../../sarvam-api/sarvam.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
+import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 
 export class AddUserVoiceMessageCommand {
   constructor(
@@ -22,6 +23,7 @@ export class AddUserVoiceMessageHandler
     private readonly langGraph: LangGraphClientService,
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
+    private readonly pendingQuestionRepo: PendingQuestionRepository,
   ) {}
 
   async execute(command: AddUserVoiceMessageCommand): Promise<void> {
@@ -51,7 +53,20 @@ export class AddUserVoiceMessageHandler
     );
 
     // 4. Send transcript to LangGraph; thread reused by phone number
-    const { reply } = await this.langGraph.sendMessage(phoneNumber, transcript);
+    const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, transcript);
+
+    // If LangGraph flagged this for human review, save to pending_questions
+    if (reviewId) {
+      await this.pendingQuestionRepo.create({
+        questionId: reviewId,
+        phoneNumber,
+        queryText: transcript,
+        toolCallId: `force-${Date.now()}`,
+      });
+      this.logger.log(
+        `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,
+      );
+    }
 
     // 5. Synthesize voice reply and send audio + text
     const audioBuffer = await this.sarvamService.synthesize(

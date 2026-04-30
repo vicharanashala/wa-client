@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { LangGraphClientService } from '../../langgraph-client.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
+import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { Result } from 'oxide.ts';
 
 export class AddUserTextMessageCommand {
@@ -21,6 +22,7 @@ export class AddUserTextMessageHandler
   constructor(
     private readonly langGraph: LangGraphClientService,
     private readonly whatsappService: WhatsappService,
+    private readonly pendingQuestionRepo: PendingQuestionRepository,
   ) {}
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
@@ -46,9 +48,22 @@ export class AddUserTextMessageHandler
     }
 
     // Send message to LangGraph; thread is created/reused automatically
-    const { reply } = await this.langGraph.sendMessage(phoneNumber, content);
+    const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, content);
 
-    // Send the AI reply back to the user
+    // If LangGraph flagged this for human review, save to pending_questions
+    if (reviewId) {
+      await this.pendingQuestionRepo.create({
+        questionId: reviewId,
+        phoneNumber,
+        queryText: content,
+        toolCallId: `force-${Date.now()}`,
+      });
+      this.logger.log(
+        `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,
+      );
+    }
+
+    // Send the AI reply back to the user (clean, without REV_ID line)
     await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
     this.logger.log(`[${phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
   }

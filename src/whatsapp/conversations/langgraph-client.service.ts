@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client} from '@langchain/langgraph-sdk';
 export interface SendMessageResult {
   reply: string;
+  reviewId?: string; // Extracted from |||REV_ID:xxx||| if present
 }
 
 /**
@@ -92,7 +93,16 @@ export class LangGraphClientService implements OnModuleInit {
       },
     );
 
-    return { reply: this.extractReply(output, phoneNumber) };
+    const rawReply = this.extractReply(output, phoneNumber);
+    const { cleanReply, reviewId } = this.extractReviewId(rawReply);
+
+    if (reviewId) {
+      this.logger.log(
+        `[${phoneNumber}] ⚡ REV_ID detected in response: ${reviewId}`,
+      );
+    }
+
+    return { reply: cleanReply, reviewId };
   }
 
   /**
@@ -159,5 +169,25 @@ export class LangGraphClientService implements OnModuleInit {
 
     this.logger.warn(`[${phoneNumber}] AI message had no extractable text`);
     return 'I could not process your request right now. Please try again.';
+  }
+
+  /**
+   * Check if the reply's last line contains |||REV_ID:xxx|||.
+   * If so, extract the ID and return a cleaned reply without that line.
+   */
+  private extractReviewId(reply: string): {
+    cleanReply: string;
+    reviewId?: string;
+  } {
+    const regex = /\|\|\|REV_ID:([a-f0-9]+)\|\|\|\s*$/;
+    const match = reply.match(regex);
+
+    if (match) {
+      const reviewId = match[1];
+      const cleanReply = reply.replace(regex, '').trim();
+      return { cleanReply, reviewId };
+    }
+
+    return { cleanReply: reply };
   }
 }
