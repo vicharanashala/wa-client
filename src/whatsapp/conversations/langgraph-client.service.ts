@@ -93,16 +93,18 @@ export class LangGraphClientService implements OnModuleInit {
       },
     );
 
-    const rawReply = this.extractReply(output, phoneNumber);
-    const { cleanReply, reviewId } = this.extractReviewId(rawReply);
+    const reply = this.extractReply(output, phoneNumber);
+
+    // Extract question_id directly from tool output (authoritative source)
+    const reviewId = this.extractQuestionIdFromToolOutput(output);
 
     if (reviewId) {
       this.logger.log(
-        `[${phoneNumber}] ⚡ REV_ID detected in response: ${reviewId}`,
+        `[${phoneNumber}] ⚡ Question ID from tool output: ${reviewId}`,
       );
     }
 
-    return { reply: cleanReply, reviewId };
+    return { reply, reviewId };
   }
 
   /**
@@ -172,22 +174,43 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
-   * Check if the reply's last line contains |||REV_ID:xxx|||.
-   * If so, extract the ID and return a cleaned reply without that line.
+   * Extract question_id from the 'upload_question_to_reviewer_system' tool
+   * output message. Looks in artifact.structured_content first, then falls
+   * back to parsing the text content JSON.
    */
-  private extractReviewId(reply: string): {
-    cleanReply: string;
-    reviewId?: string;
-  } {
-    const regex = /\|\|\|REV_ID:([a-f0-9]+)\|\|\|\s*$/;
-    const match = reply.match(regex);
+  private extractQuestionIdFromToolOutput(output: any): string | undefined {
+    const messages: any[] = output?.messages ?? [];
 
-    if (match) {
-      const reviewId = match[1];
-      const cleanReply = reply.replace(regex, '').trim();
-      return { cleanReply, reviewId };
+    const toolMsg = messages.find(
+      (m: any) =>
+        m.type === 'tool' &&
+        m.name === 'upload_question_to_reviewer_system',
+    );
+
+    if (!toolMsg) return undefined;
+
+    // Primary: artifact.structured_content.result.data.question_id
+    const fromArtifact =
+      toolMsg?.artifact?.structured_content?.result?.data?.question_id;
+    if (fromArtifact) return fromArtifact;
+
+    // Fallback: parse the text content JSON
+    try {
+      const contentBlocks = Array.isArray(toolMsg.content)
+        ? toolMsg.content
+        : [toolMsg.content];
+
+      for (const block of contentBlocks) {
+        const text = typeof block === 'string' ? block : block?.text;
+        if (!text) continue;
+
+        const parsed = JSON.parse(text);
+        if (parsed?.data?.question_id) return parsed.data.question_id;
+      }
+    } catch {
+      // Ignore JSON parse errors
     }
 
-    return { cleanReply: reply };
+    return undefined;
   }
 }
