@@ -102,6 +102,31 @@ export class LangGraphClientService implements OnModuleInit {
       this.logger.log(
         `[${phoneNumber}] ⚡ Question ID from tool output: ${reviewId}`,
       );
+
+      // Update reviewer system with user phone number (fire and forget)
+      fetch(`https://desk.vicharanashala.ai/api/questions/${reviewId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            this.logger.warn(
+              `[${phoneNumber}] Failed to update phone number for question ${reviewId}. Status: ${res.status}`,
+            );
+          } else {
+            this.logger.log(
+              `[${phoneNumber}] Successfully updated phone number for question ${reviewId}`,
+            );
+          }
+        })
+        .catch((err) => {
+          this.logger.error(
+            `[${phoneNumber}] Error updating phone number for question ${reviewId}: ${err?.message}`,
+          );
+        });
     }
 
     return { reply, reviewId };
