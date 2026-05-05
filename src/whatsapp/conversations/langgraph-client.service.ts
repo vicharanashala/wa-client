@@ -92,14 +92,15 @@ export class LangGraphClientService implements OnModuleInit {
         this.assistantId,
         {
           input: { messages: [{ role: 'human', content }] },
+          multitaskStrategy: 'reject', // Prevent concurrent runs on same thread
         },
       );
     } catch (err: any) {
       this.logger.error(
         `[${phoneNumber}] runs.wait threw an error: ${err?.message}`,
       );
-      // Corrupted thread — nuke it and retry once
-      output = await this.resetThreadAndRetry(phoneNumber, content);
+      // Try to repair first, only nuke if repair fails
+      output = await this.repairAndRetry(phoneNumber, content);
     }
 
     // Check if the output actually has an AI reply
@@ -116,7 +117,7 @@ export class LangGraphClientService implements OnModuleInit {
       this.logger.warn(
         `[${phoneNumber}] No AI reply in output — resetting thread and retrying`,
       );
-      output = await this.resetThreadAndRetry(phoneNumber, content);
+      output = await this.repairAndRetry(phoneNumber, content);
     }
 
     const reply = this.extractReply(output, phoneNumber);
@@ -159,9 +160,81 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
+   * Try to repair a corrupted thread before resorting to a full reset.
+   *
+   * Strategy:
+   *  1. Read the thread state and check if the last message is an orphaned
+   *     tool_use (AI message with tool_calls but no subsequent tool response).
+   *  2. If so, patch the state with synthetic tool responses via
+   *     client.threads.updateState() to make the history valid again.
+   *  3. Retry the user's message on the repaired thread.
+   *  4. If repair fails or the retry fails, fall back to full thread reset
+   *     (delete thread and recreate).
+   */
+  private async repairAndRetry(
+    phoneNumber: string,
+    content: string,
+  ): Promise<any> {
+    // ── Step 1: Attempt in-place repair ──────────────────────────────────
+    try {
+      const state = await this.client.threads.getState(phoneNumber);
+      const messages: any[] = (state?.values as any)?.messages ?? [];
+
+      if (messages.length > 0) {
+        const lastMsg = messages[messages.length - 1];
+
+        if (
+          lastMsg.type === 'ai' &&
+          Array.isArray(lastMsg.tool_calls) &&
+          lastMsg.tool_calls.length > 0
+        ) {
+          this.logger.warn(
+            `[${phoneNumber}] 🔧 Detected orphaned tool_use — patching with synthetic tool responses`,
+          );
+
+          // Build synthetic tool responses for each pending tool_call
+          const syntheticToolMessages = lastMsg.tool_calls.map((tc: any) => ({
+            role: 'tool',
+            content:
+              'Tool execution was interrupted due to a network error. Please inform the user that the service was temporarily unavailable and ask them to retry.',
+            tool_call_id: tc.id,
+            name: tc.name ?? 'unknown',
+          }));
+
+          // Patch the thread state with the synthetic tool responses
+          await this.client.threads.updateState(phoneNumber, {
+            values: {
+              messages: syntheticToolMessages,
+            },
+          });
+
+          this.logger.log(
+            `[${phoneNumber}] ✅ Thread repaired — retrying message`,
+          );
+        }
+      }
+
+      return await this.client.runs.wait(
+        phoneNumber,
+        this.assistantId,
+        {
+          input: { messages: [{ role: 'human', content }] },
+          multitaskStrategy: 'reject',
+        },
+      );
+    } catch (repairErr: any) {
+      this.logger.warn(
+        `[${phoneNumber}] 🔧 Repair attempt failed (${repairErr?.message}) — falling back to full thread reset`,
+      );
+    }
+
+    return this.resetThreadAndRetry(phoneNumber, content);
+  }
+
+  /**
    * Delete a corrupted thread and retry the user's message on a fresh one.
-   * Called when the run fails or returns no AI message (usually due to
-   * orphaned tool_use blocks in the thread history).
+   * Called as a last resort when in-place repair fails. Note: this loses
+   * all conversation history for the user.
    */
   private async resetThreadAndRetry(
     phoneNumber: string,

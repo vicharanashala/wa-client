@@ -7,6 +7,8 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  BadRequestException,
+  InternalServerErrorException,
   Logger,
   RawBody,
   Headers
@@ -19,6 +21,7 @@ import {
 } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
 import { CallingService } from './calling/calling.service';
 import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
+import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -153,6 +156,7 @@ export class WhatsappController {
     private readonly commandBus: CommandBus,
     private readonly callingService: CallingService,
     private readonly reviewerPollingService: ReviewerPollingService,
+    private readonly whatsappService: WhatsappService,
   ) {}
 
   @Get('test-poll')
@@ -160,6 +164,33 @@ export class WhatsappController {
     this.logger.log('🔥 Manual poll triggered via HTTP endpoint');
     await this.reviewerPollingService.pollReviewerSystem();
     return 'Polling triggered successfully! Check your server logs.';
+  }
+
+  @Post('send-message')
+  @HttpCode(HttpStatus.OK)
+  async sendMessage(
+    @Headers('x-internal-api-key') apiKey: string,
+    @Body() body: { phoneNumber: string; messageText: string },
+  ): Promise<{ status: string; message: string }> {
+    const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
+    if (!expectedKey || apiKey !== expectedKey) {
+      this.logger.warn('Unauthorized access attempt to send-message endpoint');
+      throw new ForbiddenException('Invalid API Key');
+    }
+
+    if (!body.phoneNumber || !body.messageText) {
+      throw new BadRequestException('phoneNumber and messageText are required');
+    }
+
+    this.logger.log(`📤 Sending text message via API to ${body.phoneNumber}`);
+    
+    try {
+      await this.whatsappService.sendTextMessage(body.phoneNumber, body.messageText);
+      return { status: 'success', message: 'Message sent successfully' };
+    } catch (err: any) {
+      this.logger.error(`Failed to send message: ${err.message}`);
+      throw new InternalServerErrorException('Failed to send message');
+    }
   }
 
   @Post('reviewer-webhook')
