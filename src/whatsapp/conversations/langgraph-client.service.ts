@@ -85,13 +85,39 @@ export class LangGraphClientService implements OnModuleInit {
   ): Promise<SendMessageResult> {
     const threadId = await this.ensureThread(phoneNumber);
 
-    const output = await this.client.runs.wait(
-      threadId,
-      this.assistantId,
-      {
-        input: { messages: [{ role: 'human', content }] },
-      },
+    let output: any;
+    try {
+      output = await this.client.runs.wait(
+        threadId,
+        this.assistantId,
+        {
+          input: { messages: [{ role: 'human', content }] },
+        },
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `[${phoneNumber}] runs.wait threw an error: ${err?.message}`,
+      );
+      // Corrupted thread — nuke it and retry once
+      output = await this.resetThreadAndRetry(phoneNumber, content);
+    }
+
+    // Check if the output actually has an AI reply
+    const messages: any[] = output?.messages ?? [];
+    const hasAiReply = [...messages].reverse().some(
+      (m) =>
+        m.type === 'ai' &&
+        ((typeof m.content === 'string' && m.content.trim()) ||
+          (Array.isArray(m.content) &&
+            m.content.some((b: any) => b?.type === 'text' && b.text?.trim()))),
     );
+
+    if (!hasAiReply) {
+      this.logger.warn(
+        `[${phoneNumber}] No AI reply in output — resetting thread and retrying`,
+      );
+      output = await this.resetThreadAndRetry(phoneNumber, content);
+    }
 
     const reply = this.extractReply(output, phoneNumber);
 
@@ -130,6 +156,64 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
     return { reply, reviewId };
+  }
+
+  /**
+   * Delete a corrupted thread and retry the user's message on a fresh one.
+   * Called when the run fails or returns no AI message (usually due to
+   * orphaned tool_use blocks in the thread history).
+   */
+  private async resetThreadAndRetry(
+    phoneNumber: string,
+    content: string,
+  ): Promise<any> {
+    this.logger.warn(
+      `[${phoneNumber}] 🔄 Deleting corrupted thread and retrying...`,
+    );
+
+    await this.deleteThread(phoneNumber);
+    await this.ensureThread(phoneNumber);
+
+    try {
+      return await this.client.runs.wait(
+        phoneNumber,
+        this.assistantId,
+        {
+          input: { messages: [{ role: 'human', content }] },
+        },
+      );
+    } catch (retryErr: any) {
+      this.logger.error(
+        `[${phoneNumber}] Retry also failed after thread reset: ${retryErr?.message}`,
+      );
+      return { messages: [] };
+    }
+  }
+
+  /**
+   * Delete a thread from the LangGraph server.
+   * Uses the direct REST endpoint: DELETE {AEGRA_BASE_URL}/threads/{threadId}
+   */
+  async deleteThread(phoneNumber: string): Promise<void> {
+    const apiUrl = process.env.AEGRA_BASE_URL ?? 'http://localhost:8123';
+    const url = `${apiUrl}/threads/${phoneNumber}`;
+
+    try {
+      const res = await fetch(url, { method: 'DELETE' });
+      if (res.ok) {
+        this.logger.log(
+          `[${phoneNumber}] 🗑️ Thread deleted successfully`,
+        );
+      } else {
+        this.logger.warn(
+          `[${phoneNumber}] Thread delete returned status ${res.status}`,
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(
+        `[${phoneNumber}] Failed to delete thread: ${err?.message}`,
+      );
+    }
   }
 
   /**
