@@ -23,6 +23,7 @@ import { CallingService } from './calling/calling.service';
 import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
 import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import { AccessControlService } from './access-control/access-control.service';
+import { LangGraphClientService } from './conversations/langgraph-client.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -159,6 +160,7 @@ export class WhatsappController {
     private readonly reviewerPollingService: ReviewerPollingService,
     private readonly whatsappService: WhatsappService,
     private readonly accessControlService: AccessControlService,
+    private readonly langGraphClientService: LangGraphClientService,
   ) {}
 
   @Get('test-poll')
@@ -188,6 +190,10 @@ export class WhatsappController {
     
     try {
       await this.whatsappService.sendTextMessage(body.phoneNumber, body.messageText);
+      
+      // Also append the message to the LangGraph thread state so it appears in history
+      await this.langGraphClientService.appendAiMessage(body.phoneNumber, body.messageText);
+      
       return { status: 'success', message: 'Message sent successfully' };
     } catch (err: any) {
       this.logger.error(`Failed to send message: ${err.message}`);

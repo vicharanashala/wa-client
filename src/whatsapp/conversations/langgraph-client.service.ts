@@ -326,6 +326,42 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
+   * Append an AI message to the thread's state without running the graph.
+   * Used when sending messages via the API endpoint (e.g. reviewer answers)
+   * so that these messages also appear in the LangGraph thread history.
+   *
+   * Uses POST /threads/{thread_id}/state with as_node to attribute
+   * the message to the agent node.
+   */
+  async appendAiMessage(
+    phoneNumber: string,
+    messageText: string,
+  ): Promise<void> {
+    await this.ensureThread(phoneNumber);
+
+    try {
+      await this.client.threads.updateState(phoneNumber, {
+        values: {
+          messages: [
+            {
+              role: 'assistant',
+              content: messageText,
+            },
+          ],
+        },
+      });
+
+      this.logger.log(
+        `[${phoneNumber}] ✅ AI message appended to thread state`,
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `[${phoneNumber}] Failed to append AI message to thread: ${err?.message}`,
+      );
+    }
+  }
+
+  /**
    * Extract the last AI text content from the final run output.
    * client.runs.wait() returns the graph's output state directly.
    */

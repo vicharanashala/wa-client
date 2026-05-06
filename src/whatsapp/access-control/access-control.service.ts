@@ -73,7 +73,8 @@ export class AccessControlService implements OnModuleInit {
   }
 
   private isProductionMode(): boolean {
-    const val = process.env.IS_PRODUCTION;
+    // Default to false if IS_PRODUCTION is not set in env
+    const val = process.env.IS_PRODUCTION || 'false';
     return val === 'true' || val === '1';
   }
 }
