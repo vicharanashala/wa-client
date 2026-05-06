@@ -22,6 +22,7 @@ import {
 import { CallingService } from './calling/calling.service';
 import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
 import { WhatsappService } from './whatsapp-api/whatsapp.service';
+import { AccessControlService } from './access-control/access-control.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -157,6 +158,7 @@ export class WhatsappController {
     private readonly callingService: CallingService,
     private readonly reviewerPollingService: ReviewerPollingService,
     private readonly whatsappService: WhatsappService,
+    private readonly accessControlService: AccessControlService,
   ) {}
 
   @Get('test-poll')
@@ -236,11 +238,11 @@ export class WhatsappController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  receive(
+  async receive(
     @Headers('x-hub-signature-256') signature: string,
-    @RawBody() rawBody: Buffer, // ← add this
+    @RawBody() rawBody: Buffer,
     @Body() body: any,
-  ): void {
+  ): Promise<void> {
     this.logger.log('Webhook received');
     // ── Signature Verification ──
     const appSecret = process.env.WHATSAPP_META_APP_SECRET || '';
@@ -272,6 +274,26 @@ export class WhatsappController {
     if (!Array.isArray(messages)) return;
 
     for (const message of messages) {
+      // ── Access Control Gate ──
+      const isAllowed = await this.accessControlService.isNumberAllowed(message.from);
+      if (!isAllowed) {
+        this.logger.debug(
+          `🚫 Access denied for ${message.from} — sending rejection message`,
+        );
+        // Send a polite rejection only for text/audio messages (not statuses etc.)
+        if (message.type === 'text' || message.type === 'audio') {
+          this.whatsappService
+            .sendTextMessage(
+              message.from,
+              'Thank you for reaching out to ANNAM.AI. Your number is not currently whitelisted. For access, please contact Annam.ai Foundation at communications@annam.ai',
+            )
+            .catch((err: Error) =>
+              this.logger.error(`Failed to send rejection message to ${message.from}: ${err.message}`),
+            );
+        }
+        continue;
+      }
+
       if (message.type === 'location') {
         const loc = (message as LocationMessage).location;
         this.commandBus
