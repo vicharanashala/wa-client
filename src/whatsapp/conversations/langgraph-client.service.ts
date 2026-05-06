@@ -399,7 +399,8 @@ export class LangGraphClientService implements OnModuleInit {
   private extractQuestionIdFromToolOutput(output: any): string | undefined {
     const messages: any[] = output?.messages ?? [];
 
-    const toolMsg = messages.find(
+    // Reverse the messages array to find the MOST RECENT tool call in the thread's history
+    const toolMsg = [...messages].reverse().find(
       (m: any) =>
         m.type === 'tool' &&
         m.name === 'upload_question_to_reviewer_system',
