@@ -39,16 +39,26 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
+   * Generates a thread ID based on phone number and current date.
+   * Format: {phoneNumber}-YYYY-MM-DD
+   */
+  private getThreadId(phoneNumber: string): string {
+    const dateStr = new Date().toISOString().split('T')[0];
+    return `${phoneNumber}-${dateStr}`;
+  }
+
+  /**
    * Ensure a persistent thread exists for the given phone number.
-   * Uses the phone number as the thread ID so there is always exactly
-   * one thread per user.
+   * Uses the phone number and date as the thread ID so there is exactly
+   * one thread per user per day.
    */
   async ensureThread(phoneNumber: string): Promise<string> {
+    const threadId = this.getThreadId(phoneNumber);
     await this.client.threads.create({
-      thread_id: phoneNumber,
+      thread_id: threadId,
       if_exists: 'do_nothing',
     } as any);
-    return phoneNumber;
+    return threadId;
   }
 
   /**
@@ -57,9 +67,9 @@ export class LangGraphClientService implements OnModuleInit {
    * Returns false if the thread doesn't exist yet or has no state.
    */
   async hasLocation(phoneNumber: string): Promise<boolean> {
-    await this.ensureThread(phoneNumber);
+    const threadId = await this.ensureThread(phoneNumber);
     try {
-      const state = await this.client.threads.getState(phoneNumber);
+      const state = await this.client.threads.getState(threadId);
       const location = (state?.values as any)?.location;
       return !!(
         location &&
@@ -130,28 +140,28 @@ export class LangGraphClientService implements OnModuleInit {
         `[${phoneNumber}] ⚡ Question ID from tool output: ${reviewId}`,
       );
 
-      // Update reviewer system with user phone number (fire and forget)
+      // Update reviewer system with thread ID and output data (fire and forget)
       fetch(`https://desk.vicharanashala.ai/api/questions/${reviewId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ threadId, data: output }),
       })
         .then((res) => {
           if (!res.ok) {
             this.logger.warn(
-              `[${phoneNumber}] Failed to update phone number for question ${reviewId}. Status: ${res.status}`,
+              `[${phoneNumber}] Failed to update thread ID for question ${reviewId}. Status: ${res.status}`,
             );
           } else {
             this.logger.log(
-              `[${phoneNumber}] Successfully updated phone number for question ${reviewId}`,
+              `[${phoneNumber}] Successfully updated thread ID for question ${reviewId}`,
             );
           }
         })
         .catch((err) => {
           this.logger.error(
-            `[${phoneNumber}] Error updating phone number for question ${reviewId}: ${err?.message}`,
+            `[${phoneNumber}] Error updating thread ID for question ${reviewId}: ${err?.message}`,
           );
         });
     }
@@ -175,9 +185,11 @@ export class LangGraphClientService implements OnModuleInit {
     phoneNumber: string,
     content: string,
   ): Promise<any> {
+    const threadId = await this.ensureThread(phoneNumber);
+
     // ── Step 1: Attempt in-place repair ──────────────────────────────────
     try {
-      const state = await this.client.threads.getState(phoneNumber);
+      const state = await this.client.threads.getState(threadId);
       const messages: any[] = (state?.values as any)?.messages ?? [];
 
       if (messages.length > 0) {
@@ -202,7 +214,7 @@ export class LangGraphClientService implements OnModuleInit {
           }));
 
           // Patch the thread state with the synthetic tool responses
-          await this.client.threads.updateState(phoneNumber, {
+          await this.client.threads.updateState(threadId, {
             values: {
               messages: syntheticToolMessages,
             },
@@ -215,7 +227,7 @@ export class LangGraphClientService implements OnModuleInit {
       }
 
       return await this.client.runs.wait(
-        phoneNumber,
+        threadId,
         this.assistantId,
         {
           input: { messages: [{ role: 'human', content }] },
@@ -245,11 +257,11 @@ export class LangGraphClientService implements OnModuleInit {
     );
 
     await this.deleteThread(phoneNumber);
-    await this.ensureThread(phoneNumber);
+    const threadId = await this.ensureThread(phoneNumber);
 
     try {
       return await this.client.runs.wait(
-        phoneNumber,
+        threadId,
         this.assistantId,
         {
           input: { messages: [{ role: 'human', content }] },
@@ -268,8 +280,9 @@ export class LangGraphClientService implements OnModuleInit {
    * Uses the direct REST endpoint: DELETE {AEGRA_BASE_URL}/threads/{threadId}
    */
   async deleteThread(phoneNumber: string): Promise<void> {
+    const threadId = this.getThreadId(phoneNumber);
     const apiUrl = process.env.AEGRA_BASE_URL ?? 'http://localhost:8123';
-    const url = `${apiUrl}/threads/${phoneNumber}`;
+    const url = `${apiUrl}/threads/${threadId}`;
 
     try {
       const res = await fetch(url, { method: 'DELETE' });
@@ -300,12 +313,12 @@ export class LangGraphClientService implements OnModuleInit {
     longitude: number,
     address?: string,
   ): Promise<void> {
-    await this.ensureThread(phoneNumber);
+    const threadId = await this.ensureThread(phoneNumber);
 
     // Run the graph with the location passed as input so it creates a
     // checkpoint and the `location` field is populated in state.
     await this.client.runs.wait(
-      phoneNumber,
+      threadId,
       this.assistantId,
       {
         input: {
@@ -337,10 +350,10 @@ export class LangGraphClientService implements OnModuleInit {
     phoneNumber: string,
     messageText: string,
   ): Promise<void> {
-    await this.ensureThread(phoneNumber);
+    const threadId = await this.ensureThread(phoneNumber);
 
     try {
-      await this.client.threads.updateState(phoneNumber, {
+      await this.client.threads.updateState(threadId, {
         values: {
           messages: [
             {
