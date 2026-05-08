@@ -89,6 +89,17 @@ interface AudioMessage {
   };
 }
 
+interface ReactionMessage {
+  from: string;
+  id: string;
+  timestamp: string;
+  type: 'reaction';
+  reaction: {
+    message_id: string;
+    emoji: string;
+  };
+}
+
 interface StatusMessageValue {
   messaging_product: 'whatsapp';
   metadata: Metadata;
@@ -343,6 +354,30 @@ export class WhatsappController {
               this.logger.error(`Voice message command failed: ${err.message}`);
             });
         }
+        continue;
+      }
+
+      if (message.type === 'reaction') {
+        const reaction = message as ReactionMessage;
+        const emoji = reaction.reaction?.emoji?.trim();
+        const reactedMessageId = reaction.reaction?.message_id;
+
+        if ((emoji !== '👍' && emoji !== '👎') || !reactedMessageId) {
+          this.logger.debug(
+            `Ignoring reaction [emoji=${emoji ?? 'unknown'}] from ${reaction.from}`,
+          );
+          continue;
+        }
+
+        this.logger.log(
+          `Captured reaction ${emoji} from ${reaction.from} on message ${reactedMessageId}`,
+        );
+
+        this.langGraphClientService
+          .appendUserReaction(reaction.from, reactedMessageId, emoji)
+          .catch((err: Error) =>
+            this.logger.error(`Failed to append reaction for ${reaction.from}: ${err.message}`),
+          );
         continue;
       }
 

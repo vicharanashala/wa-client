@@ -306,30 +306,13 @@ export class LangGraphClientService implements OnModuleInit {
         `[${phoneNumber}] ⚡ Question ID from tool output: ${reviewId}`,
       );
 
-      // Update reviewer system with thread ID and output data (fire and forget)
-      fetch(`https://desk.vicharanashala.ai/api/questions/${reviewId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ threadId, data: output }),
-      })
-        .then((res) => {
-          if (!res.ok) {
-            this.logger.warn(
-              `[${phoneNumber}] Failed to update thread ID for question ${reviewId}. Status: ${res.status}`,
-            );
-          } else {
-            this.logger.log(
-              `[${phoneNumber}] Successfully updated thread ID for question ${reviewId}`,
-            );
-          }
-        })
-        .catch((err) => {
-          this.logger.error(
-            `[${phoneNumber}] Error updating thread ID for question ${reviewId}: ${err?.message}`,
-          );
-        });
+      // Update reviewer system with thread ID (fire and forget).
+      // Keep payload lightweight to avoid backend 500s from oversized body.
+      this.updateReviewerThreadId(reviewId, threadId, phoneNumber).catch((err) => {
+        this.logger.error(
+          `[${phoneNumber}] Error updating thread ID for question ${reviewId}: ${err?.message}`,
+        );
+      });
     }
 
     return { reply, reviewId };
@@ -541,6 +524,43 @@ export class LangGraphClientService implements OnModuleInit {
   }
 
   /**
+   * Append a user reaction event (thumbs up/down) into thread history.
+   * This allows downstream analytics and memory tooling to inspect feedback.
+   */
+  async appendUserReaction(
+    phoneNumber: string,
+    reactedMessageId: string,
+    emoji: '👍' | '👎',
+  ): Promise<void> {
+    const threadId = await this.ensureThread(phoneNumber);
+    const feedbackText =
+      emoji === '👍'
+        ? `[Reaction] User gave thumbs up to message ${reactedMessageId}`
+        : `[Reaction] User gave thumbs down to message ${reactedMessageId}`;
+
+    try {
+      await this.client.threads.updateState(threadId, {
+        values: {
+          messages: [
+            {
+              role: 'human',
+              content: feedbackText,
+            },
+          ],
+        },
+      });
+
+      this.logger.log(
+        `[${phoneNumber}] ✅ Reaction captured (${emoji}) for message ${reactedMessageId}`,
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `[${phoneNumber}] Failed to append reaction to thread: ${err?.message}`,
+      );
+    }
+  }
+
+  /**
    * Extract the last AI text content from the final run output.
    * client.runs.wait() returns the graph's output state directly.
    */
@@ -641,5 +661,47 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
     return undefined;
+  }
+
+  private async updateReviewerThreadId(
+    reviewId: string,
+    threadId: string,
+    phoneNumber: string,
+  ): Promise<void> {
+    const url = `https://desk.vicharanashala.ai/api/questions/${reviewId}`;
+    const headers = { 'Content-Type': 'application/json' };
+
+    // Primary payload
+    let res = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ threadId }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      this.logger.warn(
+        `[${phoneNumber}] Reviewer update failed (threadId) for ${reviewId}. Status=${res.status}, body=${body}`,
+      );
+
+      // Compatibility retry for backends expecting snake_case.
+      res = await fetch(url, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ thread_id: threadId }),
+      });
+
+      if (!res.ok) {
+        const retryBody = await res.text();
+        this.logger.warn(
+          `[${phoneNumber}] Reviewer update failed (thread_id) for ${reviewId}. Status=${res.status}, body=${retryBody}`,
+        );
+        return;
+      }
+    }
+
+    this.logger.log(
+      `[${phoneNumber}] Successfully updated thread ID for question ${reviewId}`,
+    );
   }
 }
