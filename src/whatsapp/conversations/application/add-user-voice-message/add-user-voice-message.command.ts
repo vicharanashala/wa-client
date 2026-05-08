@@ -29,6 +29,9 @@ export class AddUserVoiceMessageHandler
   async execute(command: AddUserVoiceMessageCommand): Promise<void> {
     const { phoneNumber, mediaId, messageId } = command;
 
+    // Ensure daily thread handover is completed (IST day boundary).
+    await this.langGraph.prepareDailyThread(phoneNumber);
+
     // 1. Show typing indicator
     await this.whatsappService.showTyping(messageId);
 

@@ -18,12 +18,17 @@ export interface SendMessageResult {
 @Injectable()
 export class LangGraphClientService implements OnModuleInit {
   private readonly logger = new Logger(LangGraphClientService.name);
+  private static readonly KOLKATA_TZ = 'Asia/Kolkata';
   private client: Client;
   private assistantId: string;
+  private summaryAssistantId: string;
+  private assistantGraphId?: string;
 
-  onModuleInit(): void {
+  async onModuleInit(): Promise<void> {
     const apiUrl = process.env.AEGRA_BASE_URL;
     this.assistantId = process.env.AEGRA_ASSISTANT_ID ?? '';
+    this.summaryAssistantId =
+      process.env.AEGRA_SUMMARY_ASSISTANT_ID ?? 'summary_agent';
 
     if (!this.assistantId) {
       this.logger.error(
@@ -32,10 +37,27 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
     this.client = new Client({ apiUrl });
+    await this.resolveAssistantGraphId();
 
     this.logger.log(
       `LangGraph client initialised — baseUrl=${apiUrl ?? 'http://localhost:8123 (default)'}, assistantId=${this.assistantId}`,
     );
+  }
+
+  private async resolveAssistantGraphId(): Promise<void> {
+    if (!this.assistantId) return;
+    try {
+      const assistant = await this.client.assistants.get(this.assistantId);
+      const graphId =
+        (assistant as any)?.graphId ?? (assistant as any)?.graph_id;
+      if (typeof graphId === 'string' && graphId.trim()) {
+        this.assistantGraphId = graphId;
+      }
+    } catch (err: any) {
+      this.logger.warn(
+        `Could not resolve graph ID for assistant ${this.assistantId}: ${err?.message}`,
+      );
+    }
   }
 
   /**
@@ -43,8 +65,121 @@ export class LangGraphClientService implements OnModuleInit {
    * Format: {phoneNumber}-YYYY-MM-DD
    */
   private getThreadId(phoneNumber: string): string {
-    const dateStr = new Date().toISOString().split('T')[0];
+    const dateStr = this.getKolkataDateString();
     return `${phoneNumber}-${dateStr}`;
+  }
+
+  private getThreadIdForDate(phoneNumber: string, dateStr: string): string {
+    return `${phoneNumber}-${dateStr}`;
+  }
+
+  private getKolkataDateString(offsetDays = 0): string {
+    const now = new Date();
+    const shifted = new Date(
+      now.getTime() + offsetDays * 24 * 60 * 60 * 1000,
+    );
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: LangGraphClientService.KOLKATA_TZ,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(shifted);
+    const year = parts.find((p) => p.type === 'year')?.value;
+    const month = parts.find((p) => p.type === 'month')?.value;
+    const day = parts.find((p) => p.type === 'day')?.value;
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Daily handover flow:
+   * - If today's thread already has state, no-op.
+   * - If not, summarize yesterday thread (if any), store summary,
+   *   and carry yesterday location into today's thread state.
+   */
+  async prepareDailyThread(phoneNumber: string): Promise<void> {
+    const todayDate = this.getKolkataDateString();
+    const yesterdayDate = this.getKolkataDateString(-1);
+    const todayThreadId = this.getThreadIdForDate(phoneNumber, todayDate);
+    const yesterdayThreadId = this.getThreadIdForDate(phoneNumber, yesterdayDate);
+
+    try {
+      await this.client.threads.getState(todayThreadId);
+      return;
+    } catch {
+      this.logger.log(
+        `[${phoneNumber}] First message for ${todayDate} IST — running daily handover`,
+      );
+    }
+
+    await this.ensureThreadRecord(todayThreadId);
+
+    let yesterdayState: any;
+    try {
+      yesterdayState = await this.client.threads.getState(yesterdayThreadId);
+    } catch {
+      this.logger.debug(
+        `[${phoneNumber}] No previous thread state for ${yesterdayDate}`,
+      );
+      return;
+    }
+
+    const yesterdayMessages: any[] = (yesterdayState?.values as any)?.messages ?? [];
+    if (yesterdayMessages.length > 0) {
+      try {
+        const summaryRunOutput = await this.client.runs.wait(
+          yesterdayThreadId,
+          this.summaryAssistantId,
+          {
+            input: {
+              messages: [
+                {
+                  role: 'human',
+                  content:
+                    'Summarize this conversation for long-term memory in about 100 words, focusing on farmer profile, preferences, crops, constraints, and unresolved needs.',
+                },
+              ],
+            },
+          },
+        );
+
+        const summaryText = this.extractSummaryText(summaryRunOutput);
+        if (summaryText) {
+          await (this.client as any).store.putItem(
+            ['farmer_profiles', phoneNumber],
+            `daily_summary_${yesterdayDate}`,
+            {
+              date: yesterdayDate,
+              summary: summaryText,
+              sourceThreadId: yesterdayThreadId,
+            },
+          );
+        }
+      } catch (err: any) {
+        this.logger.warn(
+          `[${phoneNumber}] Failed daily summary/store handover: ${err?.message}`,
+        );
+      }
+    }
+
+    const yesterdayLocation = (yesterdayState?.values as any)?.location;
+    if (
+      yesterdayLocation &&
+      (yesterdayLocation.latitude != null ||
+        yesterdayLocation.longitude != null ||
+        yesterdayLocation.city ||
+        yesterdayLocation.state)
+    ) {
+      try {
+        await this.setLocationOnThreadState(todayThreadId, yesterdayLocation);
+        this.logger.log(
+          `[${phoneNumber}] Carried location to new daily thread (${todayDate})`,
+        );
+      } catch (err: any) {
+        this.logger.warn(
+          `[${phoneNumber}] Failed to carry location to new thread: ${err?.message}`,
+        );
+      }
+    }
   }
 
   /**
@@ -54,11 +189,42 @@ export class LangGraphClientService implements OnModuleInit {
    */
   async ensureThread(phoneNumber: string): Promise<string> {
     const threadId = this.getThreadId(phoneNumber);
-    await this.client.threads.create({
-      thread_id: threadId,
-      if_exists: 'do_nothing',
-    } as any);
+    await this.ensureThreadRecord(threadId);
     return threadId;
+  }
+
+  /**
+   * Persist thread row on LangGraph server with a deterministic ID.
+   * SDK expects camelCase (threadId / ifExists); snake_case is ignored.
+   */
+  private async ensureThreadRecord(threadId: string): Promise<void> {
+    await this.client.threads.create({
+      threadId,
+      ifExists: 'do_nothing',
+      ...(this.assistantGraphId ? { graphId: this.assistantGraphId } : {}),
+    });
+  }
+
+  private async setLocationOnThreadState(
+    threadId: string,
+    location: any,
+  ): Promise<void> {
+    try {
+      await this.client.threads.updateState(threadId, {
+        values: { location },
+      });
+    } catch (err: any) {
+      const message = String(err?.message ?? '');
+      // Some servers require a graph-associated checkpoint before updateState.
+      if (message.includes('has no associated graph')) {
+        await this.client.runs.wait(threadId, this.assistantId, {
+          input: { location },
+          multitaskStrategy: 'reject',
+        });
+        return;
+      }
+      throw err;
+    }
   }
 
   /**
@@ -378,8 +544,39 @@ export class LangGraphClientService implements OnModuleInit {
    * Extract the last AI text content from the final run output.
    * client.runs.wait() returns the graph's output state directly.
    */
+  private messagesFromRunOutput(output: any): any[] {
+    const top = output?.messages;
+    if (Array.isArray(top) && top.length > 0) return top;
+    const nested = output?.values?.messages;
+    if (Array.isArray(nested)) return nested;
+    return Array.isArray(top) ? top : [];
+  }
+
+  /** Summary runs may return messages under values or omit ai-shaped messages. */
+  private extractSummaryText(output: any): string | undefined {
+    const messages = this.messagesFromRunOutput(output);
+    const lastAi = [...messages].reverse().find((m) => m.type === 'ai');
+    if (lastAi) {
+      if (typeof lastAi.content === 'string' && lastAi.content.trim()) {
+        return lastAi.content.trim();
+      }
+      if (Array.isArray(lastAi.content)) {
+        const text = lastAi.content
+          .filter((b: any) => b?.type === 'text')
+          .map((b: any) => String(b.text ?? ''))
+          .join('');
+        if (text.trim()) return text.trim();
+      }
+    }
+    const summaryField = output?.summary ?? output?.values?.summary;
+    if (typeof summaryField === 'string' && summaryField.trim()) {
+      return summaryField.trim();
+    }
+    return undefined;
+  }
+
   private extractReply(output: any, phoneNumber: string): string {
-    const messages: any[] = output?.messages ?? [];
+    const messages: any[] = this.messagesFromRunOutput(output);
     this.logger.debug(messages);
     const lastAi = [...messages].reverse().find((m) => m.type === 'ai');
 
@@ -410,7 +607,7 @@ export class LangGraphClientService implements OnModuleInit {
    * back to parsing the text content JSON.
    */
   private extractQuestionIdFromToolOutput(output: any): string | undefined {
-    const messages: any[] = output?.messages ?? [];
+    const messages: any[] = this.messagesFromRunOutput(output);
 
     // Reverse the messages array to find the MOST RECENT tool call in the thread's history
     const toolMsg = [...messages].reverse().find(

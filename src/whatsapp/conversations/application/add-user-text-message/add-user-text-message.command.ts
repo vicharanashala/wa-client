@@ -30,6 +30,9 @@ export class AddUserTextMessageHandler
 
     this.logger.debug(`[${phoneNumber}] User text: "${content.slice(0, 60)}"`);
 
+    // Ensure daily thread handover is completed (IST day boundary).
+    await this.langGraph.prepareDailyThread(phoneNumber);
+
     // Show typing indicator (non-fatal)
     const typingResult = await Result.safe(
       this.whatsappService.showTyping(messageId),

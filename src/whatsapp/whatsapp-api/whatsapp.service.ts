@@ -5,6 +5,15 @@ import { whatsappConfig } from './whatsapp.config';
 export class WhatsappService {
   private readonly logger = new Logger(WhatsappService.name);
 
+  private isAuthErrorPayload(rawError: string): boolean {
+    try {
+      const parsed = JSON.parse(rawError);
+      return parsed?.error?.code === 190;
+    } catch {
+      return rawError.includes('"code":190');
+    }
+  }
+
   async sendTextMessage(
     to: string,
     text: string,
@@ -79,7 +88,11 @@ export class WhatsappService {
 
     if (!response.ok) {
       const error = await response.text();
-      this.logger.error(`Failed to send message to ${to}: ${error}`);
+      if (this.isAuthErrorPayload(error)) {
+        this.logger.warn(`WhatsApp auth error while sending message to ${to}`);
+      } else {
+        this.logger.error(`Failed to send message to ${to}: ${error}`);
+      }
     }
   }
 
@@ -140,7 +153,11 @@ export class WhatsappService {
 
     if (!response.ok) {
       const error = await response.text();
-      this.logger.error(`Location request to ${to} failed: ${error}`);
+      if (this.isAuthErrorPayload(error)) {
+        this.logger.warn(`WhatsApp auth error while requesting location from ${to}`);
+      } else {
+        this.logger.error(`Location request to ${to} failed: ${error}`);
+      }
     }
   }
 
@@ -230,7 +247,11 @@ export class WhatsappService {
 
     if (!response.ok) {
       const error = await response.text();
-      this.logger.error(`Failed to send voice message to ${to}: ${error}`);
+      if (this.isAuthErrorPayload(error)) {
+        this.logger.warn(`WhatsApp auth error while sending voice message to ${to}`);
+      } else {
+        this.logger.error(`Failed to send voice message to ${to}: ${error}`);
+      }
     } else {
       this.logger.log(`Voice message sent to ${to} with mediaId ${mediaId}`);
     }
