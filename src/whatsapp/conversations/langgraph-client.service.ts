@@ -60,6 +60,28 @@ export class LangGraphClientService implements OnModuleInit {
     }
   }
 
+  private buildThreadMetadata(phoneNumber: string): Record<string, any> {
+    return {
+      userId: phoneNumber,
+      phoneNumber,
+      channel: 'whatsapp',
+    };
+  }
+
+  private buildRunMetadata(
+    phoneNumber: string,
+    event: string,
+    extra: Record<string, any> = {},
+  ): Record<string, any> {
+    return {
+      userId: phoneNumber,
+      phoneNumber,
+      channel: 'whatsapp',
+      event,
+      ...extra,
+    };
+  }
+
   /**
    * Generates a thread ID based on phone number and current date.
    * Format: {phoneNumber}-YYYY-MM-DD
@@ -111,7 +133,7 @@ export class LangGraphClientService implements OnModuleInit {
       );
     }
 
-    await this.ensureThreadRecord(todayThreadId);
+    await this.ensureThreadRecord(todayThreadId, phoneNumber);
 
     let yesterdayState: any;
     try {
@@ -139,6 +161,11 @@ export class LangGraphClientService implements OnModuleInit {
                 },
               ],
             },
+            metadata: this.buildRunMetadata(phoneNumber, 'daily_summary', {
+              sourceThreadId: yesterdayThreadId,
+              targetThreadId: todayThreadId,
+              summaryDate: yesterdayDate,
+            }),
           },
         );
 
@@ -170,7 +197,11 @@ export class LangGraphClientService implements OnModuleInit {
         yesterdayLocation.state)
     ) {
       try {
-        await this.setLocationOnThreadState(todayThreadId, yesterdayLocation);
+        await this.setLocationOnThreadState(
+          todayThreadId,
+          yesterdayLocation,
+          phoneNumber,
+        );
         this.logger.log(
           `[${phoneNumber}] Carried location to new daily thread (${todayDate})`,
         );
@@ -189,7 +220,7 @@ export class LangGraphClientService implements OnModuleInit {
    */
   async ensureThread(phoneNumber: string): Promise<string> {
     const threadId = this.getThreadId(phoneNumber);
-    await this.ensureThreadRecord(threadId);
+    await this.ensureThreadRecord(threadId, phoneNumber);
     return threadId;
   }
 
@@ -197,10 +228,14 @@ export class LangGraphClientService implements OnModuleInit {
    * Persist thread row on LangGraph server with a deterministic ID.
    * SDK expects camelCase (threadId / ifExists); snake_case is ignored.
    */
-  private async ensureThreadRecord(threadId: string): Promise<void> {
+  private async ensureThreadRecord(
+    threadId: string,
+    phoneNumber: string,
+  ): Promise<void> {
     await this.client.threads.create({
       threadId,
       ifExists: 'do_nothing',
+      metadata: this.buildThreadMetadata(phoneNumber),
       ...(this.assistantGraphId ? { graphId: this.assistantGraphId } : {}),
     });
   }
@@ -208,6 +243,7 @@ export class LangGraphClientService implements OnModuleInit {
   private async setLocationOnThreadState(
     threadId: string,
     location: any,
+    phoneNumber: string,
   ): Promise<void> {
     try {
       await this.client.threads.updateState(threadId, {
@@ -220,6 +256,9 @@ export class LangGraphClientService implements OnModuleInit {
         await this.client.runs.wait(threadId, this.assistantId, {
           input: { location },
           multitaskStrategy: 'reject',
+          metadata: this.buildRunMetadata(phoneNumber, 'location_handover', {
+            threadId,
+          }),
         });
         return;
       }
@@ -269,6 +308,10 @@ export class LangGraphClientService implements OnModuleInit {
         {
           input: { messages: [{ role: 'human', content }] },
           multitaskStrategy: 'reject', // Prevent concurrent runs on same thread
+          metadata: this.buildRunMetadata(phoneNumber, 'user_message', {
+            threadId,
+            messageType: 'text_or_transcript',
+          }),
         },
       );
     } catch (err: any) {
@@ -381,6 +424,9 @@ export class LangGraphClientService implements OnModuleInit {
         {
           input: { messages: [{ role: 'human', content }] },
           multitaskStrategy: 'reject',
+          metadata: this.buildRunMetadata(phoneNumber, 'retry_after_repair', {
+            threadId,
+          }),
         },
       );
     } catch (repairErr: any) {
@@ -414,6 +460,9 @@ export class LangGraphClientService implements OnModuleInit {
         this.assistantId,
         {
           input: { messages: [{ role: 'human', content }] },
+          metadata: this.buildRunMetadata(phoneNumber, 'retry_after_reset', {
+            threadId,
+          }),
         },
       );
     } catch (retryErr: any) {
@@ -479,6 +528,11 @@ export class LangGraphClientService implements OnModuleInit {
             state: null,
           },
         },
+        metadata: this.buildRunMetadata(phoneNumber, 'location_update', {
+          threadId,
+          latitude,
+          longitude,
+        }),
       },
     );
 
@@ -511,6 +565,7 @@ export class LangGraphClientService implements OnModuleInit {
             },
           ],
         },
+        asNode: 'api_reviewer_message',
       });
 
       this.logger.log(
@@ -533,10 +588,15 @@ export class LangGraphClientService implements OnModuleInit {
     emoji: '👍' | '👎',
   ): Promise<void> {
     const threadId = await this.ensureThread(phoneNumber);
-    const feedbackText =
-      emoji === '👍'
-        ? `[Reaction] User gave thumbs up to message ${reactedMessageId}`
-        : `[Reaction] User gave thumbs down to message ${reactedMessageId}`;
+    const feedbackEvent = {
+      type: 'user_reaction',
+      emoji,
+      reactedMessageId,
+      phoneNumber,
+      userId: phoneNumber,
+      channel: 'whatsapp',
+      createdAt: new Date().toISOString(),
+    };
 
     try {
       await this.client.threads.updateState(threadId, {
@@ -544,10 +604,11 @@ export class LangGraphClientService implements OnModuleInit {
           messages: [
             {
               role: 'human',
-              content: feedbackText,
+              content: JSON.stringify(feedbackEvent),
             },
           ],
         },
+        asNode: 'user_feedback',
       });
 
       this.logger.log(
