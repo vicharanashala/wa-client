@@ -64,21 +64,41 @@ export class LangGraphClientService implements OnModuleInit {
     return {
       userId: phoneNumber,
       phoneNumber,
+      user_id: phoneNumber,
+      langfuse_user_id: phoneNumber,
       channel: 'whatsapp',
     };
   }
 
+  /**
+   * Every WhatsApp-driven `runs.wait` gets the same user identity: WhatsApp phone number.
+   * Applied for normal messages, retries, location updates, daily summary, etc.
+   * Session/thread hints (`langfuse_session_id`) only apply when `extra.threadId` is set.
+   */
   private buildRunMetadata(
     phoneNumber: string,
     event: string,
     extra: Record<string, any> = {},
   ): Record<string, any> {
+    const threadId =
+      typeof extra.threadId === 'string' && extra.threadId.trim()
+        ? extra.threadId.trim()
+        : undefined;
+
     return {
-      userId: phoneNumber,
-      phoneNumber,
       channel: 'whatsapp',
       event,
       ...extra,
+      userId: phoneNumber,
+      phoneNumber,
+      user_id: phoneNumber,
+      langfuse_user_id: phoneNumber,
+      ...(threadId
+        ? {
+            thread_id: threadId,
+            langfuse_session_id: threadId,
+          }
+        : {}),
     };
   }
 
@@ -162,6 +182,7 @@ export class LangGraphClientService implements OnModuleInit {
               ],
             },
             metadata: this.buildRunMetadata(phoneNumber, 'daily_summary', {
+              threadId: yesterdayThreadId,
               sourceThreadId: yesterdayThreadId,
               targetThreadId: todayThreadId,
               summaryDate: yesterdayDate,
