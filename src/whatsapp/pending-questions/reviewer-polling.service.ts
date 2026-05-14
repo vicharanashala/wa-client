@@ -128,6 +128,7 @@ export class ReviewerPollingService implements OnModuleInit {
           await this.whatsappService.sendTextMessage(
             question.phoneNumber,
             notificationMessage,
+            question.originalMessageId ?? undefined,
           );
 
           // Mark as notified
@@ -191,6 +192,7 @@ export class ReviewerPollingService implements OnModuleInit {
       await this.whatsappService.sendTextMessage(
         question.phoneNumber,
         notificationMessage,
+        question.originalMessageId ?? undefined,
       );
 
       // Mark as notified

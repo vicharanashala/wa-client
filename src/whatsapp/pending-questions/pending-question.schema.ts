@@ -17,6 +17,14 @@ export class PendingQuestionModel {
   @Prop({ required: true })
   toolCallId: string; // LangChain tool_call_id for traceability
 
+  // WhatsApp wamid of the user's original incoming message that triggered
+  // this question. Used so that when the reviewer answers, we can send the
+  // notification as a reply (quoted) to that exact message in the chat.
+  // Optional because legacy rows (created before this field existed) may not
+  // have it; in that case we fall back to a non-quoted send.
+  @Prop({ default: null })
+  originalMessageId?: string;
+
   @Prop({
     required: true,
     enum: ['pending', 'answered', 'notified'],

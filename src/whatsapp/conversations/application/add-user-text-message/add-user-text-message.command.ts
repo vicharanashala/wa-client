@@ -60,6 +60,7 @@ export class AddUserTextMessageHandler
         phoneNumber,
         queryText: content,
         toolCallId: `force-${Date.now()}`,
+        originalMessageId: messageId,
       });
       this.logger.log(
         `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,

@@ -67,24 +67,65 @@ export class WhatsappService {
     text: string,
     replyToMessageId?: string,
   ): Promise<void> {
-    const response = await fetch(whatsappConfig.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${whatsappConfig.accessToken}`,
-      },
-      body: JSON.stringify({
+    const buildBody = (withContext: boolean) =>
+      JSON.stringify({
         messaging_product: 'whatsapp',
         recipient_type: 'individual',
         to,
-        ...(replyToMessageId && { context: { message_id: replyToMessageId } }),
+        ...(withContext && replyToMessageId
+          ? { context: { message_id: replyToMessageId } }
+          : {}),
         type: 'text',
         text: {
           preview_url: false,
           body: text,
         },
-      }),
-    });
+      });
+
+    const post = (body: string) =>
+      fetch(whatsappConfig.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${whatsappConfig.accessToken}`,
+        },
+        body,
+      });
+
+    let response = await post(buildBody(true));
+
+    // If a reply-context send failed because the referenced message is
+    // stale/invalid (common when reviewer answers come back days later or
+    // the original wamid has rolled off WhatsApp's index), drop the context
+    // and retry so the user still receives the answer — just without the
+    // quoted-reply bubble.
+    if (!response.ok && replyToMessageId) {
+      const errorText = await response.text();
+      if (this.isContextRejectionPayload(errorText)) {
+        this.logger.warn(
+          `WhatsApp rejected reply context for ${to} (msg_id=${replyToMessageId}); retrying without quote. Error: ${errorText}`,
+        );
+        response = await post(buildBody(false));
+        if (!response.ok) {
+          const retryError = await response.text();
+          if (this.isAuthErrorPayload(retryError)) {
+            this.logger.warn(`WhatsApp auth error while sending message to ${to}`);
+          } else {
+            this.logger.error(`Failed to send message to ${to}: ${retryError}`);
+          }
+        }
+        return;
+      }
+
+      // Non-context failure: fall through to the standard error path so we
+      // don't double-read the body.
+      if (this.isAuthErrorPayload(errorText)) {
+        this.logger.warn(`WhatsApp auth error while sending message to ${to}`);
+      } else {
+        this.logger.error(`Failed to send message to ${to}: ${errorText}`);
+      }
+      return;
+    }
 
     if (!response.ok) {
       const error = await response.text();
@@ -93,6 +134,36 @@ export class WhatsappService {
       } else {
         this.logger.error(`Failed to send message to ${to}: ${error}`);
       }
+    }
+  }
+
+  /**
+   * Heuristically detect WhatsApp Cloud API error payloads that indicate the
+   * `context.message_id` reference is the cause of the failure. Covers:
+   *   - 100  : "Param message_id must be a valid message id"
+   *   - 131009: "Parameter value is not valid"
+   *   - Any payload that explicitly mentions context / message_id in the text.
+   * Conservative on purpose — we only want to retry without context when we
+   * are reasonably sure that's why the original send failed.
+   */
+  private isContextRejectionPayload(rawError: string): boolean {
+    try {
+      const parsed = JSON.parse(rawError);
+      const code = parsed?.error?.code;
+      const errData = parsed?.error?.error_data;
+      const details: string = (
+        parsed?.error?.message ??
+        parsed?.error?.error_user_msg ??
+        errData?.details ??
+        ''
+      ).toString();
+
+      if (code === 131009) return true;
+      if (code === 100 && /message[_ ]id|context/i.test(details)) return true;
+      if (/context\.message_id|context message_id/i.test(details)) return true;
+      return false;
+    } catch {
+      return /context\.message_id|context message_id/i.test(rawError);
     }
   }
 

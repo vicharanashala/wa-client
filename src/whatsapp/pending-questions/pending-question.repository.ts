@@ -5,6 +5,9 @@ export interface CreatePendingQuestionDto {
   phoneNumber: string;
   queryText: string;
   toolCallId: string;
+  // WhatsApp wamid of the user's original message; used to send the future
+  // reviewer answer as a quoted reply to that exact message.
+  originalMessageId?: string;
 }
 
 export abstract class PendingQuestionRepository {

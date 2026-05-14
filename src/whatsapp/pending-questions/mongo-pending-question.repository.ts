@@ -25,6 +25,9 @@ export class MongoPendingQuestionRepository
       phoneNumber: dto.phoneNumber,
       queryText: dto.queryText,
       toolCallId: dto.toolCallId,
+      ...(dto.originalMessageId
+        ? { originalMessageId: dto.originalMessageId }
+        : {}),
       status: 'pending',
     });
   }
