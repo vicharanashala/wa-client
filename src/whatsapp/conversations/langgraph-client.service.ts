@@ -707,12 +707,30 @@ export class LangGraphClientService implements OnModuleInit {
    * Extract question_id from the 'upload_question_to_reviewer_system' tool
    * output message. Looks in artifact.structured_content first, then falls
    * back to parsing the text content JSON.
+   *
+   * IMPORTANT: `client.runs.wait()` returns the FULL thread message history,
+   * not just the messages produced by the current run. We must therefore
+   * restrict our search to tool messages emitted AFTER the latest human
+   * message — i.e. the one we just sent in this call. Otherwise a follow-up
+   * question that does NOT trigger the reviewer tool would incorrectly inherit
+   * the question_id from an earlier message in the same thread, causing
+   * duplicate pending_questions rows with the same questionId in Mongo.
    */
   private extractQuestionIdFromToolOutput(output: any): string | undefined {
     const messages: any[] = this.messagesFromRunOutput(output);
 
-    // Reverse the messages array to find the MOST RECENT tool call in the thread's history
-    const toolMsg = [...messages].reverse().find(
+    let lastHumanIdx = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i]?.type === 'human') {
+        lastHumanIdx = i;
+        break;
+      }
+    }
+
+    const currentRunMessages =
+      lastHumanIdx >= 0 ? messages.slice(lastHumanIdx + 1) : messages;
+
+    const toolMsg = [...currentRunMessages].reverse().find(
       (m: any) =>
         m.type === 'tool' &&
         m.name === 'upload_question_to_reviewer_system',
