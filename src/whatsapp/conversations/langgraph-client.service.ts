@@ -61,7 +61,11 @@ export class LangGraphClientService implements OnModuleInit {
   private async patchThreadMessages(
     threadId: string,
     phoneNumber: string,
-    messages: Array<{ role: string; content: string }>,
+    messages: Array<{
+      role: string;
+      content: string;
+      additional_kwargs?: Record<string, unknown>;
+    }>,
     logContext: string,
   ): Promise<boolean> {
     const attempts: Array<{ asNode?: string; label: string }> = [];
@@ -659,17 +663,42 @@ export class LangGraphClientService implements OnModuleInit {
   async appendAiMessage(
     phoneNumber: string,
     messageText: string,
-    options?: { threadId?: string },
+    options?: {
+      threadId?: string;
+      /** Reviewer desk attribution stored on the LangGraph message. */
+      reviewer?: { sendBy: string; userId: string };
+    },
   ): Promise<boolean> {
     const threadId =
       typeof options?.threadId === 'string' && options.threadId.trim()
         ? options.threadId.trim()
         : await this.ensureThread(phoneNumber);
 
+    const reviewer = options?.reviewer;
+    const messagePatch: {
+      role: string;
+      content: string;
+      additional_kwargs?: Record<string, unknown>;
+    } = {
+      role: 'assistant',
+      content: messageText,
+    };
+
+    if (reviewer?.sendBy?.trim() && reviewer?.userId?.trim()) {
+      messagePatch.additional_kwargs = {
+        type: 'manual_outbound',
+        source: 'send-message-api',
+        send_by: reviewer.sendBy.trim(),
+        reviewer_user_id: reviewer.userId.trim(),
+        sent_at: new Date().toISOString(),
+        channel: 'whatsapp',
+      };
+    }
+
     const ok = await this.patchThreadMessages(
       threadId,
       phoneNumber,
-      [{ role: 'assistant', content: messageText }],
+      [messagePatch],
       'appendAiMessage',
     );
     if (ok) {

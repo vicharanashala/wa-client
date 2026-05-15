@@ -24,6 +24,7 @@ import { ReviewerPollingService } from './pending-questions/reviewer-polling.ser
 import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import { AccessControlService } from './access-control/access-control.service';
 import { LangGraphClientService } from './conversations/langgraph-client.service';
+import { formatManualOutboundWhatsAppMessage } from './manual-outbound-message';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -185,7 +186,13 @@ export class WhatsappController {
   @HttpCode(HttpStatus.OK)
   async sendMessage(
     @Headers('x-internal-api-key') apiKey: string,
-    @Body() body: { phoneNumber: string; messageText: string },
+    @Body()
+    body: {
+      phoneNumber: string;
+      messageText: string;
+      sendBy: string;
+      userId: string;
+    },
   ): Promise<{
     status: string;
     message: string;
@@ -198,33 +205,45 @@ export class WhatsappController {
       throw new ForbiddenException('Invalid API Key');
     }
 
-    if (!body.phoneNumber || !body.messageText) {
-      throw new BadRequestException('phoneNumber and messageText are required');
+    const phoneNumber = body.phoneNumber?.trim();
+    const messageText = body.messageText?.trim();
+    const sendBy = body.sendBy?.trim();
+    const userId = body.userId?.trim();
+
+    if (!phoneNumber || !messageText || !sendBy || !userId) {
+      throw new BadRequestException(
+        'phoneNumber, messageText, sendBy, and userId are required',
+      );
     }
 
+    const outboundMessage = formatManualOutboundWhatsAppMessage(
+      messageText,
+      sendBy,
+    );
+
     const langGraphThreadId =
-      await this.langGraphClientService.ensureThread(body.phoneNumber);
+      await this.langGraphClientService.ensureThread(phoneNumber);
 
     this.logger.log(
-      `📤 Sending text message via API to ${body.phoneNumber} (thread ${langGraphThreadId})`,
+      `📤 Sending text message via API to ${phoneNumber} by ${sendBy} (reviewerId=${userId}, thread ${langGraphThreadId})`,
     );
 
     try {
-      await this.whatsappService.sendTextMessage(
-        body.phoneNumber,
-        body.messageText,
-      );
+      await this.whatsappService.sendTextMessage(phoneNumber, outboundMessage);
 
       const langGraphAppended =
         await this.langGraphClientService.appendAiMessage(
-          body.phoneNumber,
-          body.messageText,
-          { threadId: langGraphThreadId },
+          phoneNumber,
+          outboundMessage,
+          {
+            threadId: langGraphThreadId,
+            reviewer: { sendBy, userId },
+          },
         );
 
       if (!langGraphAppended) {
         this.logger.warn(
-          `WhatsApp delivered to ${body.phoneNumber} but LangGraph append failed for thread ${langGraphThreadId}`,
+          `WhatsApp delivered to ${phoneNumber} but LangGraph append failed for thread ${langGraphThreadId}`,
         );
       }
 
