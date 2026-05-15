@@ -9,6 +9,7 @@ import { PendingQuestionRepository } from './pending-question.repository';
 import { MongoPendingQuestionRepository } from './mongo-pending-question.repository';
 import { ReviewerPollingService } from './reviewer-polling.service';
 import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
+import { LangGraphModule } from '../conversations/langgraph.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
       { name: PendingQuestionModel.name, schema: PendingQuestionModelSchema },
     ]),
     WhatsappApiModule,
+    LangGraphModule,
   ],
   providers: [
     {

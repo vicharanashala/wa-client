@@ -8,6 +8,8 @@ export interface CreatePendingQuestionDto {
   // WhatsApp wamid of the user's original message; used to send the future
   // reviewer answer as a quoted reply to that exact message.
   originalMessageId?: string;
+  /** Thread the graph used when this question was created (for expert-answer append). */
+  langGraphThreadId?: string;
 }
 
 export abstract class PendingQuestionRepository {

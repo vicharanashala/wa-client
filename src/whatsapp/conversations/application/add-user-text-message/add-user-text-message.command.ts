@@ -55,12 +55,14 @@ export class AddUserTextMessageHandler
 
     // If LangGraph flagged this for human review, save to pending_questions
     if (reviewId) {
+      const langGraphThreadId = await this.langGraph.ensureThread(phoneNumber);
       await this.pendingQuestionRepo.create({
         questionId: reviewId,
         phoneNumber,
         queryText: content,
         toolCallId: `force-${Date.now()}`,
         originalMessageId: messageId,
+        langGraphThreadId,
       });
       this.logger.log(
         `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,

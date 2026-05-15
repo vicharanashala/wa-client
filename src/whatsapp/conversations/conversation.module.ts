@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { LangGraphClientService } from './langgraph-client.service';
+import { LangGraphModule } from './langgraph.module';
 import { AddUserTextMessageHandler } from './application/add-user-text-message/add-user-text-message.command';
 import { SetUserLocationHandler } from './application/set-user-location/set-user-location.command';
 import { AddUserVoiceMessageHandler } from './application/add-user-voice-message/add-user-voice-message.command';
@@ -11,16 +11,16 @@ import { PendingQuestionsModule } from '../pending-questions/pending-questions.m
 @Module({
   imports: [
     CqrsModule,
+    LangGraphModule,
     WhatsappApiModule,
     SarvamModule,
     PendingQuestionsModule,
   ],
   providers: [
-    LangGraphClientService,
     AddUserTextMessageHandler,
     SetUserLocationHandler,
     AddUserVoiceMessageHandler,
   ],
-  exports: [LangGraphClientService],
+  exports: [LangGraphModule],
 })
 export class ConversationModule {}

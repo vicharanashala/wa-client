@@ -25,6 +25,10 @@ export class PendingQuestionModel {
   @Prop({ default: null })
   originalMessageId?: string;
 
+  /** LangGraph thread id (phone-YYYY-MM-DD IST) when the question was raised */
+  @Prop({ default: null })
+  langGraphThreadId?: string;
+
   @Prop({
     required: true,
     enum: ['pending', 'answered', 'notified'],

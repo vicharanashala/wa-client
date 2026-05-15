@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
+import { LangGraphClientService } from '../conversations/langgraph-client.service';
 
 // Define a type for the reviewer result to keep our signatures clean
 type ReviewerStatusResult = {
@@ -34,6 +35,7 @@ export class ReviewerPollingService implements OnModuleInit {
   constructor(
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappService: WhatsappService,
+    private readonly langGraph: LangGraphClientService,
   ) {
     this.reviewerApiBaseUrl =
       process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
@@ -131,6 +133,20 @@ export class ReviewerPollingService implements OnModuleInit {
             question.originalMessageId ?? undefined,
           );
 
+          try {
+            await this.langGraph.appendAiMessage(
+              question.phoneNumber,
+              notificationMessage,
+              question.langGraphThreadId
+                ? { threadId: question.langGraphThreadId }
+                : undefined,
+            );
+          } catch (lgErr: any) {
+            this.logger.error(
+              `LangGraph append failed for ${question.phoneNumber} (question ${question.questionId}): ${lgErr?.message}`,
+            );
+          }
+
           // Mark as notified
           await this.pendingQuestionRepo.markNotified(question.questionId);
 
@@ -194,6 +210,20 @@ export class ReviewerPollingService implements OnModuleInit {
         notificationMessage,
         question.originalMessageId ?? undefined,
       );
+
+      try {
+        await this.langGraph.appendAiMessage(
+          question.phoneNumber,
+          notificationMessage,
+          question.langGraphThreadId
+            ? { threadId: question.langGraphThreadId }
+            : undefined,
+        );
+      } catch (lgErr: any) {
+        this.logger.error(
+          `LangGraph append failed for ${question.phoneNumber} (question ${question_id}): ${lgErr?.message}`,
+        );
+      }
 
       // Mark as notified
       await this.pendingQuestionRepo.markNotified(question_id);

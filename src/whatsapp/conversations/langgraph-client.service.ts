@@ -569,12 +569,19 @@ export class LangGraphClientService implements OnModuleInit {
    *
    * Uses POST /threads/{thread_id}/state with as_node to attribute
    * the message to the agent node.
+   *
+   * @param options.threadId — when set, writes to that thread (e.g. the day
+   *   the question was asked); otherwise uses today's thread for the phone.
    */
   async appendAiMessage(
     phoneNumber: string,
     messageText: string,
+    options?: { threadId?: string },
   ): Promise<void> {
-    const threadId = await this.ensureThread(phoneNumber);
+    const threadId =
+      typeof options?.threadId === 'string' && options.threadId.trim()
+        ? options.threadId.trim()
+        : await this.ensureThread(phoneNumber);
 
     try {
       await this.client.threads.updateState(threadId, {

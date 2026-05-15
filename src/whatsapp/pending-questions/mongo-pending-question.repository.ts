@@ -28,6 +28,9 @@ export class MongoPendingQuestionRepository
       ...(dto.originalMessageId
         ? { originalMessageId: dto.originalMessageId }
         : {}),
+      ...(dto.langGraphThreadId
+        ? { langGraphThreadId: dto.langGraphThreadId }
+        : {}),
       status: 'pending',
     });
   }
