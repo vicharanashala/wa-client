@@ -31,6 +31,9 @@ export class MongoPendingQuestionRepository
       ...(dto.langGraphThreadId
         ? { langGraphThreadId: dto.langGraphThreadId }
         : {}),
+      ...(dto.questionLanguageCode
+        ? { questionLanguageCode: dto.questionLanguageCode }
+        : {}),
       status: 'pending',
     });
   }

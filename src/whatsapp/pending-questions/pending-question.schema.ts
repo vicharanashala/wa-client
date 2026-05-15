@@ -29,6 +29,10 @@ export class PendingQuestionModel {
   @Prop({ default: null })
   langGraphThreadId?: string;
 
+  /** BCP-47 from Sarvam STT when question was voice; guides expert-answer localization */
+  @Prop({ default: null })
+  questionLanguageCode?: string;
+
   @Prop({
     required: true,
     enum: ['pending', 'answered', 'notified'],

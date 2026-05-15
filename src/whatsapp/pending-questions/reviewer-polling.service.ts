@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 import { LangGraphClientService } from '../conversations/langgraph-client.service';
+import { ReviewerAnswerLocalizationService } from './reviewer-answer-localization.service';
 
 // Define a type for the reviewer result to keep our signatures clean
 type ReviewerStatusResult = {
@@ -36,6 +37,7 @@ export class ReviewerPollingService implements OnModuleInit {
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappService: WhatsappService,
     private readonly langGraph: LangGraphClientService,
+    private readonly answerLocalization: ReviewerAnswerLocalizationService,
   ) {
     this.reviewerApiBaseUrl =
       process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
@@ -120,12 +122,19 @@ export class ReviewerPollingService implements OnModuleInit {
           );
 
           // Send notification to user on WhatsApp
-          const notificationMessage = this.formatNotification(
+          const englishNotification = this.formatNotification(
             question.queryText,
             result.answer,
             result.author,
             result.sources,
           );
+
+          const notificationMessage =
+            await this.answerLocalization.localizeExpertWhatsAppMessage({
+              englishMessage: englishNotification,
+              userQuestionText: question.queryText,
+              sttLanguageCode: question.questionLanguageCode,
+            });
 
           await this.whatsappService.sendTextMessage(
             question.phoneNumber,
@@ -198,12 +207,19 @@ export class ReviewerPollingService implements OnModuleInit {
       await this.pendingQuestionRepo.markAnswered(question_id, answer);
 
       // Send notification
-      const notificationMessage = this.formatNotification(
+      const englishNotification = this.formatNotification(
         question.queryText,
         answer,
         author,
         sources,
       );
+
+      const notificationMessage =
+        await this.answerLocalization.localizeExpertWhatsAppMessage({
+          englishMessage: englishNotification,
+          userQuestionText: question.queryText,
+          sttLanguageCode: question.questionLanguageCode,
+        });
 
       await this.whatsappService.sendTextMessage(
         question.phoneNumber,
@@ -319,6 +335,18 @@ export class ReviewerPollingService implements OnModuleInit {
 
   // ── Notification Formatting ────────────────────────────────────────────
 
+  private displayQuery(queryText: string): string {
+    try {
+      const parsed = JSON.parse(queryText) as { question?: string };
+      if (parsed?.question) {
+        return String(parsed.question);
+      }
+    } catch {
+      // not JSON
+    }
+    return queryText;
+  }
+
   /**
    * Formats the WhatsApp notification message that gets sent when an
    * expert answer becomes available.
@@ -329,14 +357,7 @@ export class ReviewerPollingService implements OnModuleInit {
     author?: string,
     sources?: { source: string; page?: string | null }[],
   ): string {
-    let parsedQuestion = queryText;
-    try {
-      const parsedData = JSON.parse(queryText);
-      if (parsedData && parsedData.question) {
-        parsedQuestion = parsedData.question;
-      }
-    } catch (err) {
-    }
+    const parsedQuestion = this.displayQuery(queryText);
 
     const authorName = author || 'Expert';
     const sourceLinks =

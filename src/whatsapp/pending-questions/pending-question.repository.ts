@@ -10,6 +10,8 @@ export interface CreatePendingQuestionDto {
   originalMessageId?: string;
   /** Thread the graph used when this question was created (for expert-answer append). */
   langGraphThreadId?: string;
+  /** Sarvam STT language when question was voice (optional). */
+  questionLanguageCode?: string;
 }
 
 export abstract class PendingQuestionRepository {

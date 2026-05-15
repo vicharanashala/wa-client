@@ -7,6 +7,7 @@ import {
 } from './pending-question.schema';
 import { PendingQuestionRepository } from './pending-question.repository';
 import { MongoPendingQuestionRepository } from './mongo-pending-question.repository';
+import { ReviewerAnswerLocalizationService } from './reviewer-answer-localization.service';
 import { ReviewerPollingService } from './reviewer-polling.service';
 import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 import { LangGraphModule } from '../conversations/langgraph.module';
@@ -25,6 +26,7 @@ import { LangGraphModule } from '../conversations/langgraph.module';
       provide: PendingQuestionRepository,
       useClass: MongoPendingQuestionRepository,
     },
+    ReviewerAnswerLocalizationService,
     ReviewerPollingService,
   ],
   exports: [PendingQuestionRepository, ReviewerPollingService],

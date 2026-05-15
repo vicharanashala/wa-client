@@ -68,6 +68,7 @@ export class AddUserVoiceMessageHandler
         toolCallId: `force-${Date.now()}`,
         originalMessageId: messageId,
         langGraphThreadId,
+        ...(languageCode ? { questionLanguageCode: languageCode } : {}),
       });
       this.logger.log(
         `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,
