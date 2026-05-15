@@ -122,17 +122,12 @@ export class ReviewerPollingService implements OnModuleInit {
           );
 
           // Send notification to user on WhatsApp
-          const englishNotification = this.formatNotification(
-            question.queryText,
-            result.answer,
-            result.author,
-            result.sources,
-          );
-
           const notificationMessage =
-            await this.answerLocalization.localizeExpertWhatsAppMessage({
-              englishMessage: englishNotification,
+            await this.answerLocalization.localizeExpertWhatsAppNotification({
               userQuestionText: question.queryText,
+              expertAnswer: result.answer,
+              author: result.author,
+              sources: result.sources,
               sttLanguageCode: question.questionLanguageCode,
             });
 
@@ -206,17 +201,12 @@ export class ReviewerPollingService implements OnModuleInit {
       await this.pendingQuestionRepo.markAnswered(question_id, answer);
 
       // Send notification
-      const englishNotification = this.formatNotification(
-        question.queryText,
-        answer,
-        author,
-        sources,
-      );
-
       const notificationMessage =
-        await this.answerLocalization.localizeExpertWhatsAppMessage({
-          englishMessage: englishNotification,
+        await this.answerLocalization.localizeExpertWhatsAppNotification({
           userQuestionText: question.queryText,
+          expertAnswer: answer,
+          author,
+          sources,
           sttLanguageCode: question.questionLanguageCode,
         });
 
@@ -331,53 +321,4 @@ export class ReviewerPollingService implements OnModuleInit {
     return map;
   }
 
-  // ── Notification Formatting ────────────────────────────────────────────
-
-  private displayQuery(queryText: string): string {
-    try {
-      const parsed = JSON.parse(queryText) as { question?: string };
-      if (parsed?.question) {
-        return String(parsed.question);
-      }
-    } catch {
-      // not JSON
-    }
-    return queryText;
-  }
-
-  /**
-   * Formats the WhatsApp notification message that gets sent when an
-   * expert answer becomes available.
-   */
-  private formatNotification(
-    queryText: string,
-    answer: string,
-    author?: string,
-    sources?: { source: string; page?: string | null }[],
-  ): string {
-    const parsedQuestion = this.displayQuery(queryText);
-
-    const authorName = author || 'Expert';
-    const sourceLinks =
-      sources && sources.length > 0
-        ? sources.map((s) => `🔗 ${s.source}`)
-        : ['No sources provided.'];
-
-    return [
-      `✅ *Your question has been reviewed by an expert!*`,
-      ``,
-      `📌 *Your Question:*`,
-      `"${parsedQuestion}"`,
-      ``,
-      `💡 *Expert Answer:*`,
-      answer,
-      ``,
-      `👤 *Answered by:* ${authorName}`,
-      ``,
-      `📚 *Sources:*`,
-      ...sourceLinks,
-      ``,
-      `⚠️ This is a testing version. Please consult an expert before making farming decisions.`,
-    ].join('\n');
-  }
 }
