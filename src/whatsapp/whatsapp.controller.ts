@@ -186,7 +186,12 @@ export class WhatsappController {
   async sendMessage(
     @Headers('x-internal-api-key') apiKey: string,
     @Body() body: { phoneNumber: string; messageText: string },
-  ): Promise<{ status: string; message: string }> {
+  ): Promise<{
+    status: string;
+    message: string;
+    langGraphAppended: boolean;
+    langGraphThreadId: string;
+  }> {
     const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
     if (!expectedKey || apiKey !== expectedKey) {
       this.logger.warn('Unauthorized access attempt to send-message endpoint');
@@ -197,15 +202,38 @@ export class WhatsappController {
       throw new BadRequestException('phoneNumber and messageText are required');
     }
 
-    this.logger.log(`📤 Sending text message via API to ${body.phoneNumber}`);
-    
+    const langGraphThreadId =
+      await this.langGraphClientService.ensureThread(body.phoneNumber);
+
+    this.logger.log(
+      `📤 Sending text message via API to ${body.phoneNumber} (thread ${langGraphThreadId})`,
+    );
+
     try {
-      await this.whatsappService.sendTextMessage(body.phoneNumber, body.messageText);
-      
-      // Also append the message to the LangGraph thread state so it appears in history
-      await this.langGraphClientService.appendAiMessage(body.phoneNumber, body.messageText);
-      
-      return { status: 'success', message: 'Message sent successfully' };
+      await this.whatsappService.sendTextMessage(
+        body.phoneNumber,
+        body.messageText,
+      );
+
+      const langGraphAppended =
+        await this.langGraphClientService.appendAiMessage(
+          body.phoneNumber,
+          body.messageText,
+          { threadId: langGraphThreadId },
+        );
+
+      if (!langGraphAppended) {
+        this.logger.warn(
+          `WhatsApp delivered to ${body.phoneNumber} but LangGraph append failed for thread ${langGraphThreadId}`,
+        );
+      }
+
+      return {
+        status: 'success',
+        message: 'Message sent successfully',
+        langGraphAppended,
+        langGraphThreadId,
+      };
     } catch (err: any) {
       this.logger.error(`Failed to send message: ${err.message}`);
       throw new InternalServerErrorException('Failed to send message');

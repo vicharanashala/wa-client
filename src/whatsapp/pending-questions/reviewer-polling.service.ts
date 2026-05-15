@@ -142,17 +142,16 @@ export class ReviewerPollingService implements OnModuleInit {
             question.originalMessageId ?? undefined,
           );
 
-          try {
-            await this.langGraph.appendAiMessage(
-              question.phoneNumber,
-              notificationMessage,
-              question.langGraphThreadId
-                ? { threadId: question.langGraphThreadId }
-                : undefined,
-            );
-          } catch (lgErr: any) {
+          const appended = await this.langGraph.appendAiMessage(
+            question.phoneNumber,
+            notificationMessage,
+            question.langGraphThreadId
+              ? { threadId: question.langGraphThreadId }
+              : undefined,
+          );
+          if (!appended) {
             this.logger.error(
-              `LangGraph append failed for ${question.phoneNumber} (question ${question.questionId}): ${lgErr?.message}`,
+              `LangGraph append failed for ${question.phoneNumber} (question ${question.questionId})`,
             );
           }
 
@@ -227,17 +226,16 @@ export class ReviewerPollingService implements OnModuleInit {
         question.originalMessageId ?? undefined,
       );
 
-      try {
-        await this.langGraph.appendAiMessage(
-          question.phoneNumber,
-          notificationMessage,
-          question.langGraphThreadId
-            ? { threadId: question.langGraphThreadId }
-            : undefined,
-        );
-      } catch (lgErr: any) {
+      const appended = await this.langGraph.appendAiMessage(
+        question.phoneNumber,
+        notificationMessage,
+        question.langGraphThreadId
+          ? { threadId: question.langGraphThreadId }
+          : undefined,
+      );
+      if (!appended) {
         this.logger.error(
-          `LangGraph append failed for ${question.phoneNumber} (question ${question_id}): ${lgErr?.message}`,
+          `LangGraph append failed for ${question.phoneNumber} (question ${question_id})`,
         );
       }
 

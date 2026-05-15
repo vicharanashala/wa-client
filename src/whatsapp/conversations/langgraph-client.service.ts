@@ -23,6 +23,8 @@ export class LangGraphClientService implements OnModuleInit {
   private assistantId: string;
   private summaryAssistantId: string;
   private assistantGraphId?: string;
+  /** Optional graph node for threads.updateState message patches (must exist on the deployed graph). */
+  private stateAppendAsNode?: string;
 
   async onModuleInit(): Promise<void> {
     const apiUrl = process.env.AEGRA_BASE_URL;
@@ -36,12 +38,92 @@ export class LangGraphClientService implements OnModuleInit {
       );
     }
 
+    const appendNode = process.env.AEGRA_APPEND_AS_NODE?.trim();
+    if (appendNode) {
+      this.stateAppendAsNode = appendNode;
+    }
+
     this.client = new Client({ apiUrl });
     await this.resolveAssistantGraphId();
 
     this.logger.log(
-      `LangGraph client initialised — baseUrl=${apiUrl ?? 'http://localhost:8123 (default)'}, assistantId=${this.assistantId}`,
+      `LangGraph client initialised — baseUrl=${apiUrl ?? 'http://localhost:8123 (default)'}, assistantId=${this.assistantId}` +
+        (this.stateAppendAsNode
+          ? `, stateAppendAsNode=${this.stateAppendAsNode}`
+          : ', stateAppendAsNode=(auto: omit asNode)'),
     );
+  }
+
+  /**
+   * Patch thread `messages` via updateState. Tries AEGRA_APPEND_AS_NODE first, then
+   * without asNode. Retries after a minimal run when the thread has no checkpoint yet.
+   */
+  private async patchThreadMessages(
+    threadId: string,
+    phoneNumber: string,
+    messages: Array<{ role: string; content: string }>,
+    logContext: string,
+  ): Promise<boolean> {
+    const attempts: Array<{ asNode?: string; label: string }> = [];
+    if (this.stateAppendAsNode) {
+      attempts.push({
+        asNode: this.stateAppendAsNode,
+        label: `AEGRA_APPEND_AS_NODE=${this.stateAppendAsNode}`,
+      });
+    }
+    attempts.push({ label: 'no asNode' });
+
+    let lastErr: any;
+    for (const attempt of attempts) {
+      try {
+        await this.client.threads.updateState(threadId, {
+          values: { messages },
+          ...(attempt.asNode ? { asNode: attempt.asNode } : {}),
+        });
+        this.logger.debug(
+          `[${phoneNumber}] updateState (${logContext}) ok via ${attempt.label} on ${threadId}`,
+        );
+        return true;
+      } catch (err: any) {
+        lastErr = err;
+        const msg = String(err?.message ?? '');
+        if (
+          msg.includes('does not exist') ||
+          msg.includes('Unknown node') ||
+          msg.includes('has no associated graph')
+        ) {
+          continue;
+        }
+        break;
+      }
+    }
+
+    const lastMsg = String(lastErr?.message ?? '');
+    if (lastMsg.includes('has no associated graph') && this.assistantId) {
+      try {
+        this.logger.warn(
+          `[${phoneNumber}] Thread ${threadId} has no checkpoint — bootstrapping with a minimal run before ${logContext}`,
+        );
+        await this.client.runs.wait(threadId, this.assistantId, {
+          input: { messages: [{ role: 'human', content: '.' }] },
+          multitaskStrategy: 'reject',
+          metadata: this.buildRunMetadata(phoneNumber, 'state_bootstrap', {
+            threadId,
+          }),
+        });
+        await this.client.threads.updateState(threadId, {
+          values: { messages },
+        });
+        return true;
+      } catch (bootstrapErr: any) {
+        lastErr = bootstrapErr;
+      }
+    }
+
+    this.logger.error(
+      `[${phoneNumber}] Failed to patch thread messages (${logContext}) on ${threadId}: ${lastErr?.message}`,
+    );
+    return false;
   }
 
   private async resolveAssistantGraphId(): Promise<void> {
@@ -572,38 +654,30 @@ export class LangGraphClientService implements OnModuleInit {
    *
    * @param options.threadId — when set, writes to that thread (e.g. the day
    *   the question was asked); otherwise uses today's thread for the phone.
+   * @returns whether `threads.updateState` succeeded
    */
   async appendAiMessage(
     phoneNumber: string,
     messageText: string,
     options?: { threadId?: string },
-  ): Promise<void> {
+  ): Promise<boolean> {
     const threadId =
       typeof options?.threadId === 'string' && options.threadId.trim()
         ? options.threadId.trim()
         : await this.ensureThread(phoneNumber);
 
-    try {
-      await this.client.threads.updateState(threadId, {
-        values: {
-          messages: [
-            {
-              role: 'assistant',
-              content: messageText,
-            },
-          ],
-        },
-        asNode: 'api_reviewer_message',
-      });
-
+    const ok = await this.patchThreadMessages(
+      threadId,
+      phoneNumber,
+      [{ role: 'assistant', content: messageText }],
+      'appendAiMessage',
+    );
+    if (ok) {
       this.logger.log(
-        `[${phoneNumber}] ✅ AI message appended to thread state`,
-      );
-    } catch (err: any) {
-      this.logger.error(
-        `[${phoneNumber}] Failed to append AI message to thread: ${err?.message}`,
+        `[${phoneNumber}] ✅ AI message appended to thread ${threadId}`,
       );
     }
+    return ok;
   }
 
   /**
@@ -626,25 +700,15 @@ export class LangGraphClientService implements OnModuleInit {
       createdAt: new Date().toISOString(),
     };
 
-    try {
-      await this.client.threads.updateState(threadId, {
-        values: {
-          messages: [
-            {
-              role: 'human',
-              content: JSON.stringify(feedbackEvent),
-            },
-          ],
-        },
-        asNode: 'user_feedback',
-      });
-
+    const ok = await this.patchThreadMessages(
+      threadId,
+      phoneNumber,
+      [{ role: 'human', content: JSON.stringify(feedbackEvent) }],
+      'appendUserReaction',
+    );
+    if (ok) {
       this.logger.log(
         `[${phoneNumber}] ✅ Reaction captured (${emoji}) for message ${reactedMessageId}`,
-      );
-    } catch (err: any) {
-      this.logger.error(
-        `[${phoneNumber}] Failed to append reaction to thread: ${err?.message}`,
       );
     }
   }
