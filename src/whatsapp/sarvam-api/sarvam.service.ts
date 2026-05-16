@@ -55,12 +55,20 @@ export class SarvamService {
 
   // ── Text to Speech ─────────────────────────────────────────────────
 
-  async synthesize(text: string, languageCode: string | null): Promise<Buffer> {
+  /**
+   * One valid OGG/Opus buffer per text chunk. Do NOT concatenate buffers — each
+   * Sarvam response is a complete file; byte-concatenation breaks long replies.
+   */
+  async synthesizeChunks(
+    text: string,
+    languageCode: string | null,
+  ): Promise<Buffer[]> {
     const targetLanguage = this.mapToSarvamLanguage(languageCode);
     const chunks = this.chunkText(text, 2500);
     const audioBuffers: Buffer[] = [];
 
-    for (const chunk of chunks) {
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
       const response = await fetch(`${this.baseUrl}/text-to-speech`, {
         method: 'POST',
         headers: {
@@ -78,14 +86,21 @@ export class SarvamService {
 
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(`Sarvam TTS failed: ${error}`);
+        throw new Error(
+          `Sarvam TTS failed (chunk ${i + 1}/${chunks.length}): ${error}`,
+        );
       }
 
       const data = (await response.json()) as { audios: string[] };
+      if (!data.audios?.[0]) {
+        throw new Error(
+          `Sarvam TTS returned no audio (chunk ${i + 1}/${chunks.length})`,
+        );
+      }
       audioBuffers.push(Buffer.from(data.audios[0], 'base64'));
     }
 
-    return Buffer.concat(audioBuffers);
+    return audioBuffers;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────

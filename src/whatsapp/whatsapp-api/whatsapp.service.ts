@@ -297,34 +297,57 @@ export class WhatsappService {
     mediaId: string,
     replyToMessageId?: string,
   ): Promise<void> {
-    const response = await fetch(whatsappConfig.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${whatsappConfig.accessToken}`,
-      },
-      body: JSON.stringify({
+    const buildBody = (withContext: boolean) =>
+      JSON.stringify({
         messaging_product: 'whatsapp',
         recipient_type: 'individual',
         to,
-        ...(replyToMessageId && { context: { message_id: replyToMessageId } }),
+        ...(withContext && replyToMessageId
+          ? { context: { message_id: replyToMessageId } }
+          : {}),
         type: 'audio',
         audio: {
           id: mediaId,
           voice: true,
         },
-      }),
-    });
+      });
+
+    const post = (body: string) =>
+      fetch(whatsappConfig.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${whatsappConfig.accessToken}`,
+        },
+        body,
+      });
+
+    let response = await post(buildBody(true));
+
+    if (!response.ok && replyToMessageId) {
+      const errorText = await response.text();
+      if (this.isContextRejectionPayload(errorText)) {
+        this.logger.warn(
+          `WhatsApp rejected voice reply context for ${to}; retrying without quote.`,
+        );
+        response = await post(buildBody(false));
+      } else {
+        this.throwVoiceSendError(to, errorText);
+      }
+    }
 
     if (!response.ok) {
       const error = await response.text();
-      if (this.isAuthErrorPayload(error)) {
-        this.logger.warn(`WhatsApp auth error while sending voice message to ${to}`);
-      } else {
-        this.logger.error(`Failed to send voice message to ${to}: ${error}`);
-      }
-    } else {
-      this.logger.log(`Voice message sent to ${to} with mediaId ${mediaId}`);
+      this.throwVoiceSendError(to, error);
     }
+
+    this.logger.log(`Voice message sent to ${to} with mediaId ${mediaId}`);
+  }
+
+  private throwVoiceSendError(to: string, rawError: string): never {
+    if (this.isAuthErrorPayload(rawError)) {
+      this.logger.warn(`WhatsApp auth error while sending voice message to ${to}`);
+    }
+    throw new Error(`Failed to send voice message to ${to}: ${rawError}`);
   }
 }
