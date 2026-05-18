@@ -19,6 +19,9 @@ export interface SendMessageResult {
 export class LangGraphClientService implements OnModuleInit {
   private readonly logger = new Logger(LangGraphClientService.name);
   private static readonly KOLKATA_TZ = 'Asia/Kolkata';
+  /** Prepended to LangGraph state only — not sent on WhatsApp. */
+  private static readonly AGRI_EXPERT_LANGGRAPH_BANNER =
+    'THIS IS AN AGRI EXPERT GENERATED MESSAGE';
   private client: Client;
   private assistantId: string;
   private summaryAssistantId: string;
@@ -648,6 +651,15 @@ export class LangGraphClientService implements OnModuleInit {
     );
   }
 
+  /** LangGraph-only banner; WhatsApp uses the raw message passed to Meta API. */
+  private wrapAgriExpertLangGraphContent(messageText: string): string {
+    const body = messageText.trim();
+    if (body.startsWith(LangGraphClientService.AGRI_EXPERT_LANGGRAPH_BANNER)) {
+      return body;
+    }
+    return `${LangGraphClientService.AGRI_EXPERT_LANGGRAPH_BANNER}\n\n${body}`;
+  }
+
   /**
    * Append an AI message to the thread's state without running the graph.
    * Used when sending messages via the API endpoint (e.g. reviewer answers)
@@ -681,7 +693,7 @@ export class LangGraphClientService implements OnModuleInit {
       additional_kwargs?: Record<string, unknown>;
     } = {
       role: 'assistant',
-      content: messageText,
+      content: this.wrapAgriExpertLangGraphContent(messageText),
     };
 
     if (reviewer?.sendBy?.trim() && reviewer?.userId?.trim()) {
@@ -692,6 +704,15 @@ export class LangGraphClientService implements OnModuleInit {
         reviewer_user_id: reviewer.userId.trim(),
         sent_at: new Date().toISOString(),
         channel: 'whatsapp',
+        message_kind: 'agri_expert',
+      };
+    } else {
+      messagePatch.additional_kwargs = {
+        type: 'expert_review',
+        source: 'reviewer-system',
+        sent_at: new Date().toISOString(),
+        channel: 'whatsapp',
+        message_kind: 'agri_expert',
       };
     }
 
