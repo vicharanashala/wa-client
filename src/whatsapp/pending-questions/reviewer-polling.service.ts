@@ -189,8 +189,8 @@ export class ReviewerPollingService implements OnModuleInit {
       return;
     }
 
-    if (question.status === 'notified') {
-      this.logger.log(`Question ${question_id} has already been answered and notified.`);
+    if (question.status === 'notified' || question.status === 'answered') {
+      this.logger.log(`Question ${question_id} is already '${question.status}' — skipping webhook.`);
       return;
     }
 
