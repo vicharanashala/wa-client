@@ -13,7 +13,7 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
   private readonly model: string;
 
   constructor() {
-    this.apiKey = process.env.ANTHROPIC_API_KEY ?? '';
+    this.apiKey = process.env.LLM_API_KEY ?? '';
     this.model =
       process.env.ANTHROPIC_REVIEW_ANSWER_MODEL ?? 'claude-sonnet-4-5-20250929';
   }
@@ -21,7 +21,7 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
   onModuleInit(): void {
     if (!this.apiKey) {
       this.logger.warn(
-        'ANTHROPIC_API_KEY is not set — reviewer answers will stay in English.',
+        'LLM_API_KEY is not set — reviewer answers will stay in English.',
       );
     } else {
       this.logger.log(
