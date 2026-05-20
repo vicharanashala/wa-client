@@ -50,10 +50,7 @@ export class LangGraphClientService implements OnModuleInit {
     await this.resolveAssistantGraphId();
 
     this.logger.log(
-      `LangGraph client initialised — baseUrl=${apiUrl ?? 'http://localhost:8123 (default)'}, assistantId=${this.assistantId}` +
-        (this.stateAppendAsNode
-          ? `, stateAppendAsNode=${this.stateAppendAsNode}`
-          : ', stateAppendAsNode=(auto: omit asNode)'),
+      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'})`,
     );
   }
 
@@ -87,9 +84,7 @@ export class LangGraphClientService implements OnModuleInit {
           values: { messages },
           ...(attempt.asNode ? { asNode: attempt.asNode } : {}),
         });
-        this.logger.debug(
-          `[${phoneNumber}] updateState (${logContext}) ok via ${attempt.label} on ${threadId}`,
-        );
+        this.logger.debug(`[${phoneNumber}] updateState(${logContext}) ok`);
         return true;
       } catch (err: any) {
         lastErr = err;
@@ -109,7 +104,7 @@ export class LangGraphClientService implements OnModuleInit {
     if (lastMsg.includes('has no associated graph') && this.assistantId) {
       try {
         this.logger.warn(
-          `[${phoneNumber}] Thread ${threadId} has no checkpoint — bootstrapping with a minimal run before ${logContext}`,
+          `[${phoneNumber}] Bootstrapping thread checkpoint before ${logContext}`,
         );
         await this.client.runs.wait(threadId, this.assistantId, {
           input: { messages: [{ role: 'human', content: '.' }] },
@@ -128,7 +123,7 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
     this.logger.error(
-      `[${phoneNumber}] Failed to patch thread messages (${logContext}) on ${threadId}: ${lastErr?.message}`,
+      `[${phoneNumber}] patchThreadMessages(${logContext}) failed: ${lastErr?.message}`,
     );
     return false;
   }
@@ -237,9 +232,7 @@ export class LangGraphClientService implements OnModuleInit {
       await this.client.threads.getState(todayThreadId);
       return;
     } catch {
-      this.logger.log(
-        `[${phoneNumber}] First message for ${todayDate} IST — running daily handover`,
-      );
+      this.logger.log(`[${phoneNumber}] Daily handover → ${todayDate}`);
     }
 
     await this.ensureThreadRecord(todayThreadId, phoneNumber);
@@ -248,9 +241,7 @@ export class LangGraphClientService implements OnModuleInit {
     try {
       yesterdayState = await this.client.threads.getState(yesterdayThreadId);
     } catch {
-      this.logger.debug(
-        `[${phoneNumber}] No previous thread state for ${yesterdayDate}`,
-      );
+      this.logger.debug(`[${phoneNumber}] No prior thread for ${yesterdayDate}`);
       return;
     }
 
@@ -312,8 +303,8 @@ export class LangGraphClientService implements OnModuleInit {
           yesterdayLocation,
           phoneNumber,
         );
-        this.logger.log(
-          `[${phoneNumber}] Carried location to new daily thread (${todayDate})`,
+        this.logger.debug(
+          `[${phoneNumber}] Location carried to ${todayDate}`,
         );
       } catch (err: any) {
         this.logger.warn(
@@ -425,8 +416,8 @@ export class LangGraphClientService implements OnModuleInit {
         },
       );
     } catch (err: any) {
-      this.logger.error(
-        `[${phoneNumber}] runs.wait threw an error: ${err?.message}`,
+      this.logger.warn(
+        `[${phoneNumber}] runs.wait failed: ${err?.message?.slice(0, 120)}`,
       );
       // Try to repair first, only nuke if repair fails
       output = await this.repairAndRetry(phoneNumber, content);
@@ -443,9 +434,7 @@ export class LangGraphClientService implements OnModuleInit {
     );
 
     if (!hasAiReply) {
-      this.logger.warn(
-        `[${phoneNumber}] No AI reply in output — resetting thread and retrying`,
-      );
+      this.logger.warn(`[${phoneNumber}] No AI reply — repairing thread`);
       output = await this.repairAndRetry(phoneNumber, content);
     }
 
@@ -455,15 +444,11 @@ export class LangGraphClientService implements OnModuleInit {
     const reviewId = this.extractQuestionIdFromToolOutput(output);
 
     if (reviewId) {
-      this.logger.log(
-        `[${phoneNumber}] ⚡ Question ID from tool output: ${reviewId}`,
-      );
+      this.logger.log(`[${phoneNumber}] REV_ID=${reviewId}`);
 
-      // Update reviewer system with thread ID (fire and forget).
-      // Keep payload lightweight to avoid backend 500s from oversized body.
       this.updateReviewerThreadId(reviewId, threadId, phoneNumber).catch((err) => {
-        this.logger.error(
-          `[${phoneNumber}] Error updating thread ID for question ${reviewId}: ${err?.message}`,
+        this.logger.warn(
+          `[${phoneNumber}] Reviewer threadId update failed (${reviewId}): ${err?.message?.slice(0, 100)}`,
         );
       });
     }
@@ -503,7 +488,7 @@ export class LangGraphClientService implements OnModuleInit {
           lastMsg.tool_calls.length > 0
         ) {
           this.logger.warn(
-            `[${phoneNumber}] 🔧 Detected orphaned tool_use — patching with synthetic tool responses`,
+            `[${phoneNumber}] Orphaned tool_use detected — patching`,
           );
 
           // Build synthetic tool responses for each pending tool_call
@@ -522,9 +507,7 @@ export class LangGraphClientService implements OnModuleInit {
             },
           });
 
-          this.logger.log(
-            `[${phoneNumber}] ✅ Thread repaired — retrying message`,
-          );
+          this.logger.log(`[${phoneNumber}] Thread repaired — retrying`);
         }
       }
 
@@ -541,7 +524,7 @@ export class LangGraphClientService implements OnModuleInit {
       );
     } catch (repairErr: any) {
       this.logger.warn(
-        `[${phoneNumber}] 🔧 Repair attempt failed (${repairErr?.message}) — falling back to full thread reset`,
+        `[${phoneNumber}] Repair failed — full reset (${repairErr?.message?.slice(0, 80)})`,
       );
     }
 
@@ -557,9 +540,7 @@ export class LangGraphClientService implements OnModuleInit {
     phoneNumber: string,
     content: string,
   ): Promise<any> {
-    this.logger.warn(
-      `[${phoneNumber}] 🔄 Deleting corrupted thread and retrying...`,
-    );
+    this.logger.warn(`[${phoneNumber}] Resetting thread and retrying`);
 
     await this.deleteThread(phoneNumber);
     const threadId = await this.ensureThread(phoneNumber);
@@ -577,7 +558,7 @@ export class LangGraphClientService implements OnModuleInit {
       );
     } catch (retryErr: any) {
       this.logger.error(
-        `[${phoneNumber}] Retry also failed after thread reset: ${retryErr?.message}`,
+        `[${phoneNumber}] Retry after reset also failed: ${retryErr?.message?.slice(0, 120)}`,
       );
       return { messages: [] };
     }
@@ -595,9 +576,7 @@ export class LangGraphClientService implements OnModuleInit {
     try {
       const res = await fetch(url, { method: 'DELETE' });
       if (res.ok) {
-        this.logger.log(
-          `[${phoneNumber}] 🗑️ Thread deleted successfully`,
-        );
+        this.logger.debug(`[${phoneNumber}] Thread deleted`);
       } else {
         this.logger.warn(
           `[${phoneNumber}] Thread delete returned status ${res.status}`,
@@ -646,8 +625,8 @@ export class LangGraphClientService implements OnModuleInit {
       },
     );
 
-    this.logger.log(
-      `[${phoneNumber}] Location set via run: ${latitude},${longitude}`,
+    this.logger.debug(
+      `[${phoneNumber}] Location set: ${latitude.toFixed(2)},${longitude.toFixed(2)}`,
     );
   }
 
@@ -723,9 +702,7 @@ export class LangGraphClientService implements OnModuleInit {
       'appendAiMessage',
     );
     if (ok) {
-      this.logger.log(
-        `[${phoneNumber}] ✅ AI message appended to thread ${threadId}`,
-      );
+      this.logger.debug(`[${phoneNumber}] AI message appended to ${threadId}`);
     }
     return ok;
   }
@@ -757,8 +734,8 @@ export class LangGraphClientService implements OnModuleInit {
       'appendUserReaction',
     );
     if (ok) {
-      this.logger.log(
-        `[${phoneNumber}] ✅ Reaction captured (${emoji}) for message ${reactedMessageId}`,
+      this.logger.debug(
+        `[${phoneNumber}] Reaction ${emoji} appended`,
       );
     }
   }
@@ -800,7 +777,9 @@ export class LangGraphClientService implements OnModuleInit {
 
   private extractReply(output: any, phoneNumber: string): string {
     const messages: any[] = this.messagesFromRunOutput(output);
-    this.logger.debug(messages);
+    this.logger.debug(
+      `[${phoneNumber}] extractReply: ${messages.length} messages, last type=${messages.at(-1)?.type ?? 'none'}`,
+    );
     const lastAi = [...messages].reverse().find((m) => m.type === 'ai');
 
     if (!lastAi) {
@@ -902,7 +881,7 @@ export class LangGraphClientService implements OnModuleInit {
     if (!res.ok) {
       const body = await res.text();
       this.logger.warn(
-        `[${phoneNumber}] Reviewer update failed (threadId) for ${reviewId}. Status=${res.status}, body=${body}`,
+        `[${phoneNumber}] Reviewer update (threadId) ${res.status} for ${reviewId}`,
       );
 
       // Compatibility retry for backends expecting snake_case.
@@ -915,14 +894,12 @@ export class LangGraphClientService implements OnModuleInit {
       if (!res.ok) {
         const retryBody = await res.text();
         this.logger.warn(
-          `[${phoneNumber}] Reviewer update failed (thread_id) for ${reviewId}. Status=${res.status}, body=${retryBody}`,
+          `[${phoneNumber}] Reviewer update (snake_case) also failed ${res.status} for ${reviewId}`,
         );
         return;
       }
     }
 
-    this.logger.log(
-      `[${phoneNumber}] Successfully updated thread ID for question ${reviewId}`,
-    );
+    this.logger.debug(`[${phoneNumber}] Reviewer threadId updated for ${reviewId}`);
   }
 }

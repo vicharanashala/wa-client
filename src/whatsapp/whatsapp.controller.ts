@@ -290,8 +290,7 @@ export class WhatsappController {
     const token = query['hub.verify_token'];
     const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
 
-    this.logger.debug(`Webhook verify: mode=${mode}, token=${token}, expected=${verifyToken}`);
-    this.logger.debug(`Full query: ${JSON.stringify(query)}`);
+    this.logger.debug(`Webhook verify: mode=${mode}`);
 
     if (mode === 'subscribe' && token === verifyToken) {
       this.logger.log('Webhook verified');
@@ -472,8 +471,8 @@ export class WhatsappController {
   private handleCallWebhook(value: any): void {
     if (!value) return;
   
-    // DEBUG: Log raw call webhook payload to understand structure
-    this.logger.debug(`📞 RAW CALL WEBHOOK: ${JSON.stringify(value, null, 2)}`);
+    // Avoid logging raw payloads in production; use debug level for structure insights
+    this.logger.debug(`📞 Call webhook: ${Object.keys(value).join(', ')}`);
   
     // value.calls is an array of call events
     const calls = value.calls;
@@ -485,7 +484,7 @@ export class WhatsappController {
     }
   
     for (const call of calls) {
-      this.logger.debug(`📞 RAW CALL OBJECT: ${JSON.stringify(call, null, 2)}`);
+      this.logger.debug(`📞 Call: id=${call.call_id || call.id} event=${call.event || call.type}`);
       const callId = call.call_id || call.id;
       const event = call.event || call.type;
       const from = call.from;
