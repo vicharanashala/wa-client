@@ -11,7 +11,7 @@ import {
   InternalServerErrorException,
   Logger,
   RawBody,
-  Headers
+  Headers,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { AddUserTextMessageCommand } from './conversations/application/add-user-text-message/add-user-text-message.command';
@@ -24,6 +24,10 @@ import { ReviewerPollingService } from './pending-questions/reviewer-polling.ser
 import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import { AccessControlService } from './access-control/access-control.service';
 import { LangGraphClientService } from './conversations/langgraph-client.service';
+import {
+  FindUsersResult,
+  WhatsappUserRepository,
+} from './user-stats/whatsapp-user.repository';
 import { formatManualOutboundWhatsAppMessage } from './manual-outbound-message';
 import * as crypto from 'crypto';
 
@@ -173,7 +177,85 @@ export class WhatsappController {
     private readonly whatsappService: WhatsappService,
     private readonly accessControlService: AccessControlService,
     private readonly langGraphClientService: LangGraphClientService,
+    private readonly whatsappUserRepo: WhatsappUserRepository,
   ) {}
+
+  private assertInternalApiKey(apiKey: string | undefined): void {
+    const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
+    if (!expectedKey || apiKey !== expectedKey) {
+      this.logger.warn('Unauthorized access attempt to user-stats endpoint');
+      throw new ForbiddenException('Invalid API Key');
+    }
+  }
+
+  @Get('users/count')
+  async getUniqueUserCount(
+    @Headers('x-internal-api-key') apiKey: string,
+  ): Promise<{ uniqueUserCount: number }> {
+    this.assertInternalApiKey(apiKey);
+    const uniqueUserCount = await this.whatsappUserRepo.countUniqueUsers();
+    return { uniqueUserCount };
+  }
+
+  @Get('users')
+  async listUsers(
+    @Headers('x-internal-api-key') apiKey: string,
+    @Query('skip') skipRaw?: string,
+    @Query('limit') limitRaw?: string,
+    @Query('isPaginated') isPaginatedRaw?: string,
+  ): Promise<FindUsersResult> {
+    this.assertInternalApiKey(apiKey);
+
+    const isPaginated = this.parseIsPaginated(isPaginatedRaw);
+    const skip = this.parseNonNegativeInt(skipRaw, 'skip', 0);
+    const limit = this.parsePositiveInt(limitRaw, 'limit', 20, 100);
+
+    return this.whatsappUserRepo.findAll({
+      isPaginated,
+      ...(isPaginated ? { skip, limit } : {}),
+    });
+  }
+
+  private parseIsPaginated(raw: string | undefined): boolean {
+    if (raw === undefined || raw.trim() === '') {
+      throw new BadRequestException(
+        'isPaginated is required (true or false)',
+      );
+    }
+    const normalized = raw.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+    throw new BadRequestException(
+      'isPaginated must be "true" or "false"',
+    );
+  }
+
+  private parseNonNegativeInt(
+    raw: string | undefined,
+    name: string,
+    defaultValue: number,
+  ): number {
+    if (raw === undefined || raw.trim() === '') return defaultValue;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 0) {
+      throw new BadRequestException(`${name} must be a non-negative integer`);
+    }
+    return value;
+  }
+
+  private parsePositiveInt(
+    raw: string | undefined,
+    name: string,
+    defaultValue: number,
+    max: number,
+  ): number {
+    if (raw === undefined || raw.trim() === '') return defaultValue;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 1) {
+      throw new BadRequestException(`${name} must be a positive integer`);
+    }
+    return Math.min(value, max);
+  }
 
   @Get('test-poll')
   async triggerPollManually(): Promise<string> {

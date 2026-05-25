@@ -6,9 +6,17 @@ import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import { PendingQuestionsModule } from './pending-questions/pending-questions.module';
 import { CallingModule } from './calling/calling.module';
 import { AccessControlModule } from './access-control/access-control.module';
+import { UserStatsModule } from './user-stats/user-stats.module';
 
 @Module({
-  imports: [CqrsModule, ConversationModule, PendingQuestionsModule, CallingModule, AccessControlModule],
+  imports: [
+    CqrsModule,
+    ConversationModule,
+    PendingQuestionsModule,
+    CallingModule,
+    AccessControlModule,
+    UserStatsModule,
+  ],
   controllers: [WhatsappController],
   providers: [WhatsappService],
 })

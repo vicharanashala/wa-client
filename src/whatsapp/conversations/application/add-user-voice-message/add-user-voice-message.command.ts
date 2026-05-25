@@ -4,6 +4,7 @@ import { LangGraphClientService } from '../../langgraph-client.service';
 import { SarvamService } from '../../../sarvam-api/sarvam.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
+import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
 
 /** Sarvam TTS chunk size — each chunk becomes one valid WhatsApp voice note. */
 const TTS_CHARS_PER_VOICE_NOTE = 2500;
@@ -29,6 +30,7 @@ export class AddUserVoiceMessageHandler
     private readonly sarvamService: SarvamService,
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
+    private readonly whatsappUserRepo: WhatsappUserRepository,
   ) {}
 
   async execute(command: AddUserVoiceMessageCommand): Promise<void> {
@@ -56,6 +58,8 @@ export class AddUserVoiceMessageHandler
     );
 
     const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, transcript);
+
+    await this.whatsappUserRepo.recordMessage(phoneNumber, transcript);
 
     if (reviewId) {
       const langGraphThreadId = await this.langGraph.ensureThread(phoneNumber);

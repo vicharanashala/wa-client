@@ -63,6 +63,35 @@ These variables can override settings from `config.yaml`. They are **optional** 
 | --------------------------- | -------------------------------- | -------------------------------- | --------------------------------------------- |
 | `REVIEWER_API_BASE_URL`     | `http://100.100.108.43:9007/api` | Reviewer system API base URL     | `config.yaml` → `reviewer.api.defaultBaseUrl` |
 | `REVIEWER_POLL_INTERVAL_MS` | `7200000` (2 hours)              | Polling interval in milliseconds | `config.yaml` → `reviewer.polling.intervalMs` |
+| `REVIEWER_INTERNAL_API_KEY` | _(none)_                         | Auth for internal WhatsApp APIs  | `whatsapp.controller.ts`                    |
+
+### User Stats API (internal)
+
+MongoDB collection `whatsapp_users` tracks unique WhatsApp numbers that sent LangGraph-bound messages (text/voice, after location is set). Stores first and latest message text per user (not full history).
+
+| Endpoint | Auth header | Description |
+| -------- | ----------- | ----------- |
+| `GET /whatsapp/users/count` | `x-internal-api-key` | `{ "uniqueUserCount": number }` |
+| `GET /whatsapp/users?skip=&limit=&isPaginated=` | `x-internal-api-key` | Paginated or full user list |
+
+**List query params**
+
+| Param | Required | Behavior |
+| ----- | -------- | -------- |
+| `isPaginated` | yes | `true` → apply `skip`/`limit`; `false` → return all users |
+| `skip` | when paginated | Default `0`, non-negative integer |
+| `limit` | when paginated | Default `20`, min `1`, max `100` |
+
+Sort: `lastMessageAt` descending (most recent activity first).
+
+**Manual test checklist**
+
+1. First LangGraph message → `firstMessageText` and `lastMessageText` match; second message updates only `lastMessageText`.
+2. `GET /whatsapp/users?isPaginated=true&skip=0&limit=20` returns slice with correct `total`.
+3. `GET /whatsapp/users?isPaginated=false` returns all users (`skip=0`, `limit=total`).
+4. `GET /whatsapp/users/count` reflects total distinct users.
+5. Wrong or missing API key → 403; missing `isPaginated` → 400.
+6. Message before location is set → no new row / count unchanged.
 
 ---
 
@@ -255,6 +284,13 @@ These variables are referenced in `.env.example` but are **not currently used** 
 - **Default**: `7200000` (2 hours)
 - **Example**: `3600000` (1 hour), `600000` (10 minutes)
 - **Notes**: Can override `config.yaml` → `reviewer.polling.intervalMs`
+
+#### `REVIEWER_INTERNAL_API_KEY` _(Required for internal endpoints)_
+
+- **Type**: String (API Key)
+- **Purpose**: Authenticate `POST /whatsapp/send-message`, `POST /whatsapp/reviewer-webhook`, and user-stats reads
+- **Used in**: `src/whatsapp/whatsapp.controller.ts`
+- **Notes**: Send as header `x-internal-api-key`
 
 ---
 

@@ -7,6 +7,7 @@ import { AddUserVoiceMessageHandler } from './application/add-user-voice-message
 import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 import { SarvamModule } from '../sarvam-api/sarvam.module';
 import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
+import { UserStatsModule } from '../user-stats/user-stats.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PendingQuestionsModule } from '../pending-questions/pending-questions.m
     WhatsappApiModule,
     SarvamModule,
     PendingQuestionsModule,
+    UserStatsModule,
   ],
   providers: [
     AddUserTextMessageHandler,

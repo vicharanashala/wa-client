@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { LangGraphClientService } from '../../langgraph-client.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
+import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
 import { Result } from 'oxide.ts';
 
 export class AddUserTextMessageCommand {
@@ -23,6 +24,7 @@ export class AddUserTextMessageHandler
     private readonly langGraph: LangGraphClientService,
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
+    private readonly whatsappUserRepo: WhatsappUserRepository,
   ) {}
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
@@ -52,6 +54,8 @@ export class AddUserTextMessageHandler
 
     // Send message to LangGraph; thread is created/reused automatically
     const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, content);
+
+    await this.whatsappUserRepo.recordMessage(phoneNumber, content);
 
     // If LangGraph flagged this for human review, save to pending_questions
     if (reviewId) {
