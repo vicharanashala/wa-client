@@ -258,7 +258,10 @@ export class WhatsappController {
   }
 
   @Get('test-poll')
-  async triggerPollManually(): Promise<string> {
+  async triggerPollManually(
+    @Headers('x-internal-api-key') apiKey: string,
+  ): Promise<string> {
+    this.assertInternalApiKey(apiKey);
     this.logger.log('🔥 Manual poll triggered via HTTP endpoint');
     await this.reviewerPollingService.pollReviewerSystem();
     return 'Polling triggered successfully! Check your server logs.';
