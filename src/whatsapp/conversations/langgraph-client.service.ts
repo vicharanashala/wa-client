@@ -19,6 +19,7 @@ export interface SendMessageResult {
 export class LangGraphClientService implements OnModuleInit {
   private readonly logger = new Logger(LangGraphClientService.name);
   private static readonly KOLKATA_TZ = 'Asia/Kolkata';
+  private static readonly AEGRA_API_URL = 'http://100.100.108.43:2026';
   /** Prepended to LangGraph state only — not sent on WhatsApp. */
   private static readonly AGRI_EXPERT_LANGGRAPH_BANNER =
     'THIS IS AN AGRI EXPERT GENERATED MESSAGE';
@@ -30,7 +31,7 @@ export class LangGraphClientService implements OnModuleInit {
   private stateAppendAsNode?: string;
 
   async onModuleInit(): Promise<void> {
-    const apiUrl = process.env.AEGRA_BASE_URL;
+    const apiUrl = LangGraphClientService.AEGRA_API_URL;
     this.assistantId = process.env.AEGRA_ASSISTANT_ID ?? '';
     this.summaryAssistantId =
       process.env.AEGRA_SUMMARY_ASSISTANT_ID ?? 'summary_agent';
@@ -570,7 +571,7 @@ export class LangGraphClientService implements OnModuleInit {
    */
   async deleteThread(phoneNumber: string): Promise<void> {
     const threadId = this.getThreadId(phoneNumber);
-    const apiUrl = process.env.AEGRA_BASE_URL ?? 'http://localhost:8123';
+    const apiUrl = LangGraphClientService.AEGRA_API_URL;
     const url = `${apiUrl}/threads/${threadId}`;
 
     try {
