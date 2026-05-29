@@ -19,7 +19,7 @@ export interface SendMessageResult {
 export class LangGraphClientService implements OnModuleInit {
   private readonly logger = new Logger(LangGraphClientService.name);
   private static readonly KOLKATA_TZ = 'Asia/Kolkata';
-  private static readonly AEGRA_API_URL = 'http://100.100.108.43:2026';
+  private static readonly AEGRA_API_URL = 'http://100.100.108.44:2026';
   /** Prepended to LangGraph state only — not sent on WhatsApp. */
   private static readonly AGRI_EXPERT_LANGGRAPH_BANNER =
     'THIS IS AN AGRI EXPERT GENERATED MESSAGE';
