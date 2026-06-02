@@ -31,7 +31,7 @@ export class LangGraphClientService implements OnModuleInit {
   private stateAppendAsNode?: string;
 
   async onModuleInit(): Promise<void> {
-    const apiUrl = LangGraphClientService.AEGRA_API_URL;
+    const apiUrl = process.env.AEGRA_API_URL ?? LangGraphClientService.AEGRA_API_URL;
     this.assistantId = process.env.AEGRA_ASSISTANT_ID ?? '';
     this.summaryAssistantId =
       process.env.AEGRA_SUMMARY_ASSISTANT_ID ?? 'summary_agent';

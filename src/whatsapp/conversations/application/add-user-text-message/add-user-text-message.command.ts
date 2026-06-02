@@ -44,13 +44,7 @@ export class AddUserTextMessageHandler
       this.logger.warn(`[${phoneNumber}] showTyping failed: ${typingResult.unwrapErr().message}`);
     }
 
-    // Gate: require location before proceeding
-    const hasLocation = await this.langGraph.hasLocation(phoneNumber);
-    if (!hasLocation) {
-      this.logger.log(`[${phoneNumber}] No location in thread state — requesting location`);
-      await this.whatsappService.sendLocationRequest(phoneNumber);
-      return;
-    }
+
 
     // Send message to LangGraph; thread is created/reused automatically
     const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, content);
