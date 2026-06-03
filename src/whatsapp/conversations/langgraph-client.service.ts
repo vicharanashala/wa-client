@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client} from '@langchain/langgraph-sdk';
+import * as crypto from 'crypto';
 export interface SendMessageResult {
   reply: string;
   reviewId?: string; // Extracted from |||REV_ID:xxx||| if present
@@ -132,7 +133,20 @@ export class LangGraphClientService implements OnModuleInit {
   private async resolveAssistantGraphId(): Promise<void> {
     if (!this.assistantId) return;
     try {
-      const assistant = await this.client.assistants.get(this.assistantId);
+      let assistantIdToUse = this.assistantId;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.assistantId);
+      
+      if (!isUuid) {
+        const results = await this.client.assistants.search({ graphId: this.assistantId });
+        if (results && results.length > 0) {
+          const originalId = this.assistantId;
+          assistantIdToUse = results[0].assistant_id;
+          this.assistantId = assistantIdToUse;
+          this.logger.log(`Resolved assistant ID for graph "${originalId}" to UUID "${assistantIdToUse}"`);
+        }
+      }
+
+      const assistant = await this.client.assistants.get(assistantIdToUse);
       const graphId =
         (assistant as any)?.graphId ?? (assistant as any)?.graph_id;
       if (typeof graphId === 'string' && graphId.trim()) {
@@ -191,13 +205,23 @@ export class LangGraphClientService implements OnModuleInit {
    * Generates a thread ID based on phone number and current date.
    * Format: {phoneNumber}-YYYY-MM-DD
    */
+  private stringToUUID(str: string): string {
+    const hash = crypto.createHash('sha256').update(str).digest('hex');
+    const part1 = hash.substring(0, 8);
+    const part2 = hash.substring(8, 12);
+    const part3 = '4' + hash.substring(13, 16);
+    const part4 = '8' + hash.substring(17, 20);
+    const part5 = hash.substring(20, 32);
+    return `${part1}-${part2}-${part3}-${part4}-${part5}`;
+  }
+
   private getThreadId(phoneNumber: string): string {
     const dateStr = this.getKolkataDateString();
-    return `${phoneNumber}-${dateStr}`;
+    return this.stringToUUID(`${phoneNumber}-${dateStr}`);
   }
 
   private getThreadIdForDate(phoneNumber: string, dateStr: string): string {
-    return `${phoneNumber}-${dateStr}`;
+    return this.stringToUUID(`${phoneNumber}-${dateStr}`);
   }
 
   private getKolkataDateString(offsetDays = 0): string {
@@ -870,7 +894,10 @@ export class LangGraphClientService implements OnModuleInit {
     phoneNumber: string,
   ): Promise<void> {
     const url = `https://desk.vicharanashala.ai/api/questions/${reviewId}`;
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-internal-api-key': process.env.REVIEWER_INTERNAL_API_KEY || '',
+    };
 
     // Primary payload
     let res = await fetch(url, {

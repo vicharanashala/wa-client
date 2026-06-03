@@ -56,18 +56,18 @@ interface NonTextMessage {
   id: string;
   timestamp: string;
   type:
-    | 'audio'
-    | 'document'
-    | 'image'
-    | 'video'
-    | 'sticker'
-    | 'location'
-    | 'contacts'
-    | 'reaction'
-    | 'interactive'
-    | 'order'
-    | 'system'
-    | 'unsupported';
+  | 'audio'
+  | 'document'
+  | 'image'
+  | 'video'
+  | 'sticker'
+  | 'location'
+  | 'contacts'
+  | 'reaction'
+  | 'interactive'
+  | 'order'
+  | 'system'
+  | 'unsupported';
 }
 
 type IncomingMessage = TextMessage | NonTextMessage;
@@ -133,10 +133,10 @@ type ChangeValue =
 
 interface Change {
   field:
-    | 'messages'
-    | 'group_lifecycle_update'
-    | 'group_settings_update'
-    | 'group_participant_update';
+  | 'messages'
+  | 'group_lifecycle_update'
+  | 'group_settings_update'
+  | 'group_participant_update';
   value: ChangeValue;
 }
 
@@ -178,7 +178,7 @@ export class WhatsappController {
     private readonly accessControlService: AccessControlService,
     private readonly langGraphClientService: LangGraphClientService,
     private readonly whatsappUserRepo: WhatsappUserRepository,
-  ) {}
+  ) { }
 
   private assertInternalApiKey(apiKey: string | undefined): void {
     const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
@@ -357,7 +357,7 @@ export class WhatsappController {
     }
 
     this.logger.log(`📥 Received webhook from reviewer system for question: ${body.question_id}`);
-    
+
     // Process the webhook in the background so we don't block the response
     this.reviewerPollingService.processWebhookAnswer(body).catch((err) => {
       this.logger.error(`Failed to process webhook for question ${body.question_id}: ${err.message}`);
@@ -555,10 +555,10 @@ export class WhatsappController {
 
   private handleCallWebhook(value: any): void {
     if (!value) return;
-  
+
     // Avoid logging raw payloads in production; use debug level for structure insights
     this.logger.debug(`📞 Call webhook: ${Object.keys(value).join(', ')}`);
-  
+
     // value.calls is an array of call events
     const calls = value.calls;
     if (!Array.isArray(calls)) {
@@ -567,17 +567,17 @@ export class WhatsappController {
       );
       return;
     }
-  
+
     for (const call of calls) {
       this.logger.debug(`📞 Call: id=${call.call_id || call.id} event=${call.event || call.type}`);
       const callId = call.call_id || call.id;
       const event = call.event || call.type;
       const from = call.from;
-  
+
       this.logger.log(
         `📞 Call event: ${event} | call_id: ${callId} | from: ${from}`,
       );
-  
+
       if (event === 'connect') {
         // Incoming call with SDP offer
         const sdpOffer = call.session?.sdp;
@@ -585,7 +585,7 @@ export class WhatsappController {
           this.logger.error(`No SDP offer in connect event for ${callId}`);
           return;
         }
-  
+
         this.callingService
           .handleIncomingCall(callId, from, sdpOffer)
           .catch((err: Error) =>
