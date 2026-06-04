@@ -108,8 +108,9 @@ export class WhatsappService {
         response = await post(buildBody(false));
         if (!response.ok) {
           const retryError = await response.text();
-          const msg = this.isAuthErrorPayload(retryError)
-            ? `WhatsApp auth error while sending message to ${to}`
+          const isAuth = this.isAuthErrorPayload(retryError);
+          const msg = isAuth
+            ? `WhatsApp auth error while sending message to ${to}. Raw response: ${retryError}`
             : `Failed to send message to ${to}: ${retryError}`;
           this.logger.error(msg);
           throw new Error(msg);
@@ -119,7 +120,7 @@ export class WhatsappService {
 
       // Non-context failure
       const msg = this.isAuthErrorPayload(errorText)
-        ? `WhatsApp auth error while sending message to ${to}`
+        ? `WhatsApp auth error while sending message to ${to}. Raw response: ${errorText}`
         : `Failed to send message to ${to}: ${errorText}`;
       this.logger.error(msg);
       throw new Error(msg);
@@ -128,7 +129,7 @@ export class WhatsappService {
     if (!response.ok) {
       const error = await response.text();
       const msg = this.isAuthErrorPayload(error)
-        ? `WhatsApp auth error while sending message to ${to}`
+        ? `WhatsApp auth error while sending message to ${to}. Raw response: ${error}`
         : `Failed to send message to ${to}: ${error}`;
       this.logger.error(msg);
       throw new Error(msg);

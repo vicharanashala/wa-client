@@ -40,12 +40,7 @@ export class AddUserVoiceMessageHandler
 
     await this.whatsappService.showTyping(messageId);
 
-    const hasLocation = await this.langGraph.hasLocation(phoneNumber);
-    if (!hasLocation) {
-      this.logger.log(`[${phoneNumber}] No location in thread state — requesting location`);
-      await this.whatsappService.sendLocationRequest(phoneNumber);
-      return;
-    }
+
 
     const { buffer, mimeType } =
       await this.whatsappService.downloadMedia(mediaId);
