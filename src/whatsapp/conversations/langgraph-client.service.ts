@@ -446,6 +446,12 @@ export class LangGraphClientService implements OnModuleInit {
 
     if (reviewId) {
       this.logger.log(`[${phoneNumber}] REV_ID=${reviewId}`);
+
+      this.updateReviewerThreadId(reviewId, threadId, phoneNumber).catch((err) => {
+        this.logger.warn(
+          `[${phoneNumber}] Reviewer threadId update failed (${reviewId}): ${err?.message?.slice(0, 100)}`,
+        );
+      });
     }
 
     return { reply, reviewId };
@@ -856,5 +862,45 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
     return undefined;
+  }
+
+  private async updateReviewerThreadId(
+    reviewId: string,
+    threadId: string,
+    phoneNumber: string,
+  ): Promise<void> {
+    const url = `https://desk.vicharanashala.ai/api/questions/${reviewId}`;
+    const headers = { 'Content-Type': 'application/json' };
+
+    // Primary payload
+    let res = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ threadId }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      this.logger.warn(
+        `[${phoneNumber}] Reviewer update (threadId) ${res.status} for ${reviewId}`,
+      );
+
+      // Compatibility retry for backends expecting snake_case.
+      res = await fetch(url, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ thread_id: threadId }),
+      });
+
+      if (!res.ok) {
+        const retryBody = await res.text();
+        this.logger.warn(
+          `[${phoneNumber}] Reviewer update (snake_case) also failed ${res.status} for ${reviewId}`,
+        );
+        return;
+      }
+    }
+
+    this.logger.debug(`[${phoneNumber}] Reviewer threadId updated for ${reviewId}`);
   }
 }
