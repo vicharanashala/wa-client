@@ -220,6 +220,12 @@ export class LangGraphClientService implements OnModuleInit {
     return this.stringToUUID(`${phoneNumber}-${dateStr}`);
   }
 
+  /** The human-readable {phone}-{date} string (before UUID hashing). */
+  private getReviewerThreadId(phoneNumber: string): string {
+    const dateStr = this.getKolkataDateString();
+    return `${phoneNumber}-${dateStr}`;
+  }
+
   private getThreadIdForDate(phoneNumber: string, dateStr: string): string {
     return this.stringToUUID(`${phoneNumber}-${dateStr}`);
   }
@@ -434,6 +440,12 @@ export class LangGraphClientService implements OnModuleInit {
         {
           input: { messages: [{ role: 'human', content }] },
           multitaskStrategy: 'reject', // Prevent concurrent runs on same thread
+          config: {
+            configurable: {
+              reviewer_thread_id: this.getReviewerThreadId(phoneNumber),
+              question_source: 'WHATSAPP',
+            },
+          },
           metadata: this.buildRunMetadata(phoneNumber, 'user_message', {
             threadId,
             messageType: 'text_or_transcript',
@@ -471,7 +483,7 @@ export class LangGraphClientService implements OnModuleInit {
     if (reviewId) {
       this.logger.log(`[${phoneNumber}] REV_ID=${reviewId}`);
 
-      this.updateReviewerThreadId(reviewId, threadId, phoneNumber).catch((err) => {
+      this.updateReviewerThreadId(reviewId, this.getReviewerThreadId(phoneNumber), phoneNumber).catch((err) => {
         this.logger.warn(
           `[${phoneNumber}] Reviewer threadId update failed (${reviewId}): ${err?.message?.slice(0, 100)}`,
         );
@@ -542,6 +554,12 @@ export class LangGraphClientService implements OnModuleInit {
         {
           input: { messages: [{ role: 'human', content }] },
           multitaskStrategy: 'reject',
+          config: {
+            configurable: {
+              reviewer_thread_id: this.getReviewerThreadId(phoneNumber),
+              question_source: 'WHATSAPP',
+            },
+          },
           metadata: this.buildRunMetadata(phoneNumber, 'retry_after_repair', {
             threadId,
           }),
@@ -576,6 +594,12 @@ export class LangGraphClientService implements OnModuleInit {
         this.assistantId,
         {
           input: { messages: [{ role: 'human', content }] },
+          config: {
+            configurable: {
+              reviewer_thread_id: this.getReviewerThreadId(phoneNumber),
+              question_source: 'WHATSAPP',
+            },
+          },
           metadata: this.buildRunMetadata(phoneNumber, 'retry_after_reset', {
             threadId,
           }),
