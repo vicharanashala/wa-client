@@ -217,17 +217,11 @@ export class LangGraphClientService implements OnModuleInit {
 
   private getThreadId(phoneNumber: string): string {
     const dateStr = this.getKolkataDateString();
-    return this.stringToUUID(`${phoneNumber}-${dateStr}`);
-  }
-
-  /** The human-readable {phone}-{date} string (before UUID hashing). */
-  private getReviewerThreadId(phoneNumber: string): string {
-    const dateStr = this.getKolkataDateString();
     return `${phoneNumber}-${dateStr}`;
   }
 
   private getThreadIdForDate(phoneNumber: string, dateStr: string): string {
-    return this.stringToUUID(`${phoneNumber}-${dateStr}`);
+    return `${phoneNumber}-${dateStr}`;
   }
 
   private getKolkataDateString(offsetDays = 0): string {
@@ -442,7 +436,6 @@ export class LangGraphClientService implements OnModuleInit {
           multitaskStrategy: 'reject', // Prevent concurrent runs on same thread
           config: {
             configurable: {
-              reviewer_thread_id: this.getReviewerThreadId(phoneNumber),
               question_source: 'WHATSAPP',
             },
           },
@@ -483,7 +476,7 @@ export class LangGraphClientService implements OnModuleInit {
     if (reviewId) {
       this.logger.log(`[${phoneNumber}] REV_ID=${reviewId}`);
 
-      this.updateReviewerThreadId(reviewId, this.getReviewerThreadId(phoneNumber), phoneNumber).catch((err) => {
+      this.updateReviewerThreadId(reviewId, threadId, phoneNumber).catch((err) => {
         this.logger.warn(
           `[${phoneNumber}] Reviewer threadId update failed (${reviewId}): ${err?.message?.slice(0, 100)}`,
         );
@@ -556,7 +549,6 @@ export class LangGraphClientService implements OnModuleInit {
           multitaskStrategy: 'reject',
           config: {
             configurable: {
-              reviewer_thread_id: this.getReviewerThreadId(phoneNumber),
               question_source: 'WHATSAPP',
             },
           },
@@ -596,7 +588,6 @@ export class LangGraphClientService implements OnModuleInit {
           input: { messages: [{ role: 'human', content }] },
           config: {
             configurable: {
-              reviewer_thread_id: this.getReviewerThreadId(phoneNumber),
               question_source: 'WHATSAPP',
             },
           },
