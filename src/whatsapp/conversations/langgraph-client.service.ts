@@ -314,29 +314,7 @@ export class LangGraphClientService implements OnModuleInit {
       }
     }
 
-    const yesterdayLocation = (yesterdayState?.values as any)?.location;
-    if (
-      yesterdayLocation &&
-      (yesterdayLocation.latitude != null ||
-        yesterdayLocation.longitude != null ||
-        yesterdayLocation.city ||
-        yesterdayLocation.state)
-    ) {
-      try {
-        await this.setLocationOnThreadState(
-          todayThreadId,
-          yesterdayLocation,
-          phoneNumber,
-        );
-        this.logger.debug(
-          `[${phoneNumber}] Location carried to ${todayDate}`,
-        );
-      } catch (err: any) {
-        this.logger.warn(
-          `[${phoneNumber}] Failed to carry location to new thread: ${err?.message}`,
-        );
-      }
-    }
+
   }
 
   /**
