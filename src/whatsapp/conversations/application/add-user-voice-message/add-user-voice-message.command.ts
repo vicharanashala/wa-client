@@ -45,8 +45,24 @@ export class AddUserVoiceMessageHandler
     const { buffer, mimeType } =
       await this.whatsappService.downloadMedia(mediaId);
 
-    const { transcript, languageCode } =
-      await this.sarvamService.transcribeToEnglish(buffer, mimeType);
+    let transcript: string;
+    let languageCode: string | null = null;
+
+    try {
+      const result = await this.sarvamService.transcribeToEnglish(buffer, mimeType);
+      transcript = result.transcript;
+      languageCode = result.languageCode;
+    } catch (err: any) {
+      this.logger.error(
+        `[${phoneNumber}] Sarvam STT failed: ${err?.message ?? err}`,
+      );
+      await this.whatsappService.sendTextMessage(
+        phoneNumber,
+        'Currently our speech services are down, Please use text queries.',
+        messageId,
+      );
+      return;
+    }
 
     this.logger.debug(
       `[${phoneNumber}] Voice transcribed: "${transcript.slice(0, 60)}" (lang=${languageCode})`,
@@ -134,6 +150,11 @@ export class AddUserVoiceMessageHandler
     } catch (err: any) {
       this.logger.error(
         `[${phoneNumber}] Voice reply failed — user will still get text: ${err?.message ?? err}`,
+      );
+      await this.whatsappService.sendTextMessage(
+        phoneNumber,
+        'Currently our speech services are down, Please use text queries.',
+        messageId,
       );
     }
   }
