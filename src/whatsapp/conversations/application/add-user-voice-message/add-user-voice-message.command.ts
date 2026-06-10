@@ -58,7 +58,7 @@ export class AddUserVoiceMessageHandler
       );
       await this.whatsappService.sendTextMessage(
         phoneNumber,
-        'Currently our speech services are down, Please use text queries.',
+        'Currently we are not taking audio questions, please type your questions. The audio services will resume soon.',
         messageId,
       );
       return;
@@ -153,7 +153,7 @@ export class AddUserVoiceMessageHandler
       );
       await this.whatsappService.sendTextMessage(
         phoneNumber,
-        'Currently our speech services are down, Please use text queries.',
+        'Currently we are not taking audio questions, please type your questions. The audio services will resume soon.',
         messageId,
       );
     }
