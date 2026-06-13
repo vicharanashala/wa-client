@@ -54,7 +54,7 @@ export class AddUserVoiceMessageHandler
       languageCode = result.languageCode;
     } catch (err: any) {
       this.logger.error(
-        `[${phoneNumber}] Sarvam STT failed: ${err?.message ?? err}`,
+        `[${phoneNumber}] Sarvam STT failed (audio ${(buffer.length / 1024).toFixed(0)} KB): ${err?.message ?? err}`,
       );
       await this.whatsappService.sendTextMessage(
         phoneNumber,
@@ -65,7 +65,7 @@ export class AddUserVoiceMessageHandler
     }
 
     this.logger.debug(
-      `[${phoneNumber}] Voice transcribed: "${transcript.slice(0, 60)}" (lang=${languageCode})`,
+      `[${phoneNumber}] Voice transcribed (${(buffer.length / 1024).toFixed(0)} KB): "${transcript.slice(0, 60)}" (lang=${languageCode})`,
     );
 
     const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, transcript);
