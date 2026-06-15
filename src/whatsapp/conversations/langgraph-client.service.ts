@@ -24,9 +24,9 @@ export class LangGraphClientService implements OnModuleInit {
   /** Prepended to LangGraph state only — not sent on WhatsApp. */
   private static readonly AGRI_EXPERT_LANGGRAPH_BANNER =
     'THIS IS AN AGRI EXPERT GENERATED MESSAGE';
-  private client: Client;
-  private assistantId: string;
-  private summaryAssistantId: string;
+  private client!: Client;
+  private assistantId!: string;
+  private summaryAssistantId!: string;
   private assistantGraphId?: string;
   /** Optional graph node for threads.updateState message patches (must exist on the deployed graph). */
   private stateAppendAsNode?: string;
@@ -246,12 +246,16 @@ export class LangGraphClientService implements OnModuleInit {
    * - If today's thread already has state, no-op.
    * - If not, summarize yesterday thread (if any), store summary,
    *   and carry yesterday location into today's thread state.
+   * - Also push the last 2 user questions from previous days (up to 2 days back)
+   *   to provide context in the new thread.
    */
   async prepareDailyThread(phoneNumber: string): Promise<void> {
     const todayDate = this.getKolkataDateString();
     const yesterdayDate = this.getKolkataDateString(-1);
+    const dayBeforeDate = this.getKolkataDateString(-2);
     const todayThreadId = this.getThreadIdForDate(phoneNumber, todayDate);
     const yesterdayThreadId = this.getThreadIdForDate(phoneNumber, yesterdayDate);
+    const dayBeforeThreadId = this.getThreadIdForDate(phoneNumber, dayBeforeDate);
 
     try {
       await this.client.threads.getState(todayThreadId);
@@ -261,6 +265,21 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
     await this.ensureThreadRecord(todayThreadId, phoneNumber);
+
+    // Try to get last 2 user questions from previous days (up to 2 days back)
+    const previousQuestions = await this.getLastUserQuestionsFromPreviousDays(
+      phoneNumber,
+      yesterdayThreadId,
+      dayBeforeThreadId,
+      2, // count: last 2 questions
+    );
+
+    if (previousQuestions.length > 0) {
+      this.logger.log(
+        `[${phoneNumber}] Pushing ${previousQuestions.length} previous question(s) to new thread for context`,
+      );
+      await this.pushQuestionsToThread(todayThreadId, phoneNumber, previousQuestions);
+    }
 
     let yesterdayState: any;
     try {
@@ -315,6 +334,91 @@ export class LangGraphClientService implements OnModuleInit {
     }
 
 
+  }
+
+  /**
+   * Get the last N user questions from previous days' threads.
+   * Tries yesterday first, then day before yesterday.
+   * Returns up to `count` questions total.
+   */
+  private async getLastUserQuestionsFromPreviousDays(
+    phoneNumber: string,
+    yesterdayThreadId: string,
+    dayBeforeThreadId: string,
+    count: number = 2,
+  ): Promise<string[]> {
+    const questions: string[] = [];
+
+    // Try yesterday first
+    try {
+      const yesterdayState = await this.client.threads.getState(yesterdayThreadId);
+      const yesterdayQuestions = this.extractLastUserQuestions(yesterdayState, count);
+      questions.push(...yesterdayQuestions);
+      this.logger.debug(
+        `[${phoneNumber}] Found ${yesterdayQuestions.length} question(s) from yesterday`,
+      );
+    } catch {
+      this.logger.debug(`[${phoneNumber}] No thread found for yesterday`);
+    }
+
+    // If we don't have enough questions, try day before yesterday
+    if (questions.length < count) {
+      try {
+        const dayBeforeState = await this.client.threads.getState(dayBeforeThreadId);
+        const remainingNeeded = count - questions.length;
+        const dayBeforeQuestions = this.extractLastUserQuestions(dayBeforeState, remainingNeeded);
+        questions.push(...dayBeforeQuestions);
+        this.logger.debug(
+          `[${phoneNumber}] Found ${dayBeforeQuestions.length} question(s) from day before yesterday`,
+        );
+      } catch {
+        this.logger.debug(`[${phoneNumber}] No thread found for day before yesterday`);
+      }
+    }
+
+    return questions;
+  }
+
+  /**
+   * Extract the last N user questions from thread state.
+   * Looks for human messages with actual question content.
+   */
+  private extractLastUserQuestions(state: any, count: number): string[] {
+    const messages: any[] = (state?.values as any)?.messages ?? [];
+    const questions: string[] = [];
+
+    // Go through messages in reverse order to find last N user questions
+    for (let i = messages.length - 1; i >= 0 && questions.length < count; i--) {
+      const msg = messages[i];
+      if (msg?.type === 'human' && msg?.content) {
+        const content = typeof msg.content === 'string' ? msg.content : '';
+        // Skip empty or very short messages (likely system messages)
+        if (content.trim().length > 5) {
+          questions.unshift(content.trim()); // unshift to maintain chronological order
+        }
+      }
+    }
+
+    return questions;
+  }
+
+  /**
+   * Push questions to a thread's message history.
+   * Uses updateState to add messages without triggering AI response.
+   */
+  private async pushQuestionsToThread(
+    threadId: string,
+    phoneNumber: string,
+    questions: string[],
+  ): Promise<boolean> {
+    if (questions.length === 0) return true;
+
+    const messages = questions.map((content) => ({
+      role: 'human' as const,
+      content,
+    }));
+
+    return this.patchThreadMessages(threadId, phoneNumber, messages, 'pushQuestionsToThread');
   }
 
   /**
