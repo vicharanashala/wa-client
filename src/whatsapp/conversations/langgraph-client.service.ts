@@ -519,6 +519,7 @@ export class LangGraphClientService implements OnModuleInit {
           config: {
             configurable: {
               question_source: 'WHATSAPP',
+              user_id: phoneNumber,
             },
           },
           metadata: this.buildRunMetadata(phoneNumber, 'user_message', {
@@ -632,6 +633,7 @@ export class LangGraphClientService implements OnModuleInit {
           config: {
             configurable: {
               question_source: 'WHATSAPP',
+              user_id: phoneNumber,
             },
           },
           metadata: this.buildRunMetadata(phoneNumber, 'retry_after_repair', {
@@ -671,6 +673,7 @@ export class LangGraphClientService implements OnModuleInit {
           config: {
             configurable: {
               question_source: 'WHATSAPP',
+              user_id: phoneNumber,
             },
           },
           metadata: this.buildRunMetadata(phoneNumber, 'retry_after_reset', {
