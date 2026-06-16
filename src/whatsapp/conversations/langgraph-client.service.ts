@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Client} from '@langchain/langgraph-sdk';
 import * as crypto from 'crypto';
+import { UserDetailsRepository } from '../user-details/user-details.repository';
 export interface SendMessageResult {
   reply: string;
   reviewId?: string; // Extracted from |||REV_ID:xxx||| if present
@@ -30,6 +31,10 @@ export class LangGraphClientService implements OnModuleInit {
   private assistantGraphId?: string;
   /** Optional graph node for threads.updateState message patches (must exist on the deployed graph). */
   private stateAppendAsNode?: string;
+
+  constructor(
+    private readonly userDetailsRepo: UserDetailsRepository,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     const apiUrl = process.env.AEGRA_API_URL ?? LangGraphClientService.AEGRA_API_URL;
@@ -244,18 +249,15 @@ export class LangGraphClientService implements OnModuleInit {
   /**
    * Daily handover flow:
    * - If today's thread already has state, no-op.
-   * - If not, summarize yesterday thread (if any), store summary,
-   *   and carry yesterday location into today's thread state.
-   * - Also push the last 2 user questions from previous days (up to 2 days back)
-   *   to provide context in the new thread.
+   * - If not, fetch last_rephrased_query from user_details collection
+   *   and push it to the new thread for context.
+   * - Also summarize yesterday thread (if any) and store summary.
    */
   async prepareDailyThread(phoneNumber: string): Promise<void> {
     const todayDate = this.getKolkataDateString();
     const yesterdayDate = this.getKolkataDateString(-1);
-    const dayBeforeDate = this.getKolkataDateString(-2);
     const todayThreadId = this.getThreadIdForDate(phoneNumber, todayDate);
     const yesterdayThreadId = this.getThreadIdForDate(phoneNumber, yesterdayDate);
-    const dayBeforeThreadId = this.getThreadIdForDate(phoneNumber, dayBeforeDate);
 
     try {
       await this.client.threads.getState(todayThreadId);
@@ -266,19 +268,14 @@ export class LangGraphClientService implements OnModuleInit {
 
     await this.ensureThreadRecord(todayThreadId, phoneNumber);
 
-    // Try to get last 2 user questions from previous days (up to 2 days back)
-    const previousQuestions = await this.getLastUserQuestionsFromPreviousDays(
-      phoneNumber,
-      yesterdayThreadId,
-      dayBeforeThreadId,
-      2, // count: last 2 questions
-    );
+    // Fetch last_rephrased_query from user_details collection
+    const lastRephrasedQuery = await this.userDetailsRepo.getLastRephrasedQuery(phoneNumber);
 
-    if (previousQuestions.length > 0) {
+    if (lastRephrasedQuery) {
       this.logger.log(
-        `[${phoneNumber}] Pushing ${previousQuestions.length} previous question(s) to new thread for context`,
+        `[${phoneNumber}] Pushing last_rephrased_query to new thread: "${lastRephrasedQuery.slice(0, 50)}..."`,
       );
-      await this.pushQuestionsToThread(todayThreadId, phoneNumber, previousQuestions);
+      await this.pushQuestionsToThread(todayThreadId, phoneNumber, [lastRephrasedQuery]);
     }
 
     let yesterdayState: any;
@@ -332,8 +329,6 @@ export class LangGraphClientService implements OnModuleInit {
         );
       }
     }
-
-
   }
 
   /**

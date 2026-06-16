@@ -8,6 +8,7 @@ import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 import { SarvamModule } from '../sarvam-api/sarvam.module';
 import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
 import { UserStatsModule } from '../user-stats/user-stats.module';
+import { UserDetailsModule } from '../user-details/user-details.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserStatsModule } from '../user-stats/user-stats.module';
     SarvamModule,
     PendingQuestionsModule,
     UserStatsModule,
+    UserDetailsModule,
   ],
   providers: [
     AddUserTextMessageHandler,
