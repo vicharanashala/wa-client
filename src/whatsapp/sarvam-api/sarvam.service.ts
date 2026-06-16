@@ -5,8 +5,23 @@ export interface TranscribeResult {
   languageCode: string | null;
 }
 
+/** Error thrown when audio exceeds the maximum allowed duration. */
+export class AudioTooLongError extends Error {
+  constructor(
+    public readonly estimatedSeconds: number,
+    public readonly maxSeconds: number,
+  ) {
+    super(
+      `Audio is too long: estimated ${estimatedSeconds.toFixed(0)}s exceeds ${maxSeconds}s limit`,
+    );
+    this.name = 'AudioTooLongError';
+  }
+}
+
 // ── Batch STT types ──────────────────────────────────────────────────
 
+/** Maximum audio duration (seconds) allowed for transcription. */
+const MAX_AUDIO_DURATION_SECONDS = 120; // 2 minutes
 /** Threshold (seconds) above which we switch from sync to batch STT. */
 const BATCH_STT_DURATION_THRESHOLD = 25;
 /** Interval between status polls (ms). */
@@ -59,6 +74,8 @@ export class SarvamService {
    * Transcribe audio to text. Automatically routes to the async batch
    * API when the audio is estimated to be longer than 25 seconds
    * (the sync endpoint hard-caps at 30 s).
+   * 
+   * Throws AudioTooLongError if audio exceeds MAX_AUDIO_DURATION_SECONDS (2 minutes).
    */
   async transcribeToEnglish(
     audioBuffer: Buffer,
@@ -68,6 +85,14 @@ export class SarvamService {
       audioBuffer,
       mimeType,
     );
+
+    // Check if audio exceeds maximum allowed duration
+    if (estimatedDuration > MAX_AUDIO_DURATION_SECONDS) {
+      this.logger.warn(
+        `Audio ~${estimatedDuration.toFixed(0)}s exceeds ${MAX_AUDIO_DURATION_SECONDS}s limit`,
+      );
+      throw new AudioTooLongError(estimatedDuration, MAX_AUDIO_DURATION_SECONDS);
+    }
 
     if (estimatedDuration > BATCH_STT_DURATION_THRESHOLD) {
       this.logger.log(

@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { LangGraphClientService } from '../../langgraph-client.service';
-import { SarvamService } from '../../../sarvam-api/sarvam.service';
+import { SarvamService, AudioTooLongError } from '../../../sarvam-api/sarvam.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
@@ -53,14 +53,25 @@ export class AddUserVoiceMessageHandler
       transcript = result.transcript;
       languageCode = result.languageCode;
     } catch (err: any) {
-      this.logger.error(
-        `[${phoneNumber}] Sarvam STT failed (audio ${(buffer.length / 1024).toFixed(0)} KB): ${err?.message ?? err}`,
-      );
-      await this.whatsappService.sendTextMessage(
-        phoneNumber,
-        'Currently we are not taking audio questions, please type your questions. The audio services will resume soon.',
-        messageId,
-      );
+      if (err instanceof AudioTooLongError) {
+        this.logger.warn(
+          `[${phoneNumber}] Audio too long (${err.estimatedSeconds.toFixed(0)}s > ${err.maxSeconds}s limit)`,
+        );
+        await this.whatsappService.sendTextMessage(
+          phoneNumber,
+          'Your audio is very long. Please type your message or send a shorter audio.',
+          messageId,
+        );
+      } else {
+        this.logger.error(
+          `[${phoneNumber}] Sarvam STT failed (audio ${(buffer.length / 1024).toFixed(0)} KB): ${err?.message ?? err}`,
+        );
+        await this.whatsappService.sendTextMessage(
+          phoneNumber,
+          'Currently we are not taking audio questions, please type your questions. The audio services will resume soon.',
+          messageId,
+        );
+      }
       return;
     }
 
