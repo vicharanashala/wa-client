@@ -111,12 +111,30 @@ export class AddUserVoiceMessageHandler
 
   /** Truncate only for TTS; full `reply` is still sent as text. */
   private textForVoiceNotes(reply: string): string {
+    // Strip footer/metadata before TTS - only send the actual answer content
+    const cleanReply = this.stripFooterForTts(reply);
+    
     const maxChars = TTS_CHARS_PER_VOICE_NOTE * MAX_VOICE_NOTES;
-    if (reply.length <= maxChars) return reply;
+    if (cleanReply.length <= maxChars) return cleanReply;
     this.logger.warn(
-      `Reply length ${reply.length} exceeds voice cap ${maxChars} — TTS will cover first ${maxChars} chars only; full answer sent as text.`,
+      `Reply length ${cleanReply.length} exceeds voice cap ${maxChars} — TTS will cover first ${maxChars} chars only; full answer sent as text.`,
     );
-    return reply.slice(0, maxChars);
+    return cleanReply.slice(0, maxChars);
+  }
+
+  /**
+   * Strip the footer/metadata section that appears after the separator line.
+   * This removes things like "Answered by:", "Sources:", "Important Notice" etc.
+   * so they don't get spoken in the voice note.
+   */
+  private stripFooterForTts(text: string): string {
+    // Find the separator line (underscores)
+    const separatorIndex = text.indexOf('___________________________');
+    if (separatorIndex === -1) {
+      return text;
+    }
+    // Return only the content before the separator
+    return text.slice(0, separatorIndex).trim();
   }
 
   private async sendVoiceNotes(
