@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-export type ReviewerSource = { source: string; page?: string | null };
+export type ReviewerSource = { source: string; page?: string | null; source_name?: string | null };
 
 /**
  * Localizes reviewer WhatsApp notifications so labels AND the expert answer body
@@ -81,7 +81,7 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
     const authorName = author?.trim() || 'Expert';
     const sourceLines =
       sources && sources.length > 0
-        ? sources.map((s) => `🔗 ${s.source}`).join('\n')
+        ? sources.map((s) => s.source_name ? `🔗${s.source_name}: ${s.source}` : `🔗 ${s.source}`).join('\n')
         : '🔗 No sources provided.';
 
     const prompt = `You write a single WhatsApp notification for an Indian farmer.
@@ -178,7 +178,7 @@ RULES:
     const authorName = author?.trim() || 'Expert';
     const sourceLinks =
       sources && sources.length > 0
-        ? sources.map((s) => `🔗 ${s.source}`)
+        ? sources.map((s) => s.source_name ? `🔗${s.source_name}: ${s.source}` : `🔗 ${s.source}`)
         : ['No sources provided.'];
 
     return [
