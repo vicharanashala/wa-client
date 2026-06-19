@@ -124,17 +124,43 @@ export class AddUserVoiceMessageHandler
 
   /**
    * Strip the footer/metadata section that appears after the separator line.
-   * This removes things like "Answered by:", "Sources:", "Important Notice" etc.
-   * so they don't get spoken in the voice note.
+   * This removes things like "Answered by:", "Sources:" etc. so they don't get spoken.
+   * 
+   * However, it CAPTURES the "Important Notice" section (between ⚠️ and second separator)
+   * and appends it at the end of the TTS text.
    */
   private stripFooterForTts(text: string): string {
-    // Find the separator line (underscores)
-    const separatorIndex = text.indexOf('___________________________');
-    if (separatorIndex === -1) {
+    const separator = '___________________________';
+    
+    // Find first separator
+    const firstSeparatorIndex = text.indexOf(separator);
+    if (firstSeparatorIndex === -1) {
       return text;
     }
-    // Return only the content before the separator
-    return text.slice(0, separatorIndex).trim();
+    
+    // Keep content before first separator
+    let mainContent = text.slice(0, firstSeparatorIndex).trim();
+    
+    // Find ⚠️ emoji and capture content from ⚠️ to second separator
+    const warningEmoji = '⚠️';
+    const warningIndex = text.indexOf(warningEmoji);
+    
+    if (warningIndex !== -1) {
+      // Find the second separator after the warning emoji
+      const secondSeparatorIndex = text.indexOf(separator, warningIndex);
+      
+      if (secondSeparatorIndex !== -1) {
+        // Extract content between ⚠️ and second separator
+        const warningContent = text.slice(warningIndex, secondSeparatorIndex).trim();
+        
+        // Append warning content to main content
+        if (warningContent) {
+          mainContent = mainContent + '\n\n' + warningContent;
+        }
+      }
+    }
+    
+    return mainContent;
   }
 
   private async sendVoiceNotes(
