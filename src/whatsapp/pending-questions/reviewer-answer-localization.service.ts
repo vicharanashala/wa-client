@@ -115,7 +115,17 @@ OUTPUT STRUCTURE (all section titles/labels in ${targetLanguage.name}):
 8) Blank line
 9) 📚 bold label for "Sources:" then SOURCE_LINES (localized)
 10) Blank line
-11) ⚠️ disclaimer — meaning: "This is a testing version. Please consult an expert before making farming decisions."
+11) ⚠️ Important Notice (Testing) ⚠️ (translate this title)
+12) Blank line
+13) "This AjraSakha application is under development and intended only for testing and validation." (translate)
+14) "Advisories are experimental and currently cover major crops in selected states." (translate)
+15) "Weather data is sourced from IMD." (keep as is)
+16) "Market data from eNAM, Agmarknet, and State APMCs." (keep as is)
+17) "Soil health guidance from https://soilhealth.dac.gov.in/fertilizer-dosage." (keep as is)
+18) "Government schemes from https://www.myscheme.gov.in/." (keep as is)
+19) "Other agricultural information and advisories are expert-verified by Annam.ai." (translate)
+20) Blank line
+21) "Users should independently validate recommendations before acting." (translate)
 
 RULES:
 - Do NOT use state names (Punjab, Tamil Nadu, etc.) to pick language — only USER_QUESTION script/language and TARGET_LANGUAGE above.
@@ -195,7 +205,17 @@ RULES:
       `📚 *Sources:*`,
       ...sourceLinks,
       ``,
-      `⚠️ This is a testing version. Please consult an expert before making farming decisions.`,
+      `⚠️ Important Notice (Testing) ⚠️`,
+      ``,
+      `This AjraSakha application is under development and intended only for testing and validation.`,
+      `Advisories are experimental and currently cover major crops in selected states.`,
+      `Weather data is sourced from IMD.`,
+      `Market data from eNAM, Agmarknet, and State APMCs.`,
+      `Soil health guidance from https://soilhealth.dac.gov.in/fertilizer-dosage.`,
+      `Government schemes from https://www.myscheme.gov.in/.`,
+      `Other agricultural information and advisories are expert-verified by Annam.ai.`,
+      ``,
+      `Users should independently validate recommendations before acting.`,
     ].join('\n');
   }
 
