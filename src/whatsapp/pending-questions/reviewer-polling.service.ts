@@ -10,7 +10,7 @@ type ReviewerStatusResult = {
   status: string;
   answer?: string;
   author?: string;
-  sources?: { source: string; page?: string | null }[];
+  sources?: { source: string; page?: string | null; sourceName?: string | null }[];
 };
 
 /**
@@ -174,7 +174,7 @@ export class ReviewerPollingService implements OnModuleInit {
     status: string;
     answer?: string;
     author?: string;
-    sources?: { source: string; page?: string | null }[];
+    sources?: { source: string; page?: string | null; sourceName?: string | null }[];
   }): Promise<void> {
     const { question_id, status, answer, author, sources } = payload;
     
@@ -271,7 +271,7 @@ export class ReviewerPollingService implements OnModuleInit {
         question_id: string;
         status: string;
         answer?: string | null;
-        sources?: { source: string; page?: string | null }[];
+        sources?: { source: string; page?: string | null; sourceName?: string | null }[];
         author?: string | null;
       }[];
     };
