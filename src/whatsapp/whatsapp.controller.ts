@@ -24,6 +24,7 @@ import { ReviewerPollingService } from './pending-questions/reviewer-polling.ser
 import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import { AccessControlService } from './access-control/access-control.service';
 import { LangGraphClientService } from './conversations/langgraph-client.service';
+import { ScriptDetectionService } from './script-detection/script-detection.service';
 import {
   FindUsersResult,
   WhatsappUserRepository,
@@ -178,6 +179,7 @@ export class WhatsappController {
     private readonly accessControlService: AccessControlService,
     private readonly langGraphClientService: LangGraphClientService,
     private readonly whatsappUserRepo: WhatsappUserRepository,
+    private readonly scriptDetectionService: ScriptDetectionService,
   ) { }
 
   private assertInternalApiKey(apiKey: string | undefined): void {
@@ -463,12 +465,10 @@ export class WhatsappController {
       if (message.type === 'audio') {
         const audioMsg = message as unknown as AudioMessage;
         if (audioMsg.audio.voice) {
-          // Send acknowledgment for voice notes
+          // Send acknowledgment for voice notes (use English default for audio)
+          const localizedMessage = this.scriptDetectionService.getLocalizedMessage('');
           this.whatsappService
-            .sendTextMessage(
-              audioMsg.from,
-              '🌱 Thank you for the question. The answer is getting generated, please wait for sometime...',
-            )
+            .sendTextMessage(audioMsg.from, localizedMessage)
             .catch((err: Error) =>
               this.logger.error(`Failed to send ack message to ${audioMsg.from}: ${err.message}`),
             );
@@ -528,12 +528,10 @@ export class WhatsappController {
         `Incoming [${phoneNumber}]: "${messageText.slice(0, 60)}${messageText.length > 60 ? '…' : ''}"`,
       );
 
-      // Send acknowledgment for text messages
+      // Send localized acknowledgment for text messages
+      const localizedMessage = this.scriptDetectionService.getLocalizedMessage(messageText);
       this.whatsappService
-        .sendTextMessage(
-          phoneNumber,
-          '🌱 Thank you for the question. The answer is getting generated, please wait for sometime...',
-        )
+        .sendTextMessage(phoneNumber, localizedMessage)
         .catch((err: Error) =>
           this.logger.error(`Failed to send ack message to ${phoneNumber}: ${err.message}`),
         );

@@ -82,14 +82,14 @@ export class ScriptDetectionService implements OnModuleInit {
    */
   private loadScriptMessages(): void {
     try {
-      const csvPath = path.join(__dirname, 'scripts.csv');
+      const csvPath = path.join(__dirname, 'acknowledgment-translations.csv');
       
       // Try alternative paths for different build environments
       const possiblePaths = [
         csvPath,
-        path.join(__dirname, '..', 'script-detection', 'scripts.csv'),
-        path.join(process.cwd(), 'src', 'whatsapp', 'script-detection', 'scripts.csv'),
-        path.join(process.cwd(), 'dist', 'whatsapp', 'script-detection', 'scripts.csv'),
+        path.join(__dirname, '..', 'script-detection', 'acknowledgment-translations.csv'),
+        path.join(process.cwd(), 'src', 'whatsapp', 'script-detection', 'acknowledgment-translations.csv'),
+        path.join(process.cwd(), 'dist', 'whatsapp', 'script-detection', 'acknowledgment-translations.csv'),
       ];
 
       let csvContent = '';

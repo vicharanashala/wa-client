@@ -7,6 +7,7 @@ import { PendingQuestionsModule } from './pending-questions/pending-questions.mo
 import { CallingModule } from './calling/calling.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { UserStatsModule } from './user-stats/user-stats.module';
+import { ScriptDetectionModule } from './script-detection/script-detection.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserStatsModule } from './user-stats/user-stats.module';
     CallingModule,
     AccessControlModule,
     UserStatsModule,
+    ScriptDetectionModule,
   ],
   controllers: [WhatsappController],
   providers: [WhatsappService],
