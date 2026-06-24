@@ -1,8 +1,16 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  LanguagePair,
+  LanguageSupportService,
+} from '../language-support/language-support.service';
 
-export type ReviewerSource = { source: string; page?: string | null; sourceName?: string | null };
+export type ReviewerSource = {
+  source: string;
+  page?: string | null;
+  sourceName?: string | null;
+};
 
 /**
  * Localizes reviewer WhatsApp notifications so labels AND the expert answer body
@@ -18,7 +26,7 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
   /** Map of script name -> disclaimer text from CSV */
   private disclaimerMap: Map<string, string> = new Map();
 
-  constructor() {
+  constructor(private readonly languageSupport: LanguageSupportService) {
     this.apiKey = process.env.LLM_API_KEY ?? '';
     this.model =
       process.env.ANTHROPIC_REVIEW_ANSWER_MODEL ?? 'claude-sonnet-4-5-20250929';
@@ -43,15 +51,23 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
    */
   private loadDisclaimerTranslations(): void {
     // Use process.cwd() for reliable path resolution in both dev and production
-    const jsonPath = path.join(process.cwd(), 'src', 'whatsapp', 'pending-questions', 'disclaimer-translations.json');
+    const jsonPath = path.join(
+      process.cwd(),
+      'src',
+      'whatsapp',
+      'pending-questions',
+      'disclaimer-translations.json',
+    );
     try {
       const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
       const translations = JSON.parse(jsonContent) as Record<string, string>;
-      
+
       for (const [scriptName, disclaimerText] of Object.entries(translations)) {
         if (!scriptName || !disclaimerText) continue;
         this.disclaimerMap.set(scriptName, disclaimerText);
-        this.logger.debug(`Loaded disclaimer for: ${scriptName} (${disclaimerText.length} chars)`);
+        this.logger.debug(
+          `Loaded disclaimer for: ${scriptName} (${disclaimerText.length} chars)`,
+        );
       }
 
       this.logger.log(
@@ -78,7 +94,20 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
    */
   private getDisclaimerForLanguage(languageCode: string): string {
     const scriptName = this.languageCodeToScriptName(languageCode);
-    return this.disclaimerMap.get(scriptName) ?? this.disclaimerMap.get('English') ?? '';
+    return (
+      this.disclaimerMap.get(scriptName) ??
+      this.disclaimerMap.get('English') ??
+      ''
+    );
+  }
+
+  private getDisclaimerForPair(pair: LanguagePair): string {
+    return (
+      this.languageSupport.getTestingDisclaimer(pair) ||
+      this.disclaimerMap.get(pair.scriptLanguage) ||
+      this.disclaimerMap.get('English') ||
+      ''
+    );
   }
 
   /**
@@ -120,7 +149,11 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
       en: 'English',
       'en-in': 'English',
     };
-    return map[code.toLowerCase()] ?? map[code.split('-')[0].toLowerCase()] ?? 'English';
+    return (
+      map[code.toLowerCase()] ??
+      map[code.split('-')[0].toLowerCase()] ??
+      'English'
+    );
   }
 
   /**
@@ -132,6 +165,8 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
     author?: string;
     sources?: ReviewerSource[];
     sttLanguageCode?: string | null;
+    scriptLanguage?: string | null;
+    vocalLanguage?: string | null;
   }): Promise<string> {
     const {
       userQuestionText,
@@ -139,15 +174,21 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
       author,
       sources,
       sttLanguageCode,
+      scriptLanguage,
+      vocalLanguage,
     } = params;
 
     const questionText = this.extractQuestionText(userQuestionText);
-    const targetLanguage = this.resolveTargetLanguage(questionText, sttLanguageCode);
+    const targetLanguage = await this.resolveTargetLanguage(
+      questionText,
+      sttLanguageCode,
+      { scriptLanguage, vocalLanguage },
+    );
 
-    // For English, use formatEnglishNotification with CSV disclaimer
-    if (this.isLikelyEnglishQuestion(questionText) || this.isEnglishLanguageCode(sttLanguageCode)) {
+    // For English/English, use the English template with catalog disclaimer.
+    if (this.languageSupport.isEnglishPair(targetLanguage)) {
       this.logger.debug(
-        `Skipping reviewer-answer translation — question appears to be English: "${questionText.slice(0, 80)}"`,
+        `Skipping reviewer-answer translation - resolved pair is English/English: "${questionText.slice(0, 80)}"`,
       );
       return this.formatLocalizedNotification(
         questionText,
@@ -171,31 +212,44 @@ export class ReviewerAnswerLocalizationService implements OnModuleInit {
     const authorName = author?.trim() || 'Expert';
     const sourceLines =
       sources && sources.length > 0
-        ? sources.map((s) => s.sourceName ? `🔗${s.sourceName}: ${s.source}` : `🔗 ${s.source}`).join('\n')
+        ? sources
+            .map((s) =>
+              s.sourceName
+                ? `🔗${s.sourceName}: ${s.source}`
+                : `🔗 ${s.source}`,
+            )
+            .join('\n')
         : '🔗 No sources provided.';
 
-    // LLM prompt WITHOUT disclaimer items (removed - will be appended from CSV)
+    const scriptInstruction =
+      targetLanguage.scriptLanguage === 'English'
+        ? `${targetLanguage.vocalLanguage} in English/Latin letters only. This is romanized ${targetLanguage.vocalLanguage}; do not switch to English unless a word is a URL, acronym, or proper noun.`
+        : `${targetLanguage.vocalLanguage} using the ${targetLanguage.scriptLanguage} writing system. Transliterate Latin-letter labels and terms into ${targetLanguage.scriptLanguage} when they are meant to be read by the farmer.`;
+
+    // LLM prompt WITHOUT disclaimer items (removed - will be appended from catalog)
     const prompt = `You write a single WhatsApp notification for an Indian farmer.
 
-TARGET_LANGUAGE: ${targetLanguage.name} (${targetLanguage.code})
-Use ${targetLanguage.name} for every label AND for the entire expert answer body. The farmer must not see English in the expert answer section unless the answer is only URLs or proper nouns.
+VOCAL_LANGUAGE: ${targetLanguage.vocalLanguage}
+SCRIPT_LANGUAGE: ${targetLanguage.scriptLanguage}
+OUTPUT_LANGUAGE_RULE: Use ${scriptInstruction}
+Use this language/script rule for every label AND for the entire expert answer body. The farmer must not see English in the expert answer section unless the answer is only URLs, acronyms, or proper nouns.
 
 USER_QUESTION (already in the user's language — copy verbatim inside quotes; do not re-translate):
 """
 ${questionText}
 """
 
-EXPERT_ANSWER_FROM_REVIEWER (written in ENGLISH by the expert desk — translate 100% of this text into ${targetLanguage.name}, line by line, preserving meaning and line breaks):
+EXPERT_ANSWER_FROM_REVIEWER (written in ENGLISH by the expert desk — translate 100% of this text according to OUTPUT_LANGUAGE_RULE, line by line, preserving meaning and line breaks):
 """
 ${expertAnswer}
 """
 
 AUTHOR_NAME (keep exactly as written): ${authorName}
 
-SOURCE_LINES (translate descriptive text to ${targetLanguage.name} if it is English; keep 🔗 and URLs unchanged):
+SOURCE_LINES (translate descriptive text according to OUTPUT_LANGUAGE_RULE if it is English; keep 🔗 and URLs unchanged):
 ${sourceLines}
 
-OUTPUT STRUCTURE (all section titles/labels in ${targetLanguage.name}):
+OUTPUT STRUCTURE (all section titles/labels must follow OUTPUT_LANGUAGE_RULE):
 1) Opening line with ✅ and bold title — meaning: "Your question has been reviewed by an expert!"
 2) Blank line
 3) 📌 bold label for "Your Question:" then the question in quotes on the next line(s)
@@ -205,11 +259,11 @@ OUTPUT STRUCTURE (all section titles/labels in ${targetLanguage.name}):
 7) 👤 bold label for "Answered by:" then AUTHOR_NAME
 8) Blank line
 9) 📚 bold label for "Sources:" then SOURCE_LINES (localized)
-10) END your response here. The disclaimer will be automatically appended from the CSV file. Do NOT include any disclaimer text.
+10) END your response here. The disclaimer will be automatically appended from the language catalog. Do NOT include any disclaimer text.
 
 RULES:
-- Do NOT use state names (Punjab, Tamil Nadu, etc.) to pick language — only USER_QUESTION script/language and TARGET_LANGUAGE above.
-- The Expert Answer section is mandatory to translate fully into ${targetLanguage.name}, even if it looks like placeholder text (e.g. "test test").
+- Do NOT use state names (Punjab, Tamil Nadu, etc.) to pick language — use only VOCAL_LANGUAGE and SCRIPT_LANGUAGE above.
+- The Expert Answer section is mandatory to translate fully according to OUTPUT_LANGUAGE_RULE, even if it looks like placeholder text (e.g. "test test").
 - Preserve WhatsApp bold markers like *text*.
 - Preserve emojis (✅ 📌 💡 👤 📚 ⚠️ 🔗).
 - Do not add or remove facts.
@@ -247,7 +301,9 @@ RULES:
       const data = (await res.json()) as {
         content?: { type: string; text?: string }[];
       };
-      let translatedText = data.content?.find((b) => b.type === 'text')?.text?.trim();
+      let translatedText = data.content
+        ?.find((b) => b.type === 'text')
+        ?.text?.trim();
       if (!translatedText) {
         this.logger.warn('Anthropic localization: empty content');
         return this.formatLocalizedNotification(
@@ -259,14 +315,14 @@ RULES:
         );
       }
 
-      // Append disclaimer from CSV
-      const disclaimer = this.getDisclaimerForLanguage(targetLanguage.code);
+      // Append disclaimer from the pair-keyed catalog.
+      const disclaimer = this.getDisclaimerForPair(targetLanguage);
       if (disclaimer) {
         translatedText = translatedText + '\n\n' + disclaimer;
       }
 
       this.logger.debug(
-        `Localized reviewer notification to ${targetLanguage.name} for question "${questionText.slice(0, 40)}…"`,
+        `Localized reviewer notification to ${targetLanguage.scriptLanguage}/${targetLanguage.vocalLanguage} for question "${questionText.slice(0, 40)}..."`,
       );
       return translatedText;
     } catch (err: any) {
@@ -291,16 +347,19 @@ RULES:
     answer: string,
     author?: string,
     sources?: ReviewerSource[],
-    targetLanguage?: { name: string; code: string },
+    targetLanguage?: LanguagePair & { code: string },
   ): string {
     const authorName = author?.trim() || 'Expert';
     const sourceLinks =
       sources && sources.length > 0
-        ? sources.map((s) => s.sourceName ? `🔗${s.sourceName}: ${s.source}` : `🔗 ${s.source}`)
+        ? sources.map((s) =>
+            s.sourceName ? `🔗${s.sourceName}: ${s.source}` : `🔗 ${s.source}`,
+          )
         : ['No sources provided.'];
 
-    const langCode = targetLanguage?.code ?? 'en';
-    const disclaimer = this.getDisclaimerForLanguage(langCode);
+    const disclaimer = targetLanguage
+      ? this.getDisclaimerForPair(targetLanguage)
+      : this.getDisclaimerForLanguage('en');
 
     return [
       `✅ *Your question has been reviewed by an expert!*`,
@@ -330,10 +389,17 @@ RULES:
     author?: string,
     sources?: ReviewerSource[],
   ): string {
-    return this.formatLocalizedNotification(questionText, answer, author, sources, {
-      name: 'English',
-      code: 'en',
-    });
+    return this.formatLocalizedNotification(
+      questionText,
+      answer,
+      author,
+      sources,
+      {
+        scriptLanguage: 'English',
+        vocalLanguage: 'English',
+        code: 'en',
+      },
+    );
   }
 
   private extractQuestionText(raw: string): string {
@@ -350,91 +416,61 @@ RULES:
     return trimmed;
   }
 
-  private isEnglishLanguageCode(code: string | null | undefined): boolean {
-    if (!code?.trim()) return false;
-    return /^en(-[a-z]{2,4})?$/i.test(code.trim());
-  }
-
-  private resolveTargetLanguage(
+  private async resolveTargetLanguage(
     questionText: string,
     sttLanguageCode?: string | null,
-  ): { name: string; code: string } {
-    // Check for English first
-    if (this.isLikelyEnglishQuestion(questionText) || this.isEnglishLanguageCode(sttLanguageCode)) {
-      return { name: 'English', code: 'en' };
+    stored?: {
+      scriptLanguage?: string | null;
+      vocalLanguage?: string | null;
+    },
+  ): Promise<LanguagePair & { code: string }> {
+    if (stored?.scriptLanguage?.trim() && stored?.vocalLanguage?.trim()) {
+      const vocalLanguage = stored.vocalLanguage.trim();
+      return {
+        scriptLanguage: stored.scriptLanguage.trim(),
+        vocalLanguage,
+        code: this.languageNameToCode(vocalLanguage),
+      };
     }
 
-    const fromScript = this.languageFromScript(questionText);
-    if (fromScript) return fromScript;
-
-    const fromStt = this.languageFromSttCode(sttLanguageCode);
-    if (fromStt) return fromStt;
-
-    return { name: 'Hindi', code: 'hi' };
-  }
-
-  private languageFromScript(
-    text: string,
-  ): { name: string; code: string } | null {
-    if (/[\u0B80-\u0BFF]/.test(text)) return { name: 'Tamil', code: 'ta' };
-    if (/[\u0A00-\u0A7F]/.test(text)) return { name: 'Punjabi', code: 'pa' };
-    if (/[\u0980-\u09FF]/.test(text)) return { name: 'Bengali', code: 'bn' };
-    if (/[\u0C00-\u0C7F]/.test(text)) return { name: 'Telugu', code: 'te' };
-    if (/[\u0C80-\u0CFF]/.test(text)) return { name: 'Kannada', code: 'kn' };
-    if (/[\u0D00-\u0D7F]/.test(text)) return { name: 'Malayalam', code: 'ml' };
-    if (/[\u0B00-\u0B7F]/.test(text)) return { name: 'Odia', code: 'or' };
-    if (/[\u0A80-\u0AFF]/.test(text)) return { name: 'Gujarati', code: 'gu' };
-    if (/[\u0900-\u097F]/.test(text)) return { name: 'Hindi', code: 'hi' };
-    return null;
-  }
-
-  private languageFromSttCode(
-    code: string | null | undefined,
-  ): { name: string; code: string } | null {
-    if (!code?.trim() || this.isEnglishLanguageCode(code)) return null;
-    const c = code.trim().toLowerCase();
-    const map: Record<string, { name: string; code: string }> = {
-      hi: { name: 'Hindi', code: 'hi' },
-      'hi-in': { name: 'Hindi', code: 'hi' },
-      pa: { name: 'Punjabi', code: 'pa' },
-      'pa-in': { name: 'Punjabi', code: 'pa' },
-      ta: { name: 'Tamil', code: 'ta' },
-      'ta-in': { name: 'Tamil', code: 'ta' },
-      te: { name: 'Telugu', code: 'te' },
-      kn: { name: 'Kannada', code: 'kn' },
-      ml: { name: 'Malayalam', code: 'ml' },
-      bn: { name: 'Bengali', code: 'bn' },
-      mr: { name: 'Marathi', code: 'mr' },
-      gu: { name: 'Gujarati', code: 'gu' },
-      or: { name: 'Odia', code: 'or' },
+    const resolved = await this.languageSupport.resolveLanguagePair(
+      questionText,
+      { sttLanguageCode },
+    );
+    return {
+      scriptLanguage: resolved.scriptLanguage,
+      vocalLanguage: resolved.vocalLanguage,
+      code: this.languageNameToCode(resolved.vocalLanguage),
     };
-    return map[c] ?? map[c.split('-')[0]] ?? null;
   }
 
-  private isLikelyEnglishQuestion(text: string): boolean {
-    const t = text.trim();
-    if (!t) return true;
-
-    if (
-      /[\u0900-\u097F\u0A00-\u0A7F\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0D00-\u0D7F]/.test(
-        t,
-      )
-    ) {
-      return false;
-    }
-
-    const lower = t.toLowerCase();
-    const englishWordPattern =
-      /\b(how|what|when|where|why|who|can|could|should|would|is|are|was|were|do|does|did|have|has|had|the|a|an|and|or|for|in|on|at|to|of|my|your|grow|growing|plant|crop|help|please|tell|about|best|way)\b/;
-    if (englishWordPattern.test(lower)) {
-      return true;
-    }
-
-    if (/^[\x20-\x7E\n\r\t'".,!?;:()\-–—%0-9]+$/.test(t)) {
-      return true;
-    }
-
-    return false;
+  private languageNameToCode(language: string): string {
+    const map: Record<string, string> = {
+      Assamese: 'as',
+      Bengali: 'bn',
+      Bodo: 'brx',
+      Dogri: 'doi',
+      Gujarati: 'gu',
+      Hindi: 'hi',
+      Kannada: 'kn',
+      Kashmiri: 'ks',
+      Konkani: 'kok',
+      Maithili: 'mai',
+      Malayalam: 'ml',
+      'Manipuri (Meitei)': 'mni',
+      Marathi: 'mr',
+      Nepali: 'ne',
+      Odia: 'or',
+      Punjabi: 'pa',
+      Sanskrit: 'sa',
+      Santali: 'sat',
+      Sindhi: 'sd',
+      Tamil: 'ta',
+      Telugu: 'te',
+      Urdu: 'ur',
+      English: 'en',
+    };
+    return map[language] ?? 'en';
   }
 
   // Default disclaimer getters (fallback if CSV fails)

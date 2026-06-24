@@ -1,10 +1,14 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { LangGraphClientService } from '../../langgraph-client.service';
-import { SarvamService, AudioTooLongError } from '../../../sarvam-api/sarvam.service';
+import {
+  SarvamService,
+  AudioTooLongError,
+} from '../../../sarvam-api/sarvam.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
+import { LanguageSupportService } from '../../../language-support/language-support.service';
 
 /** Sarvam TTS chunk size — each chunk becomes one valid WhatsApp voice note. */
 const TTS_CHARS_PER_VOICE_NOTE = 2500;
@@ -20,9 +24,7 @@ export class AddUserVoiceMessageCommand {
 }
 
 @CommandHandler(AddUserVoiceMessageCommand)
-export class AddUserVoiceMessageHandler
-  implements ICommandHandler<AddUserVoiceMessageCommand>
-{
+export class AddUserVoiceMessageHandler implements ICommandHandler<AddUserVoiceMessageCommand> {
   private readonly logger = new Logger(AddUserVoiceMessageHandler.name);
 
   constructor(
@@ -31,6 +33,7 @@ export class AddUserVoiceMessageHandler
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappUserRepo: WhatsappUserRepository,
+    private readonly languageSupport: LanguageSupportService,
   ) {}
 
   async execute(command: AddUserVoiceMessageCommand): Promise<void> {
@@ -40,8 +43,6 @@ export class AddUserVoiceMessageHandler
 
     await this.whatsappService.showTyping(messageId);
 
-
-
     const { buffer, mimeType } =
       await this.whatsappService.downloadMedia(mediaId);
 
@@ -49,7 +50,10 @@ export class AddUserVoiceMessageHandler
     let languageCode: string | null = null;
 
     try {
-      const result = await this.sarvamService.transcribeToEnglish(buffer, mimeType);
+      const result = await this.sarvamService.transcribeToEnglish(
+        buffer,
+        mimeType,
+      );
       transcript = result.transcript;
       languageCode = result.languageCode;
     } catch (err: any) {
@@ -79,12 +83,19 @@ export class AddUserVoiceMessageHandler
       `[${phoneNumber}] Voice transcribed (${(buffer.length / 1024).toFixed(0)} KB): "${transcript.slice(0, 60)}" (lang=${languageCode})`,
     );
 
-    const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, transcript);
+    const { reply, reviewId } = await this.langGraph.sendMessage(
+      phoneNumber,
+      transcript,
+    );
 
     await this.whatsappUserRepo.recordMessage(phoneNumber, transcript);
 
     if (reviewId) {
       const langGraphThreadId = await this.langGraph.ensureThread(phoneNumber);
+      const languagePair = await this.languageSupport.resolveLanguagePair(
+        transcript,
+        { sttLanguageCode: languageCode },
+      );
       await this.pendingQuestionRepo.create({
         questionId: reviewId,
         phoneNumber,
@@ -93,6 +104,8 @@ export class AddUserVoiceMessageHandler
         originalMessageId: messageId,
         langGraphThreadId,
         ...(languageCode ? { questionLanguageCode: languageCode } : {}),
+        scriptLanguage: languagePair.scriptLanguage,
+        vocalLanguage: languagePair.vocalLanguage,
       });
       this.logger.log(
         `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,
@@ -113,7 +126,7 @@ export class AddUserVoiceMessageHandler
   private textForVoiceNotes(reply: string): string {
     // Strip footer/metadata before TTS - only send the actual answer content
     const cleanReply = this.stripFooterForTts(reply);
-    
+
     const maxChars = TTS_CHARS_PER_VOICE_NOTE * MAX_VOICE_NOTES;
     if (cleanReply.length <= maxChars) return cleanReply;
     this.logger.warn(
@@ -125,41 +138,43 @@ export class AddUserVoiceMessageHandler
   /**
    * Strip the footer/metadata section that appears after the separator line.
    * This removes things like "Answered by:", "Sources:" etc. so they don't get spoken.
-   * 
+   *
    * However, it CAPTURES the "Important Notice" section (between ⚠️ and second separator)
    * and appends it at the end of the TTS text.
    */
   private stripFooterForTts(text: string): string {
     const separator = '___________________________';
-    
+
     // Find first separator
     const firstSeparatorIndex = text.indexOf(separator);
     if (firstSeparatorIndex === -1) {
       return text;
     }
-    
+
     // Keep content before first separator
     let mainContent = text.slice(0, firstSeparatorIndex).trim();
-    
+
     // Find ⚠️ emoji and capture content from ⚠️ to second separator
     const warningEmoji = '⚠️';
     const warningIndex = text.indexOf(warningEmoji);
-    
+
     if (warningIndex !== -1) {
       // Find the second separator after the warning emoji
       const secondSeparatorIndex = text.indexOf(separator, warningIndex);
-      
+
       if (secondSeparatorIndex !== -1) {
         // Extract content between ⚠️ and second separator
-        const warningContent = text.slice(warningIndex, secondSeparatorIndex).trim();
-        
+        const warningContent = text
+          .slice(warningIndex, secondSeparatorIndex)
+          .trim();
+
         // Append warning content to main content
         if (warningContent) {
           mainContent = mainContent + '\n\n' + warningContent;
         }
       }
     }
-    
+
     return mainContent;
   }
 

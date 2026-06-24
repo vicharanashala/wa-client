@@ -10,7 +10,11 @@ type ReviewerStatusResult = {
   status: string;
   answer?: string;
   author?: string;
-  sources?: { source: string; page?: string | null; sourceName?: string | null }[];
+  sources?: {
+    source: string;
+    page?: string | null;
+    sourceName?: string | null;
+  }[];
 };
 
 /**
@@ -50,9 +54,7 @@ export class ReviewerPollingService implements OnModuleInit {
     this.logger.log(
       `🕐 Reviewer polling cron job ACTIVE — schedule: "${cronExpr}"`,
     );
-    this.logger.log(
-      `🔗 Reviewer API base URL: ${this.reviewerApiBaseUrl}`,
-    );
+    this.logger.log(`🔗 Reviewer API base URL: ${this.reviewerApiBaseUrl}`);
   }
 
   /**
@@ -129,6 +131,8 @@ export class ReviewerPollingService implements OnModuleInit {
               author: result.author,
               sources: result.sources,
               sttLanguageCode: question.questionLanguageCode,
+              scriptLanguage: question.scriptLanguage,
+              vocalLanguage: question.vocalLanguage,
             });
 
           await this.whatsappService.sendTextMessage(
@@ -174,27 +178,40 @@ export class ReviewerPollingService implements OnModuleInit {
     status: string;
     answer?: string;
     author?: string;
-    sources?: { source: string; page?: string | null; sourceName?: string | null }[];
+    sources?: {
+      source: string;
+      page?: string | null;
+      sourceName?: string | null;
+    }[];
   }): Promise<void> {
     const { question_id, status, answer, author, sources } = payload;
-    
+
     if (status !== 'closed' || !answer) {
-      this.logger.warn(`Webhook received for question ${question_id} but status is '${status}' or answer is missing`);
+      this.logger.warn(
+        `Webhook received for question ${question_id} but status is '${status}' or answer is missing`,
+      );
       return;
     }
 
-    const question = await this.pendingQuestionRepo.findByQuestionId(question_id);
+    const question =
+      await this.pendingQuestionRepo.findByQuestionId(question_id);
     if (!question) {
-      this.logger.warn(`Webhook received for unknown question ID: ${question_id}`);
+      this.logger.warn(
+        `Webhook received for unknown question ID: ${question_id}`,
+      );
       return;
     }
 
     if (question.status === 'notified' || question.status === 'answered') {
-      this.logger.log(`Question ${question_id} is already '${question.status}' — skipping webhook.`);
+      this.logger.log(
+        `Question ${question_id} is already '${question.status}' — skipping webhook.`,
+      );
       return;
     }
 
-    this.logger.log(`✅ Webhook received: Question ${question_id} answered! Notifying ${question.phoneNumber}`);
+    this.logger.log(
+      `✅ Webhook received: Question ${question_id} answered! Notifying ${question.phoneNumber}`,
+    );
 
     try {
       // Mark as answered
@@ -208,6 +225,8 @@ export class ReviewerPollingService implements OnModuleInit {
           author,
           sources,
           sttLanguageCode: question.questionLanguageCode,
+          scriptLanguage: question.scriptLanguage,
+          vocalLanguage: question.vocalLanguage,
         });
 
       await this.whatsappService.sendTextMessage(
@@ -232,7 +251,9 @@ export class ReviewerPollingService implements OnModuleInit {
       // Mark as notified
       await this.pendingQuestionRepo.markNotified(question_id);
 
-      this.logger.log(`📤 Notification sent to ${question.phoneNumber} for question ${question_id}`);
+      this.logger.log(
+        `📤 Notification sent to ${question.phoneNumber} for question ${question_id}`,
+      );
     } catch (sendErr: any) {
       this.logger.error(
         `Failed to notify ${question.phoneNumber} for question ${question_id} via webhook: ${sendErr.message}`,
@@ -271,7 +292,11 @@ export class ReviewerPollingService implements OnModuleInit {
         question_id: string;
         status: string;
         answer?: string | null;
-        sources?: { source: string; page?: string | null; sourceName?: string | null }[];
+        sources?: {
+          source: string;
+          page?: string | null;
+          sourceName?: string | null;
+        }[];
         author?: string | null;
       }[];
     };
@@ -320,5 +345,4 @@ export class ReviewerPollingService implements OnModuleInit {
 
     return map;
   }
-
 }

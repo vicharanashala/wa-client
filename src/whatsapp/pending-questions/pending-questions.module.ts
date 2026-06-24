@@ -11,6 +11,7 @@ import { ReviewerAnswerLocalizationService } from './reviewer-answer-localizatio
 import { ReviewerPollingService } from './reviewer-polling.service';
 import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 import { LangGraphModule } from '../conversations/langgraph.module';
+import { LanguageSupportModule } from '../language-support/language-support.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LangGraphModule } from '../conversations/langgraph.module';
     ]),
     WhatsappApiModule,
     LangGraphModule,
+    LanguageSupportModule,
   ],
   providers: [
     {

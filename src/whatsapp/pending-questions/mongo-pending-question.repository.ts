@@ -11,9 +11,7 @@ import {
 } from './pending-question.repository';
 
 @Injectable()
-export class MongoPendingQuestionRepository
-  implements PendingQuestionRepository
-{
+export class MongoPendingQuestionRepository implements PendingQuestionRepository {
   constructor(
     @InjectModel(PendingQuestionModel.name)
     private readonly model: Model<PendingQuestionDocument>,
@@ -34,6 +32,8 @@ export class MongoPendingQuestionRepository
       ...(dto.questionLanguageCode
         ? { questionLanguageCode: dto.questionLanguageCode }
         : {}),
+      ...(dto.scriptLanguage ? { scriptLanguage: dto.scriptLanguage } : {}),
+      ...(dto.vocalLanguage ? { vocalLanguage: dto.vocalLanguage } : {}),
       status: 'pending',
     });
   }
@@ -46,7 +46,9 @@ export class MongoPendingQuestionRepository
       .exec();
   }
 
-  async findByQuestionId(questionId: string): Promise<PendingQuestionModel | null> {
+  async findByQuestionId(
+    questionId: string,
+  ): Promise<PendingQuestionModel | null> {
     return this.model.findOne({ questionId }).lean().exec();
   }
 

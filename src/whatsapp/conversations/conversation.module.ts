@@ -9,6 +9,7 @@ import { SarvamModule } from '../sarvam-api/sarvam.module';
 import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
 import { UserStatsModule } from '../user-stats/user-stats.module';
 import { UserDetailsModule } from '../user-details/user-details.module';
+import { LanguageSupportModule } from '../language-support/language-support.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UserDetailsModule } from '../user-details/user-details.module';
     PendingQuestionsModule,
     UserStatsModule,
     UserDetailsModule,
+    LanguageSupportModule,
   ],
   providers: [
     AddUserTextMessageHandler,

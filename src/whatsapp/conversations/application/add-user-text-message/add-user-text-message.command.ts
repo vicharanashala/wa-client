@@ -4,6 +4,7 @@ import { LangGraphClientService } from '../../langgraph-client.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
+import { LanguageSupportService } from '../../../language-support/language-support.service';
 import { Result } from 'oxide.ts';
 
 export class AddUserTextMessageCommand {
@@ -15,9 +16,7 @@ export class AddUserTextMessageCommand {
 }
 
 @CommandHandler(AddUserTextMessageCommand)
-export class AddUserTextMessageHandler
-  implements ICommandHandler<AddUserTextMessageCommand>
-{
+export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMessageCommand> {
   private readonly logger = new Logger(AddUserTextMessageHandler.name);
 
   constructor(
@@ -25,6 +24,7 @@ export class AddUserTextMessageHandler
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappUserRepo: WhatsappUserRepository,
+    private readonly languageSupport: LanguageSupportService,
   ) {}
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
@@ -41,19 +41,24 @@ export class AddUserTextMessageHandler
     );
 
     if (typingResult.isErr()) {
-      this.logger.warn(`[${phoneNumber}] showTyping failed: ${typingResult.unwrapErr().message}`);
+      this.logger.warn(
+        `[${phoneNumber}] showTyping failed: ${typingResult.unwrapErr().message}`,
+      );
     }
 
-
-
     // Send message to LangGraph; thread is created/reused automatically
-    const { reply, reviewId } = await this.langGraph.sendMessage(phoneNumber, content);
+    const { reply, reviewId } = await this.langGraph.sendMessage(
+      phoneNumber,
+      content,
+    );
 
     await this.whatsappUserRepo.recordMessage(phoneNumber, content);
 
     // If LangGraph flagged this for human review, save to pending_questions
     if (reviewId) {
       const langGraphThreadId = await this.langGraph.ensureThread(phoneNumber);
+      const languagePair =
+        await this.languageSupport.resolveLanguagePair(content);
       await this.pendingQuestionRepo.create({
         questionId: reviewId,
         phoneNumber,
@@ -61,6 +66,8 @@ export class AddUserTextMessageHandler
         toolCallId: `force-${Date.now()}`,
         originalMessageId: messageId,
         langGraphThreadId,
+        scriptLanguage: languagePair.scriptLanguage,
+        vocalLanguage: languagePair.vocalLanguage,
       });
       this.logger.log(
         `[${phoneNumber}] 📝 Pending question created — REV_ID: ${reviewId}`,

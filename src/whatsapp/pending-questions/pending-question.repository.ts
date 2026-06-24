@@ -12,12 +12,18 @@ export interface CreatePendingQuestionDto {
   langGraphThreadId?: string;
   /** Sarvam STT language when question was voice (optional). */
   questionLanguageCode?: string;
+  /** LangGraph-compatible writing system, e.g. English, Devanagari, Telugu. */
+  scriptLanguage?: string;
+  /** LangGraph-compatible spoken language, e.g. English, Hindi, Telugu. */
+  vocalLanguage?: string;
 }
 
 export abstract class PendingQuestionRepository {
   abstract create(dto: CreatePendingQuestionDto): Promise<void>;
   abstract findAllPending(): Promise<PendingQuestionModel[]>;
-  abstract findByQuestionId(questionId: string): Promise<PendingQuestionModel | null>;
+  abstract findByQuestionId(
+    questionId: string,
+  ): Promise<PendingQuestionModel | null>;
   abstract markAnswered(questionId: string, answer: string): Promise<void>;
   abstract markNotified(questionId: string): Promise<void>;
 }

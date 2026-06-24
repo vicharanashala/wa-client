@@ -33,6 +33,14 @@ export class PendingQuestionModel {
   @Prop({ default: null })
   questionLanguageCode?: string;
 
+  /** LangGraph-compatible writing system, e.g. English, Devanagari, Telugu */
+  @Prop({ default: null })
+  scriptLanguage?: string;
+
+  /** LangGraph-compatible spoken language, e.g. English, Hindi, Telugu */
+  @Prop({ default: null })
+  vocalLanguage?: string;
+
   @Prop({
     required: true,
     enum: ['pending', 'answered', 'notified'],

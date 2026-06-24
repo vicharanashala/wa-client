@@ -1,0 +1,452 @@
+[
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "English",
+    "twoHourDisclaimer": "Your question has been shared with our agri expert at annam.ai. You will get the answer within 2 hours.\nThank You.",
+    "stateFollowUp": "Which state and district are you in?",
+    "cropFollowUp": "Which crop are you growing?",
+    "testingDisclaimer": "⚠️ Important Notice (Testing) ⚠️\n\nThis AjraSakha application is under development and intended only for testing and validation.\nAdvisories are experimental and currently cover major crops in selected states.\n_____________________________\n\nWeather data is sourced from IMD.\nMarket data from eNAM, Agmarknet, and State APMCs.\nSoil health guidance from https://soilhealth.dac.gov.in/fertilizer-dosage.\nGovernment schemes from https://www.myscheme.gov.in/. \nOther agricultural information and advisories are expert-verified by Annam.ai. \n\nUsers should independently validate recommendations before acting.",
+    "lateNightDisclaimer": "Your question has been forwarded to our agri expert. You will receive a response by tomorrow, 8:00 AM.",
+    "earlyMorningDisclaimer": "Your question has been forwarded to our agri expert. You will receive a response by today, 8:00 AM."
+  },
+  {
+    "scriptLanguage": "Bengali-Assamese",
+    "vocalLanguage": "Assamese",
+    "twoHourDisclaimer": "আপোনাৰ প্ৰশ্নটো annam.ai-ৰ আমাৰ কৃষি বিশেষজ্ঞৰ সৈতে ভাগ-বতৰা কৰা হৈছে। আপুনি ২ ঘণ্টাৰ ভিতৰত উত্তৰ পাব।\nধন্যবাদ।",
+    "stateFollowUp": "আপুনি কোনখন ৰাজ্য আৰু জিলাত আছে?",
+    "cropFollowUp": "আপুনি কোনটো  শস্যৰ খেতি কৰিছে?",
+    "testingDisclaimer": "⚠️ গুৰুত্বপূৰ্ণ জাননী (পৰীক্ষামূলক) ⚠️\n\nএই AjraSakha এপ্লিকেচনটো বিকাশৰ পৰ্যায়ত আছে আৰু কেৱল পৰীক্ষা আৰু বৈধকৰণৰ বাবেহে উদ্দিষ্ট।\nপৰামৰ্শসমূহ পৰীক্ষামূলক আৰু বৰ্তমান নিৰ্বাচিত ৰাজ্যসমূহৰ প্ৰধান শস্যসমূহ সামৰি লয়।\n_____________________________\n\nবতৰৰ তথ্য IMD-ৰ পৰা সংগ্ৰহ কৰা হৈছে।\nবজাৰৰ তথ্য eNAM, Agmarknet, আৰু ৰাজ্যিক APMC-সমূহৰ পৰা লোৱা হৈছে।\nমাটিৰ স্বাস্থ্য সম্পৰ্কীয় নিৰ্দেশনা https://soilhealth.dac.gov.in/fertilizer-dosage-ৰ পৰা।\nচৰকাৰী আঁচনিসমূহ https://www.myscheme.gov.in/-ৰ পৰা।\nঅন্যান্য কৃষি তথ্য আৰু পৰামৰ্শসমূহ Annam.ai-ৰ দ্বাৰা বিশেষজ্ঞ-যাচাইকৃত।\n\nব্যৱহাৰকাৰীসকলে কাৰ্যব্যৱস্থা গ্ৰহণ কৰাৰ আগতে পৰামৰ্শসমূহ স্বতন্ত্ৰভাৱে যাচাই কৰি ল'ব লাগে।",
+    "lateNightDisclaimer": "আপোনাৰ প্ৰশ্নটো আমাৰ কৃষি বিশেষজ্ঞৰ ওচৰলৈ প্ৰেৰণ কৰা হৈছে। আপুনি কাইলৈ পুৱা ৮:০০ বজাৰ ভিতৰত উত্তৰ পাব।",
+    "earlyMorningDisclaimer": "আপোনাৰ প্ৰশ্নটো আমাৰ কৃষি বিশেষজ্ঞৰ ওচৰলৈ প্ৰেৰণ কৰা হৈছে। আপুনি আজি পুৱা ৮:০০ বজাৰ ভিতৰত উত্তৰ পাব।"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Assamese",
+    "twoHourDisclaimer": "Aapunar prashnatō annam.ai-r aamar krishi bisheshagyor soite bhag-batora kora hoise. Aapuni 2 ghontar bhitore uttor pabo.\nDhanyabad.",
+    "stateFollowUp": "Aapuni konkhon rajya aru zillat ase?",
+    "cropFollowUp": "Aapuni konto shasya kheti korise?",
+    "testingDisclaimer": "⚠️ Gurutbopurna jannani (porikhamulok) ⚠️\n\nEi AjraSakha application-tō bikashor paryayot ase aru kebol poriksha aru baedhakaronor babehe uddishtō.\nPoramarshosomuh porikhamulok aru bortoman nirbachit rajyosomuhot prodhan shasya-somuh samori loy.\n_____________________________\n\nBotaror totho IMD-r pora songrah kora hoise.\nBajaror totho eNAM, Agmarknet, aru rajyik APMC-somuhor pora lowa hoise.\nMati-r swasthya somporkiyo nirdeshona https://soilhealth.dac.gov.in/fertilizer-dosage-r pora.\nSorkaori aachoni-somuh https://www.myscheme.gov.in/-r pora.\nAnyanyo krishi totho aru poramarshosomuh Annam.ai-r dwara bisheshagya-jachai-krito.\n\nByaboharkarisokole karyabyabastha grohon korar agote poramarshosomuh swotontrobhabe jachai kori lob lage.",
+    "lateNightDisclaimer": "\"Aapunar prashnatō aamar krishi bisheshagyor oloi forward kora hoise. Aapuni kaligoi puwa 8:00 bozat uttor pabo.\"",
+    "earlyMorningDisclaimer": "\"Aapunar prashnatō aamar krishi bisheshagyor logot pathai diya hoise. Aapuni aaji puwa 8:00 bozaloi uttor pabo.\""
+  },
+  {
+    "scriptLanguage": "Bengali-Assamese",
+    "vocalLanguage": "Bengali",
+    "twoHourDisclaimer": "আপনার প্রশ্নটি annam.ai-এর আমাদের কৃষি বিশেষজ্ঞের সাথে শেয়ার করা হয়েছে। আপনি ২ ঘণ্টার মধ্যে উত্তর পাবেন।\nধন্যবাদ।",
+    "stateFollowUp": "আপনি কোন রাজ্য এবং জেলায় আছেন?",
+    "cropFollowUp": "আপনি কোন ফসল চাষ করছেন?",
+    "testingDisclaimer": "⚠️ গুরুত্বপূর্ণ বিজ্ঞপ্তি (পরীক্ষামূলক) ⚠️\n\nএই AjraSakha অ্যাপ্লিকেশনটি বিকাশের পর্যায়ে রয়েছে এবং শুধুমাত্র পরীক্ষা ও যাচাইয়ের উদ্দেশ্যে তৈরি।\nপরামর্শগুলি পরীক্ষামূলক এবং বর্তমানে নির্বাচিত রাজ্যগুলিতে প্রধান ফসলগুলিকে অন্তর্ভুক্ত করে।\n_____________________________\n\nআবহাওয়ার তথ্য IMD থেকে সংগ্রহ করা হয়েছে।\nবাজারের তথ্য eNAM, Agmarknet এবং রাজ্য APMC থেকে নেওয়া হয়েছে।\nমাটির স্বাস্থ্য সংক্রান্ত নির্দেশনা https://soilhealth.dac.gov.in/fertilizer-dosage থেকে নেওয়া হয়েছে।\nসরকারি প্রকল্পের তথ্য https://www.myscheme.gov.in/ থেকে নেওয়া হয়েছে।\nঅন্যান্য কৃষি তথ্য ও পরামর্শ Annam.ai দ্বারা বিশেষজ্ঞ-যাচাইকৃত।\n\nব্যবহারকারীদের উচিত কোনো পদক্ষেপ নেওয়ার আগে স্বাধীনভাবে সুপারিশগুলি যাচাই করে নেওয়া।",
+    "lateNightDisclaimer": "আপনার প্রশ্নটি আমাদের কৃষি বিশেষজ্ঞের কাছে পাঠানো হয়েছে। আপনি আগামীকাল সকাল ৮:০০ টার মধ্যে উত্তর পাবেন।",
+    "earlyMorningDisclaimer": "আপনার প্রশ্নটি আমাদের কৃষি বিশেষজ্ঞের কাছে পাঠানো হয়েছে। আজ সকাল ৮:০০ টার মধ্যে আপনি উত্তর পাবেন।"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Bengali",
+    "twoHourDisclaimer": "Apnar proshhnoti annam.ai-er amader krishi bisheshogyer shathe share kora hoyeche. Apni 2 ghontar modhye uttor paben.\nDhonyobad.",
+    "stateFollowUp": "Apni kon rajye o district-e achen?",
+    "cropFollowUp": "Apni kon phosol chash korchen?",
+    "testingDisclaimer": "⚠️ Guruttopurno Biggopti (Porikkshamulok) ⚠️\n\nEi AjraSakha application ti bikasher porjaye royeche ebong shudhumatro poriksha o jachaier uddeshye toiri.\nPoramorshoguli porikkshamulok ebong bortomane nirbachito rajyogulite prodhan phosolguloke ontorbhukt kore.\n_____________________________\n\nAbohawar tothyo IMD theke songgroho kora hoyeche.\nBajarer tothyo eNAM, Agmarknet ebong rajyo APMC theke neowa hoyeche.\nMatir shasthyo songkranto nirdeshona https://soilhealth.dac.gov.in/fertilizer-dosage theke neowa hoyeche.\nSorkaari prokolper tothyo https://www.myscheme.gov.in/ theke neowa hoyeche.\nOnyanya krishi tothyo o poramorsh Annam.ai dwara bisheshogyo-jachaikkrit.\n\nByaboharkariider uchit kono podokkhep newar age shadhinobhabe suparishshoguli jachai kore neowa.",
+    "lateNightDisclaimer": "\"Apnar proshnoti amader krishi biseshogner kache pathano hoyeche. Apni agamikaal sokal 8:00 TAr modhye uttor paben.\"",
+    "earlyMorningDisclaimer": "\"Apnar proshno amader krishi biseshogyer kachhe pathano hoyeche. Apni ajker modhye, sokal 8:00 TAr modhye uttor paben.\""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Bodo",
+    "twoHourDisclaimer": "आपुनार सोंथिखौ annam.ai-नि आमार कृषि बिशेसोज्ञजों बाँटिनाय जायो। आपुनि 2 घन्टानि भितराव जबाब पाबो।\nबादायबो।",
+    "stateFollowUp": "आपुनि माबे रायजो आरो जिलाआव आसो?",
+    "cropFollowUp": "आपुनि माबे फसल फलायो?",
+    "testingDisclaimer": "⚠️ दान्थाइ जानगार (परिक्षा) ⚠️\n\nबे AjraSakha एपलिकेसनखौ थाखोनाय जायो आरो केवल परिक्षा आरो सत्यापनाव बाहायनो हागौ।\nसलाहसमूहखौ प्रयोगात्मक रूपाव बानायनाय जायो आरो दाननि बायदि बायदि रायजोनि मुलु फसलखौ फारसे फारसे राजखान्थिनि गेजेराव हेफाजाब करो।\n_____________________________\n\nमौसम दाटा IMD-नि जाय।\nबाजार दाटा eNAM, Agmarknet, आरो रायजो APMCs-नि जाय।\nमाटि स्वास्थ्य सलाह https://soilhealth.dac.gov.in/fertilizer-dosage-नि जाय।\nसरकारि आखाइखौ https://www.myscheme.gov.in/-नि जाय।\nबेसेबां कृषि थाखोनाय आरो सलाहखौ Annam.ai-नि बिशेसोज्ञजों सत्यापन करनाय जायो।\n\nबाहायग्रा मानसिफोरा खुंथायखौ लानो आगोनाव सोलोंथाय सत्यापन करनो हागौ।",
+    "lateNightDisclaimer": "\"नंथिनि सुबुंथाव नंथिनि खेती बिसेसग्यजों लामाव खौ बिजिरदों। नंथाय दाहान्नै सिगां 8:00 आव जाबाय फैगौ।\"",
+    "earlyMorningDisclaimer": "\"नायनि होंनाय गोसो नांथाय खेथि बिसेसगेयाव थायखिदिखौ जादों। नोंथांनि फिन्नाय दिनैसिम नाजा 8:00 बाजाफोरा मोनदों।\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Bodo",
+    "twoHourDisclaimer": "Apunar sonthikhau annam.ai-ni aamar krishi bishesognjong bantinay jaayo. Apuni 2 ghontani bhitoraav jobab paabo.\nBadaaybo.",
+    "stateFollowUp": "Apuni maabe raayjoaav aar districtaav aaso?",
+    "cropFollowUp": "Apuni maabe phosal phalaayo?",
+    "testingDisclaimer": "⚠️ Danthai Jangar (Porikha) ⚠️\n\nBe AjraSakha application khau thaakhonay jaayo aaro keval porikha aaro satyapanaav bahaynо haagau.\nSolahsamuhkhau proyogatmak ruphaav baanaynay jaayo aaro dannai baydai baydai raayjoni mulu phosalkhau pharose pharose raajkhanthinai gejeraav hefaajab koro.\n_____________________________\n\nMausam data IMD-ni jaay.\nBaajaar data eNAM, Agmarknet, aaro raayjo APMCs-ni jaay.\nMaati swasthya solah https://soilhealth.dac.gov.in/fertilizer-dosage-ni jaay.\nSorkari aakhaaikhau https://www.myscheme.gov.in/-ni jaay.\nBesebang krishi thaakhonay aaro solahkhau Annam.ai-ni bishesogngjong satyapan kornay jaayo.\n\nBahaygra mansifoora khunthaykhau laano aagonaav solongthaay satyapan korno haagau.",
+    "lateNightDisclaimer": "\"Nwngni khonthai-a hamni krishi biseshogya khou phaitha jaisri. Nwng thimani 8:00 AM khou phali gwjab paigwn.\"",
+    "earlyMorningDisclaimer": "\"नंथाइनि सोदोब सिम बिजिरनायाव फोरमायनाय जानो। नं दिनै सिगां 8:00 बजाफोरआव फोरमायनि खौरां पाबाय गोनां।\""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Dogri",
+    "twoHourDisclaimer": "तुंदा सवाल साड्डे कृषि विशेषज्ञ कोल annam.ai उप्पर साझा कीता गेआ ऐ। तुसेंगी 2 घैंटें दे अंदर जवाब मिलग। धन्यवाद।",
+    "stateFollowUp": "तुसीं किस राज्य ते जिले च ओ?",
+    "cropFollowUp": "तुसीं कौन जेई फसल उगा'रे ओ?",
+    "testingDisclaimer": "⚠️ जरूरी सूचना (परीक्षण) ⚠️\n\nएह् AjraSakha एप्लीकेशन विकास दे अधीन ऐ ते केवल परीक्षण ते सत्यापन लेई ऐ।\nसलाहां प्रयोगात्मक न ते इस बेल्लै चुनिंदा राज्यें च मुक्ख फसलें गी कवर करदियां न।\n_____________________________\n\nमौसम दा डेटा IMD थमां लैता गेआ ऐ।\nबजार दा डेटा eNAM, Agmarknet, ते राज्य APMCs थमां ऐ।\nमिट्टी दी सेहत दी अगवाई https://soilhealth.dac.gov.in/fertilizer-dosage थमां ऐ।\nसरकारी योजनाएं https://www.myscheme.gov.in/ थमां न।\nहोर कृषि जानकारी ते सलाहां Annam.ai द्वारा विशेषज्ञें कोलोंं सत्यापित कीतियां गेइयां न।\n\nयूजरें गी चाहिदा जे ओ कोई कदम चुक्कने थमां पैहलें सिफारशें गी अपने आप सत्यापित करन।",
+    "lateNightDisclaimer": "\"तुंदा सवाल साढ़े कृषि विशेषज्ञ गी भेज दित्ता गेदा ऐ। तुसेंगी कल सवेरे 8 बजे तगर जवाब मिल जाग।\"",
+    "earlyMorningDisclaimer": "\"तुंदा सवाल साढ़े कृषि विशेषज्ञ गी भेज दित्ता गेदा ऐ। तुसेंगी अज्ज सवेरे 8:00 बजे तगर जवाब मिल जाग।\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Dogri",
+    "twoHourDisclaimer": "Tunda sawaal sadde krishi visheshagya kol annam.ai upar saajha keeta gea ai. Tusengi 2 ghainten de andar jawaab milga. Dhanyawaad.",
+    "stateFollowUp": "Tuseen kis raajya te zile ch o?",
+    "cropFollowUp": "Tuseen kaun jei fasal ugaare o?",
+    "testingDisclaimer": "⚠️ Zaroori Soochna (Parikshan) ⚠️\n\nEh AjraSakha application vikaas de adheen ai te kewal parikshan te satyaapan lei ai.\nSalaahaan prayogatmak ne te is bellai chuninda raajyen ch mukhkh faslen gi cover kardiyaan ne.\n_____________________________\n\nMausam da data IMD thaman laita gea ai.\nBazaar da data eNAM, Agmarknet, te raajya APMCs thaman ai.\nMitti di sehat di agwaai https://soilhealth.dac.gov.in/fertilizer-dosage thaman ai.\nSarkaari yojanaen https://www.myscheme.gov.in/ thaman ne.\nHor krishi jaankaari te salaahaan Annam.ai dwaara visheshaagyen kolonn satyaapit keetiyaan geiyaan ne.\n\nYuzaron gi chaahida je o koi kadam chukne thaman pehlan sifarshan gi apne aap satyaapit karan.",
+    "lateNightDisclaimer": "\"Tuhada sawal saade kheti maahir kol bhej ditta gaya hai. Tuhanu kal savere 8 baje tak jawab mil jauga.\"",
+    "earlyMorningDisclaimer": "\"Tuhada sawal saade kheti maahir gai bhejja gea hai. Tuhanu ajj, savere 8 baje tak jawaab mil jauga.\""
+  },
+  {
+    "scriptLanguage": "Gujarati",
+    "vocalLanguage": "Gujarati",
+    "twoHourDisclaimer": "તમારો પ્રશ્ન annam.ai પર અમારા કૃષિ નિષ્ણાત સાથે શેર કરવામાં આવ્યો છે. તમને 2 કલાકની અંદર જવાબ મળશે.\nઆભાર.",
+    "stateFollowUp": "તમે કયા રાજ્ય અને જિલ્લામાં છો?",
+    "cropFollowUp": "તમે કઈ પાક ઉગાડો છો?",
+    "testingDisclaimer": "⚠️ મહત્વપૂર્ણ સૂચના (પરીક્ષણ) ⚠️\n\nઆ AjraSakha એપ્લિકેશન વિકાસ હેઠળ છે અને માત્ર પરીક્ષણ અને માન્યતા માટે જ બનાવવામાં આવી છે.\nસલાહ પ્રાયોગિક છે અને હાલમાં પસંદ કરેલ રાજ્યોમાં મુખ્ય પાકોને આવરી લે છે.\n_____________________________\n\nહવામાન ડેટા IMD માંથી લેવામાં આવ્યો છે.\nબજાર ડેટા eNAM, Agmarknet અને રાજ્ય APMCs માંથી લેવામાં આવ્યો છે.\nમાટીના સ્વાસ્થ્ય માર્ગદર્શન https://soilhealth.dac.gov.in/fertilizer-dosage માંથી.\nસરકારી યોજનાઓ https://www.myscheme.gov.in/ માંથી.\nઅન્ય કૃષિ માહિતી અને સલાહ Annam.ai દ્વારા નિષ્ણાત-ચકાસાયેલ છે.\n\nઉપયોગકર્તાઓએ કાર્ય કરતા પહેલા ભલામણોને સ્વતંત્ર રીતે ચકાસવી જોઈએ.",
+    "lateNightDisclaimer": "\"તમારો પ્રશ્ન અમારા કૃષિ નિષ્ણાતને મોકલી આપવામાં આવ્યો છે. તમને કાલે સવારે 8:00 વાગ્યા સુધીમાં જવાબ મળશે.\"",
+    "earlyMorningDisclaimer": "\"તમારો પ્રશ્ન અમારા કૃષિ નિષ્ણાતને મોકલી આપવામાં આવ્યો છે. તમને આજે સવારે 8:00 વાગ્યા સુધીમાં જવાબ મળશે.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Gujarati",
+    "twoHourDisclaimer": "Tamaro prashna annam.ai par amara krushi nishnat sathe share karavama avyo chhe. Tamane 2 kalakni andar javab malashe.\nAbhar.",
+    "stateFollowUp": "Tame kaya rajya ane jillama chho?",
+    "cropFollowUp": "Tame kai pak ugado chho?",
+    "testingDisclaimer": "⚠️ Matvapurna suchana (Parikshan) ⚠️\n\nAa AjraSakha application vikas hethal chhe ane matra parikshan ane manyata mate j banavavama avi chhe.\nSalah prayogik chhe ane halma pasand karayel rajyoma mukhya pakone avari le chhe.\n_____________________________\n\nHavaman data IMD mathi lavama avyo chhe.\nBajar data eNAM, Agmarknet ane rajya APMCs mathi lavama avyo chhe.\nMatana swasthya margadarshan https://soilhealth.dac.gov.in/fertilizer-dosage mathi.\nSarkari yojnao https://www.myscheme.gov.in/ mathi.\nAnya krushi mahiti ane salah Annam.ai dwara nishnat-chakasayel chhe.\n\nUpayogkartaoe karya karata pahela bhalamano swatantra rite chakasavi joie.",
+    "lateNightDisclaimer": "Tamaro prashn amara krushi nishnant ne mokalva ma aavyo che. Tamne kal savare 8:00 vagya sudhi ma javab malase.",
+    "earlyMorningDisclaimer": "Tamaro prashna amara krushi nishnant ne mokalva ma aavyo che. Tamne aaje savare 8:00 vaagya sudhi javab malase."
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Hindi",
+    "twoHourDisclaimer": "आपका प्रश्न annam.ai पर हमारे कृषि विशेषज्ञ के साथ साझा किया गया है। आपको 2 घंटे के भीतर उत्तर मिलेगा। धन्यवाद।",
+    "stateFollowUp": "आप किस राज्य और जिले में हैं?",
+    "cropFollowUp": "आप कौन सी फसल उगा रहे हैं?",
+    "testingDisclaimer": "⚠️ महत्वपूर्ण सूचना (परीक्षण) ⚠️\n\nयह AjraSakha एप्लिकेशन विकास के अधीन है और केवल परीक्षण और सत्यापन के लिए है।\nसलाहें प्रयोगात्मक हैं और वर्तमान में चुनिंदा राज्यों में प्रमुख फसलों को कवर करती हैं।\n_____________________________\n\nमौसम डेटा IMD से लिया गया है।\nबाजार डेटा eNAM, Agmarknet और राज्य APMCs से लिया गया है।\nमृदा स्वास्थ्य मार्गदर्शन https://soilhealth.dac.gov.in/fertilizer-dosage से लिया गया है।\nसरकारी योजनाएं https://www.myscheme.gov.in/ से ली गई हैं।\nअन्य कृषि जानकारी और सलाहें Annam.ai द्वारा विशेषज्ञ-सत्यापित हैं।\n\nउपयोगकर्ताओं को कार्य करने से पहले सिफारिशों को स्वतंत्र रूप से सत्यापित करना चाहिए।",
+    "lateNightDisclaimer": "आपका प्रश्न हमारे कृषि विशेषज्ञ को भेज दिया गया है। आपको कल सुबह 8:00 बजे तक उत्तर मिल जाएगा।",
+    "earlyMorningDisclaimer": "आपका प्रश्न हमारे कृषि विशेषज्ञ को भेज दिया गया है। आपको आज सुबह 8:00 बजे तक उत्तर मिल जाएगा।"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Hindi",
+    "twoHourDisclaimer": "Aapka prashna annam.ai par hamare krishi visheshagya ke saath saajha kiya gaya hai. Aapko 2 ghante ke bheetar uttar milega. Dhanyavaad.",
+    "stateFollowUp": "Aap kis rajya aur zile mein hain?",
+    "cropFollowUp": "Aap kaun si fasal uga rahe hain?",
+    "testingDisclaimer": "⚠️ Mahatvapurn Soochna (Parikshan) ⚠️\n\nYeh AjraSakha application vikas ke adhin hai aur keval parikshan aur satyapan ke liye hai.\nSalaahein prayogatmak hain aur vartaman mein chuninda rajyon mein pramukh faslon ko cover karti hain.\n_____________________________\n\nMausam data IMD se liya gaya hai.\nBazaar data eNAM, Agmarknet aur rajya APMCs se liya gaya hai.\nMrida swasthya margadarshan https://soilhealth.dac.gov.in/fertilizer-dosage se liya gaya hai.\nSarkaari yojanaen https://www.myscheme.gov.in/ se li gayi hain.\nAnya krishi jaankari aur salaahein Annam.ai dwara visheshagya-satyapit hain.\n\nUpayogkartaon ko kaarya karne se pehle sifaarsho ko swatantra roop se satyapit karna chahiye.",
+    "lateNightDisclaimer": "\"Aapka prashna hamare krishi visheshagya ko bhej diya gaya hai. Aapko kal subah 8:00 baje tak uttar mil jayega.\"",
+    "earlyMorningDisclaimer": "\"Aapka prashna hamare krishi visheshagya ko bhej diya gaya hai. Aapko aaj subah 8:00 baje tak uttar mil jayega.\""
+  },
+  {
+    "scriptLanguage": "Kannada",
+    "vocalLanguage": "Kannada",
+    "twoHourDisclaimer": "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು annam.ai ನಲ್ಲಿರುವ ನಮ್ಮ ಕೃಷಿ ತಜ್ಞರೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲಾಗಿದೆ. ನಿಮಗೆ 2 ಗಂಟೆಗಳ ಒಳಗೆ ಉತ್ತರ ಸಿಗುತ್ತದೆ.\nಧನ್ಯವಾದಗಳು.",
+    "stateFollowUp": "ನೀವು ಯಾವ ರಾಜ್ಯ ಮತ್ತು ಜಿಲ್ಲೆಯಲ್ಲಿದ್ದೀರಿ?",
+    "cropFollowUp": "ನೀವು ಯಾವ ಬೆಳೆ ಬೆಳೆಯುತ್ತಿದ್ದೀರಿ?",
+    "testingDisclaimer": "⚠️ ಮಹತ್ವದ ಸೂಚನೆ (ಪರೀಕ್ಷಾ ಹಂತ) ⚠️\n\nಈ AjraSakha ಅಪ್ಲಿಕೇಶನ್ ಅಭಿವೃದ್ಧಿ ಹಂತದಲ್ಲಿದ್ದು, ಕೇವಲ ಪರೀಕ್ಷೆ ಮತ್ತು ಮೌಲ್ಯಮಾಪನಕ್ಕಾಗಿ ಮಾತ್ರ ಉದ್ದೇಶಿಸಲಾಗಿದೆ.\nಸಲಹೆಗಳು ಪ್ರಾಯೋಗಿಕವಾಗಿದ್ದು, ಪ್ರಸ್ತುತ ಆಯ್ದ ರಾಜ್ಯಗಳಲ್ಲಿ ಪ್ರಮುಖ ಬೆಳೆಗಳನ್ನು ಒಳಗೊಂಡಿವೆ.\n_____________________________\n\nಹವಾಮಾನ ಮಾಹಿತಿಯನ್ನು IMD ನಿಂದ ಪಡೆಯಲಾಗಿದೆ.\nಮಾರುಕಟ್ಟೆ ಮಾಹಿತಿಯನ್ನು eNAM, Agmarknet ಮತ್ತು ರಾಜ್ಯ APMCಗಳಿಂದ ಪಡೆಯಲಾಗಿದೆ.\nಮಣ್ಣಿನ ಆರೋಗ್ಯ ಮಾರ್ಗದರ್ಶನವನ್ನು https://soilhealth.dac.gov.in/fertilizer-dosage ನಿಂದ ಪಡೆಯಲಾಗಿದೆ.\nಸರ್ಕಾರಿ ಯೋಜನೆಗಳನ್ನು https://www.myscheme.gov.in/ ನಿಂದ ಪಡೆಯಲಾಗಿದೆ.\nಇತರ ಕೃಷಿ ಮಾಹಿತಿ ಮತ್ತು ಸಲಹೆಗಳನ್ನು Annam.ai ನ ತಜ್ಞರು ಪರಿಶೀಲಿಸಿ ದೃಢೀಕರಿಸಿದ್ದಾರೆ.\n\nಬಳಕೆದಾರರು ಯಾವುದೇ ಕ್ರಮ ತೆಗೆದುಕೊಳ್ಳುವ ಮೊದಲು ಶಿಫಾರಸುಗಳನ್ನು ಸ್ವತಂತ್ರವಾಗಿ ಪರಿಶೀಲಿಸಬೇಕು.",
+    "lateNightDisclaimer": "\"ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ನಮ್ಮ ಕೃಷಿ ತಜ್ಞರಿಗೆ ರವಾನಿಸಲಾಗಿದೆ. ನಾಳೆ ಬೆಳಿಗ್ಗೆ 8:00 ಗಂಟೆಗೆ ನಿಮಗೆ ಉತ್ತರ ಸಿಗುತ್ತದೆ.\"",
+    "earlyMorningDisclaimer": "\"ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ನಮ್ಮ ಕೃಷಿ ತಜ್ಞರಿಗೆ ಕಳುಹಿಸಲಾಗಿದೆ. ನೀವು ಇಂದು ಬೆಳಿಗ್ಗೆ 8:00 ಗಂಟೆಗೆ ಉತ್ತರವನ್ನು ಸ್ವೀಕರಿಸುತ್ತೀರಿ.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Kannada",
+    "twoHourDisclaimer": "Nimma prashneyanu annam.ai nalli iruva namma krushi tajnarodige hanchikollalaagide. Nimage 2 gantegala olage uttara siguttade.\nDhanyavaadagalu.",
+    "stateFollowUp": "Neevu yaava raajya mattu jilleyalli iddiri?",
+    "cropFollowUp": "Neevu yaava bele beleyuttiddiri?",
+    "testingDisclaimer": "⚠️ Mahathvada soochane (Pareeksha hanta) ⚠️\n\nEe AjraSakha application abhivruddhi hantadalli iddu, kevala pareekshe mattu maulyamaapanakkaagi maatra uddeshisalaagide.\nSalahegalu praayogikavaagiddu, prastuta aayda raajyagalalli pramukha belegalu olagondiwe.\n_____________________________\n\nHavamaana maahitiyanu IMD ninda padeyalaagide.\nMaarukatte maahitiyanu eNAM, Agmarknet mattu raajya APMCgalinda padeyalaagide.\nMannina aarogya maargadarshanannu https://soilhealth.dac.gov.in/fertilizer-dosage ninda padeyalaagide.\nSarkaari yojanegalu https://www.myscheme.gov.in/ ninda padeyalaagide.\nItara krushi maahiti mattu salahegalu Annam.ai na tajnaru parisheelisi drudheekarisiddaare.\n\nBalakadaararu yaavude krama tegedukolluva modalu shifarasugalanu swatantravagi parisheelisabeeku.",
+    "lateNightDisclaimer": "\"Nimma prashneyanu nammi krushi vidwamsakke forward madiddeevi. Neevu naaley beleyaaru 8:00 gantege pratikriye receive maadteeri.\"",
+    "earlyMorningDisclaimer": "\"Nimma prashneyanu namm krushi visharada varigey forward maaditteevi. Nimgey ivattey beligge 8:00 gaantege uttara sigutte.\""
+  },
+  {
+    "scriptLanguage": "Perso-Arabic",
+    "vocalLanguage": "Kashmiri",
+    "twoHourDisclaimer": "آپکا سوال annam.ai پر ہمارے زراعت ماہر کے ساتھ شیئر کیا گیا چھُ۔ آپس 2 گھنٹن اندر جواب ملہِ۔\nشکریہ۔",
+    "stateFollowUp": "آپ کُس صوبس تہٕ ضِلس منز چھِو؟",
+    "cropFollowUp": "آپ کُس فصلس اُگاوان چھِو؟",
+    "testingDisclaimer": "⚠️ اہم اطلاع (ٹیسٹنگ) ⚠️\n\nیہ AjraSakha اپلیکیشن ترقی تلہ چھیہ تہ صرف ٹیسٹنگ تہ توثیق کیتہ مخصوص چھیہ۔\nمشورے تجرباتی چھہِ تہ فی الحال منتخب صوبن منز اہم فصلن پیٹھ مشتمل چھہِ۔\n_____________________________\n\nموسمی ڈیٹا IMD ہنز طرفہ چھُ۔\nمارکیٹ ڈیٹا eNAM، Agmarknet تہ ریاستی APMCs ہنز طرفہ چھُ۔\nمٹی صحت رہنمائی https://soilhealth.dac.gov.in/fertilizer-dosage ہنز طرفہ چھیہ۔\nسرکاری اسکیمیں https://www.myscheme.gov.in/ ہنز طرفہ چھہِ۔\nبیاکھ زرعی معلومات تہ مشورے Annam.ai ہنز طرفہ ماہرین تصدیق شدہ چھہِ۔\n\nاستعمال کرنہ والین پیٹھ لازم چھُ کہ عمل کرنہ سیتی پہلہ سفارشن کی آزادانہ تصدیق کرن۔",
+    "lateNightDisclaimer": "آپکا سوال اسۍ زراعت ماہر کس آگے بھیٚجمُت چھُ۔ آپس پگاہ صبحُک ٮ۪ بجے تام جواب ملہِ۔",
+    "earlyMorningDisclaimer": "آپکا سوال أسِندِس زراعت ماہر کُن فاروَرڑ کرنہ آمُت چھُ۔ آپس اَز، صُبحُک 8 بجے تام جواب ملِہ۔"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Kashmiri",
+    "twoHourDisclaimer": "Aapka sawal annam.ai par hamarey zaraet maahir keth saath share kiya gaye chhu. Aapas 2 ghanten andar jawaab milhi.\nShukriya.",
+    "stateFollowUp": "Aap kus soobas te kus zilas manz chhiv?",
+    "cropFollowUp": "Aap kus faslas ugaavan chhiv?",
+    "testingDisclaimer": "⚠️ Aham Ittila (Testing) ⚠️\n\nYih AjraSakha application taraqqi talah chhyeh tah sirf testing tah tasdeeq kyeth makhsoos chhyeh.\nMashwarey tajrbaati chhih tah fil-haal muntakhab soobon manz aham faslon pyeth mushtamil chhih.\n_____________________________\n\nMausami data IMD hanz tarafah chhu.\nMarket data eNAM, Agmarknet tah riyaasti APMCs hanz tarafah chhu.\nMatti sehat rahnumai https://soilhealth.dac.gov.in/fertilizer-dosage hanz tarafah chhyeh.\nSarkari schemes https://www.myscheme.gov.in/ hanz tarafah chhih.\nByaakh zaraei maloomaat tah mashwarey Annam.ai hanz tarafah maahireen tasdeeq shuddah chhih.\n\nIstimaal karnih waalien pyeth laazim chhu keh amal karnih syeti pehle sifaarshan ki aazaadaanah tasdeeq karan.",
+    "lateNightDisclaimer": "\"Tuhund sawal chhu aasaani ziraat maahir kus pathaavnay aamut. Tuhis milih paagah, 8:00 AM tak jawaab.\"",
+    "earlyMorningDisclaimer": "\"Tuhund sawal chhu asi peyith agri expert kas. Tuhis milith aadz, 8:00 AM tak jawab.\""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Konkani",
+    "twoHourDisclaimer": "तुमचो प्रस्न आमच्या annam.ai च्या कृषी तज्ञाकडे पाठयला आसा. तुमकां 2 वरांभितर जाप मेळटली.\nधन्यवाद.",
+    "stateFollowUp": "तुमी कोणत्या राज्यांत आनी जिल्ह्यांत आसात?",
+    "cropFollowUp": "तुमी कोणती पीक लायल्यात?",
+    "testingDisclaimer": "⚠️ म्हत्वाची सुचोवणी (परीक्षण) ⚠️\n\nही AjraSakha अर्जी विकासाधीन आसा आनी फकत परीक्षण आनी प्रमाणीकरणा खातीर आसा.\nसल्ले प्रायोगिक आसात आनी सद्याक निवडिल्ल्या राज्यांतल्या मुखेल पिकांक व्यापतात.\n_____________________________\n\nहवामान माहिती IMD कडसून घेतल्या.\nबाजार माहिती eNAM, Agmarknet, आनी राज्य APMC कडसून.\nमाती आरोग्य मार्गदर्शन https://soilhealth.dac.gov.in/fertilizer-dosage कडसून.\nसरकारी येवजण्यो https://www.myscheme.gov.in/ कडसून.\nइतर कृषी माहिती आनी सल्ले Annam.ai द्वारे तज्ञांनी प्रमाणित केल्यात.\n\nवापरकर्त्यांनी शिफारशींचेर अमल करचे आदीं स्वतंत्रपणान पडताळणी करची.",
+    "lateNightDisclaimer": "तुमचो प्रश्न आमच्या कृषी तज्ञाक धाडला. तुमकां फाल्यां सकाळीं ८:०० वरांक जाप मेळटली.",
+    "earlyMorningDisclaimer": "तुमचो प्रश्न आमच्या कृषी तज्ञाक धाडला. तुमकां आयज सकाळीं ८:०० वरांक जाप मेळटली."
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Konkani",
+    "twoHourDisclaimer": "Tumcho proshno amchya annam.ai chya krushi tajnyakade pathyila asa. Tumkam 2 varambitr jaap meltoli.\nDhanyavad.",
+    "stateFollowUp": "Tumi konthya rajyant ani districtant asat?",
+    "cropFollowUp": "Tumi konthi pik lailyat?",
+    "testingDisclaimer": "⚠️ Mhottvaachi suchovni (Parikshan) ⚠️\n\nHi AjraSakha arji vikasadheen asa ani fokat parikshan ani pramanikaran khatir asa.\nSalle prayogik asat ani sadyak nividillea rajyantle mukhel pikank vyaptat.\n_____________________________\n\nHavaman mahiti IMD kadasun ghetlya.\nBazar mahiti eNAM, Agmarknet, ani rajyo APMC kadasun.\nMati arogya margadarshan https://soilhealth.dac.gov.in/fertilizer-dosage kadasun.\nSarkaari yevjonnyo https://www.myscheme.gov.in/ kadasun.\nItor krushi mahiti ani salle Annam.ai dvare tajnyannim pramanit kelyat.\n\nVaparkartyanni shifarashincher amal korche adim swatantropanan padtalni korchi.",
+    "lateNightDisclaimer": "\" Tumcho proshn amchya krushi tajnyak dhadla. Tumkam falyam sokallim 8:00 vorank jaap melltoli.\"",
+    "earlyMorningDisclaimer": "\" Tumcho proshn amchya krushi tajnyak dhadla. Tumkam aij sokallim 8:00 vorank jaap melltoli. \""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Maithili",
+    "twoHourDisclaimer": "अहाँक प्रश्न annam.ai पर हमर कृषि विशेषज्ञ संग साझा कयल गेल अछि। अहाँकेँ २ घंटाक भीतर उत्तर भेटत। धन्यवाद।",
+    "stateFollowUp": "अहाँ कोन राज्य आ जिलामे छी?",
+    "cropFollowUp": "अहाँ कोन फसल उगा रहल छी?",
+    "testingDisclaimer": "⚠️ महत्वपूर्ण सूचना (परीक्षण) ⚠️\n\nई AjraSakha एप्लिकेशन विकासक अधीन अछि आ केवल परीक्षण आ सत्यापनक लेल बनाओल गेल अछि।\nसलाह प्रयोगात्मक अछि आ वर्तमानमे चुनल राज्यमे प्रमुख फसल सभकेँ कवर करैत अछि।\n_____________________________\n\nमौसम डेटा IMD सँ लेल गेल अछि।\nबाजार डेटा eNAM, Agmarknet, आ राज्य APMC सँ लेल गेल अछि।\nमृदा स्वास्थ्य मार्गदर्शन https://soilhealth.dac.gov.in/fertilizer-dosage सँ लेल गेल अछि।\nसरकारी योजना https://www.myscheme.gov.in/ सँ लेल गेल अछि।\nअन्य कृषि जानकारी आ सलाह Annam.ai द्वारा विशेषज्ञ-सत्यापित अछि।\n\nउपयोगकर्ता सभकेँ कोनो कार्य करबासँ पहिने सिफारिशकेँ स्वतंत्र रूपसँ सत्यापित करबाक चाही।",
+    "lateNightDisclaimer": "\"अहाँक प्रश्न हमर कृषि विशेषज्ञ कें भेज देल गेल अछि। अहाँ कें काल्हि भोरे ८:०० बजे तक उत्तर भेटत।\"",
+    "earlyMorningDisclaimer": "\"अहाँक प्रश्न हमर कृषि विशेषज्ञ केँ भेज देल गेल अछि। अहाँ केँ आइ भोर ८:०० बजे तक उत्तर भेटत।\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Maithili",
+    "twoHourDisclaimer": "Ahaank prashna annam.ai par hamar krishi visheshagya sang saajha kayal gel achhi. Ahaankein 2 ghantaak bhitar uttar bhetat. Dhanyavaad.",
+    "stateFollowUp": "Ahaan kon rajya aur district me chhi?",
+    "cropFollowUp": "Ahaan kon fasal uga rahal chhi?",
+    "testingDisclaimer": "⚠️ Mahatvapurn Suchana (Parikshan) ⚠️\n\nI AjraSakha application vikaasak adhin achhi aa keval parikshan aa satyapanakk lel banaol gel achhi.\nSalaah prayogaatmak achhi aa vartamanme chunal rajyame pramukh fasal sabhakein cover karait achhi.\n_____________________________\n\nMausam data IMD san lel gel achhi.\nBaajaar data eNAM, Agmarknet, aa rajya APMC san lel gel achhi.\nMrida swasthya maargadarshan https://soilhealth.dac.gov.in/fertilizer-dosage san lel gel achhi.\nSarkaari yojana https://www.myscheme.gov.in/ san lel gel achhi.\nAnya krishi jaankaari aa salaah Annam.ai dwaara visheshagya-satyapit achhi.\n\nUpayogkarta sabhakein kono kaary karabasaan pahine sifarishakein swatantra ruupasaan satyaapit karbaak chaahi.",
+    "lateNightDisclaimer": "\"Ahank prashn hamaar krishi vishesgya ke pathawa deल gेल achhi. Ahank kal bिहाne 8:00 baje tak uttar bhेट jaयत.\"",
+    "earlyMorningDisclaimer": "\"Ahank prasna hamaar krishi vishesgya ke pathao gail chhai. Ahank ke aaji bihane 8:00 baje tak uttar bhet jaet.\""
+  },
+  {
+    "scriptLanguage": "Malayalam",
+    "vocalLanguage": "Malayalam",
+    "twoHourDisclaimer": "നിങ്ങളുടെ ചോദ്യം annam.ai-ലെ ഞങ്ങളുടെ കാർഷിക വിദഗ്ധനുമായി പങ്കുവെച്ചിരിക്കുന്നു. 2 മണിക്കൂറിനുള്ളിൽ നിങ്ങൾക്ക് ഉത്തരം ലഭിക്കും.\nനന്ദി.",
+    "stateFollowUp": "നിങ്ങൾ ഏത് സംസ്ഥാനത്തും ജില്ലയിലുമാണ് ഉള്ളത്?",
+    "cropFollowUp": "നിങ്ങൾ ഏത് വിളയാണ് കൃഷി ചെയ്യുന്നത്?",
+    "testingDisclaimer": "⚠️ പ്രധാന അറിയിപ്പ് (പരീക്ഷണം) ⚠️\n\nഈ AjraSakha ആപ്ലിക്കേഷൻ വികസന ഘട്ടത്തിലാണ്. ഇത് നിലവിൽ പരീക്ഷണത്തിനും സാധൂകരണത്തിനുമായി മാത്രം ഉദ്ദേശിച്ചിട്ടുള്ളതാണ്. ഉപദേശങ്ങൾ പരീക്ഷണാത്മക സ്വഭാവമുള്ളവയാണ്. നിലവിൽ തിരഞ്ഞെടുത്ത സംസ്ഥാനങ്ങളിലെ പ്രധാന വിളകൾ മാത്രമാണ്   ഉൾപ്പെടുത്തിയിരിക്കുന്നത്.\n\n_____________________________\n\nകാലാവസ്ഥാ വിവരങ്ങൾ IMD-ൽ നിന്നാണ് ശേഖരിക്കുന്നത്. വിപണി വിവരങ്ങൾ eNAM, Agmarknet, വിവിധ സംസ്ഥാനങ്ങളിലെ APMC-കളിൽ നിന്നാണ് ലഭ്യമാക്കുന്നത്. മണ്ണിന്റെ ആരോഗ്യവുമായി ബന്ധപ്പെട്ട മാർഗ്ഗനിർദ്ദേശങ്ങൾ https://soilhealth.dac.gov.in/fertilizer-dosage ൽ നിന്നാണ് ലഭ്യമാക്കുന്നത്. സർക്കാർ പദ്ധതികളുമായി ബന്ധപ്പെട്ട വിവരങ്ങൾ https://www.myscheme.gov.in/ ൽ നിന്നാണ് ലഭ്യമാക്കുന്നത്. മറ്റ് കാർഷിക വിവരങ്ങളും ഉപദേശങ്ങളും Annam.ai-യിലെ വിദഗ്ധർ പരിശോധിച്ച് സ്ഥിരീകരിച്ചവയാണ്.\n\nശുപാർശകൾ പ്രാവർത്തികമാക്കുന്നതിന് മുമ്പ് ഉപയോക്താക്കൾ അവ സ്വതന്ത്രമായി പരിശോധിച്ച് സ്ഥിരീകരിക്കണം.",
+    "lateNightDisclaimer": "\"നിങ്ങളുടെ ചോദ്യം ഞങ്ങളുടെ കാർഷിക വിദഗ്ധന് കൈമാറിയിട്ടുണ്ട്. നാളെ രാവിലെ 8:00 മണിക്കുള്ളിൽ നിങ്ങൾക്ക് മറുപടി ലഭിക്കുന്നതാണ്.\"",
+    "earlyMorningDisclaimer": "\"നിങ്ങളുടെ ചോദ്യം ഞങ്ങളുടെ കാർഷിക വിദഗ്ധന് കൈമാറിയിട്ടുണ്ട്. ഇന്ന് രാവിലെ 8:00 മണിക്കുള്ളിൽ നിങ്ങൾക്ക് മറുപടി ലഭിക്കുന്നതാണ്.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Malayalam",
+    "twoHourDisclaimer": "Ningalude chodyam Annam.ai-yile njangalude kaarshika vidagdharumaayi pankuvechittundu. 2 manikkoorinnullil ningalkku marupadi labhikkunnathaanu.\n\nNandi.",
+    "stateFollowUp": "Ningal ethu samsthaanathilum jillayilumaanu ullath?",
+    "cropFollowUp": "Ningal ethu vilayaanu krishi cheyyunnath?",
+    "testingDisclaimer": "⚠️ Pradhaana Ariyippu (Pareekshanam) ⚠️\n\nEe AjraSakha application vikasanaghattathilaanu. Ithu nilavil pareekshanathinum saadhookaranathinumaayi maathram uddeshichittullathaanu. Upadeshangal pareekshanaathmaka swabhaavamullavayaanu. Nilavil thiranjedutha samsthaanangalile pradhaana vilakal maathramaanu ulppeduthiyirikkunnath.\n\n_____________________________\n\nKaalaavastha vivarangal IMD-il ninnaanu shekharikkunnath. Vipani vivarangal eNAM, Agmarknet, vividha samsthaanangalile APMC-kalil ninnaanu labhyamaakkunnath. Manninte aarogyavumaayi bandhapetta maargganirdeshangal https://soilhealth.dac.gov.in/fertilizer-dosage il ninnaanu labhyamaakkunnath. Sarkkaar padhathikalumaayi bandhapetta vivarangal https://www.myscheme.gov.in/ il ninnaanu labhyamaakkunnath. Matthu kaarshika vivarangalum upadeshangalum Annam.ai-yile vidagdhar parishodhichu sthirikarichavayaanu.\n\nEthengilum shupaarshakal praavarthikamaakkunnathinu munpu upayokthakkal ava swathanthramaayi parishodhikkukayum sthirikarikkukayum cheyyendathaanu.",
+    "lateNightDisclaimer": "\"Ningalude chodyam njangalude kaarshika vidagdhanu kaimaarriyittundu. Naale raavile 8:00 manikkakam ningalkku marupadi labhikkunnathaanu.\"",
+    "earlyMorningDisclaimer": "\"Ningalude chodyam njangalude kaarshika vidagdhanu kaimaarriyittundu. Innu raavile 8:00 manikkakam ningalkku marupadi labhikkunnathaanu.\""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Marathi",
+    "twoHourDisclaimer": "तुमचा प्रश्न annam.ai च्या आमlच्या कृषी तज्ञांसोबत शेअर करण्यात आला आहे. तुम्हाला २ तासांच्या आत उत्तर मिळेल.\nधन्यवाद.",
+    "stateFollowUp": "तुम्ही कोणत्या राज्यात आणि जिल्ह्यात आहात?",
+    "cropFollowUp": "तुम्ही कोणते पीक घेत आहात?",
+    "testingDisclaimer": "⚠️ महत्त्वाची सूचना (चाचणी) ⚠️\n\nही AjraSakha अॅप्लिकेशन विकासाधीन आहे आणि केवळ चाचणी आणि प्रमाणीकरणासाठी आहे.\nसल्ले प्रायोगिक आहेत आणि सध्या निवडक राज्यांमधील प्रमुख पिकांसाठी उपलब्ध आहेत.\n_____________________________\n\nहवामान डेटा IMD कडून घेतला आहे.\nबाजार डेटा eNAM, Agmarknet आणि राज्य APMC कडून घेतला आहे.\nमाती आरोग्य मार्गदर्शन https://soilhealth.dac.gov.in/fertilizer-dosage वरून घेतले आहे.\nसरकारी योजना https://www.myscheme.gov.in/ वरून घेतल्या आहेत.\nइतर कृषी माहिती आणि सल्ले Annam.ai द्वारे तज्ञ-सत्यापित आहेत.\n\nवापरकर्त्यांनी कृती करण्यापूर्वी शिफारसींची स्वतंत्रपणे पडताळणी करावी.",
+    "lateNightDisclaimer": "\"तुमचा प्रश्न आमच्या कृषी तज्ञाकडे पाठवण्यात आला आहे. तुम्हाला उद्या सकाळी ८:०० वाजेपर्यंत प्रतिसाद मिळेल.\"",
+    "earlyMorningDisclaimer": "\"तुमचा प्रश्न आमच्या कृषी तज्ञांकडे पाठवला आहे. तुम्हाला आज सकाळी ८:०० वाजेपर्यंत प्रतिसाद मिळेल.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Marathi",
+    "twoHourDisclaimer": "Tumcha prashna annam.ai chya aamchya krushi tajnyansobat share karnyat aala ahe. Tumhala 2 tasanch्ya aat uttar milelel.\nDhanyavad",
+    "stateFollowUp": "Tumhi kontyaa raajyaat aani kontyaa jilhyaat aahat?",
+    "cropFollowUp": "Tumhi konthe pik ghet aahat?",
+    "testingDisclaimer": "⚠️ Mahattvachi soochana (Chaachani) ⚠️\n\nHi AjraSakha application vikasaadheen ahe aani keval chaachani aani pramaanikaranasaathi ahe.\nSalle praayogik aahet aani sadhya nivadak raajyanmadheel pramukh pikansaathi upalabdh aahet.\n_____________________________\n\nHavamaan data IMD kadoon ghetal ahe.\nBaajaar data eNAM, Agmarknet aani raajya APMC kadoon ghetal ahe.\nMaati aarogya maargadarshan https://soilhealth.dac.gov.in/fertilizer-dosage varun ghetal ahe.\nSarkaari yojana https://www.myscheme.gov.in/ varun ghetlya aahet.\nItar krushi maahiti aani salle Annam.ai dwara tajnya-satyaapith aahet.\n\nVaaparkartyanni kruti karnyapoorvi shifarashinchi swatantrapane padataalni karaavi.",
+    "lateNightDisclaimer": "\"Tumcha prashn amchya krushi tanjnya kade pathavla ahe. Tumhala udya sakalі 8:00 varta paryant pratisar milel.\"",
+    "earlyMorningDisclaimer": "\"Tumcha prashn amchya krushi tanjnyakade pathavla ahe. Tumhala aaj sakali 8:00 vाजेपर्यंत pratiसाद milel.\""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Nepali",
+    "twoHourDisclaimer": "तपाईंको प्रश्न annam.ai का हाम्रा कृषि विशेषज्ञसँग साझा गरिएको छ। तपाईंले २ घण्टाभित्र उत्तर पाउनुहुनेछ।\nधन्यवाद।",
+    "stateFollowUp": "तपाईं कुन राज्य र जिल्लामा हुनुहुन्छ?",
+    "cropFollowUp": "तपाईं कुन बाली उमार्दै हुनुहुन्छ?",
+    "testingDisclaimer": "⚠️ महत्त्वपूर्ण सूचना (परीक्षण) ⚠️\n\nयो AjraSakha एप्लिकेसन विकासको क्रममा छ र यो केवल परीक्षण र प्रमाणीकरणको लागि मात्र हो।\nसल्लाहहरू प्रयोगात्मक छन् र हाल चयनित राज्यहरूमा प्रमुख बालीहरू समेट्छन्।\n_____________________________\n\nमौसम डेटा IMD बाट लिइएको छ।\nबजार डेटा eNAM, Agmarknet, र राज्य APMCहरूबाट लिइएको छ।\nमाटोको स्वास्थ्य मार्गदर्शन https://soilhealth.dac.gov.in/fertilizer-dosage बाट लिइएको छ।\nसरकारी योजनाहरू https://www.myscheme.gov.in/ बाट लिइएको छ।\nअन्य कृषि सम्बन्धी जानकारी र सल्लाहहरू Annam.ai द्वारा विशेषज्ञ-प्रमाणित छन्।\n\nप्रयोगकर्ताहरूले कुनै पनि कदम चाल्नु अघि सिफारिसहरू स्वतन्त्र रूपमा प्रमाणित गर्नुपर्छ।",
+    "lateNightDisclaimer": "तपाईंको प्रश्न हाम्रो कृषि विशेषज्ञलाई पठाइएको छ। तपाईंले भोलि बिहान ८:०० बजे सम्ममा जवाफ प्राप्त गर्नुहुनेछ।",
+    "earlyMorningDisclaimer": "तपाईंको प्रश्न हाम्रो कृषि विशेषज्ञलाई पठाइएको छ। तपाईंले आज बिहान ८:०० बजेसम्म जवाफ प्राप्त गर्नुहुनेछ।"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Nepali",
+    "twoHourDisclaimer": "Tapaaiko prashna annam.ai ka hamaara krishi visheshagyasanga saajha gariyeko chha. Tapaaile 2 ghantabitra uttar paaunuhunechha.\nDhanyabaad.",
+    "stateFollowUp": "Tapaain kun raajya ra jillama hunuhunchha?",
+    "cropFollowUp": "Tapaain kun baali umaardai hunuhunchha?",
+    "testingDisclaimer": "⚠️ Mahattwapurna Soochana (Parikshan) ⚠️\n\nYo AjraSakha application bikasako kramama chha ra yo kewal parikshan ra pramaanikaranako laagi maatra ho.\nSallaahaharu prayogaatmak chhan ra haal chayit raajyaharu ma pramukh baaliharu sametanchhan.\n_____________________________\n\nMausam data IMD bata liyeko chha.\nBajar data eNAM, Agmarknet, ra raajya APMChaaru bata liyeko chha.\nMaatoko swasthya maargadarshan https://soilhealth.dac.gov.in/fertilizer-dosage bata liyeko chha.\nSarkaari yojanaaharu https://www.myscheme.gov.in/ bata liyeko chha.\nAnya krishi sambandhi jaankaari ra sallaahaharu Annam.ai dwaara visheshagya-pramaanit chhan.\n\nPrayogakartaaharu le kunai pani kadam chaalnu aghi sifaarishaharu swatantra ruupama praamaanit garnuparchha.",
+    "lateNightDisclaimer": "\"Tapaiko prashna haamiley hamro krishi visheshagya lai pathayi sakeka chhaun. Tapaile bholi bihaana 8:00 bajey samma jawaf paunu hunechha.\"",
+    "earlyMorningDisclaimer": "\"Tapaiko prashna hamro krishi bisheshagya lai pathaaeko chha. Tapailai aaja bihaana 8:00 bajey samma jawaf prapta hunechha.\""
+  },
+  {
+    "scriptLanguage": "Odia",
+    "vocalLanguage": "Odia",
+    "twoHourDisclaimer": "ଆପଣଙ୍କ ପ୍ରଶ୍ନ annam.ai ର ଆମ କୃଷି ବିଶେଷଜ୍ଞଙ୍କ ସହ ସାଝା କରାଯାଇଛି। ଆପଣ ୨ ଘଣ୍ଟା ମଧ୍ୟରେ ଉତ୍ତର ପାଇବେ।\nଧନ୍ୟବାଦ।",
+    "stateFollowUp": "ଆପଣ କେଉଁ ରାଜ୍ୟ ଓ ଜିଲ୍ଲାରେ ଅଛନ୍ତି?",
+    "cropFollowUp": "ଆପଣ କେଉଁ ଫସଲ ଚାଷ କରୁଛନ୍ତି?",
+    "testingDisclaimer": "⚠️ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ ସୂଚନା (ପରୀକ୍ଷଣ) ⚠️\n\nଏହି AjraSakha ଆପ୍ଲିକେସନ ବିକାଶ ଅଧୀନରେ ଅଛି ଏବଂ କେବଳ ପରୀକ୍ଷଣ ଓ ବୈଧତା ନିରୂପଣ ପାଇଁ ଉଦ୍ଦିଷ୍ଟ।\nପରାମର୍ଶଗୁଡ଼ିକ ପ୍ରାୟୋଗିକ ଏବଂ ବର୍ତ୍ତମାନ ଚୟନିତ ରାଜ୍ୟଗୁଡ଼ିକରେ ପ୍ରମୁଖ ଫସଲଗୁଡ଼ିକୁ ଅନ୍ତର୍ଭୁକ୍ତ କରୁଛି।\n_____________________________\n\nଆବହାୱା ତଥ୍ୟ IMD ରୁ ସଂଗ୍ରହ କରାଯାଇଛି।\nବଜାର ତଥ୍ୟ eNAM, Agmarknet ଏବଂ ରାଜ୍ୟ APMC ଗୁଡ଼ିକରୁ ନିଆଯାଇଛି।\nମୃତ୍ତିକା ସ୍ୱାସ୍ଥ୍ୟ ମାର୍ଗଦର୍ଶନ https://soilhealth.dac.gov.in/fertilizer-dosage ରୁ ନିଆଯାଇଛି।\nସରକାରୀ ଯୋଜନା https://www.myscheme.gov.in/ ରୁ ନିଆଯାଇଛି।\nଅନ୍ୟ କୃଷି ସୂଚନା ଓ ପରାମର୍ଶ Annam.ai ଦ୍ୱାରା ବିଶେଷଜ୍ଞ-ଯାଞ୍ଚିତ।\n\nବ୍ୟବହାରକାରୀମାନେ କାର୍ଯ୍ୟ କରିବା ପୂର୍ବରୁ ସୁପାରିଶଗୁଡ଼ିକୁ ସ୍ୱାଧୀନ ଭାବରେ ଯାଞ୍ଚ କରିବା ଉଚିତ।",
+    "lateNightDisclaimer": "\"ଆପଣଙ୍କ ପ୍ରଶ୍ନ ଆମର କୃଷି ବିଶେଷଜ୍ଞଙ୍କ ନିକଟକୁ ପଠାଯାଇଛି। ଆପଣ ଆସନ୍ତାକାଲି ସକାଳ ୮:୦୦ ଟା ସୁଦ୍ଧା ଉତ୍ତର ପାଇବେ।\"",
+    "earlyMorningDisclaimer": "\"ଆପଣଙ୍କ ପ୍ରଶ୍ନ ଆମର କୃଷି ବିଶେଷଜ୍ଞଙ୍କ ନିକଟକୁ ପଠାଯାଇଛି। ଆପଣ ଆଜି ସକାଳ ୮:୦୦ ଟା ସୁଦ୍ଧା ଉତ୍ତର ପାଇବେ।\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Odia",
+    "twoHourDisclaimer": "Aapananka prashna annam.ai ra aama krushi bisheshagyanka saha sajha karayaichi. Aapana 2 ghanta madhyare uttara paibe.\nDhanyabaada.",
+    "stateFollowUp": "Aapana keun rajya o district re achhanti?",
+    "cropFollowUp": "Aapana keun phasala chaasha karuchanti?",
+    "testingDisclaimer": "⚠️ Gurutwapurna suchana (Parikshana) ⚠️\n\nEhi AjraSakha application bikaasha adhinare achhi ebam kebala parikshana o baidhataa nirupana paain uddishtaa.\nParaamarshagudika praayogika ebam bartamaana chayanita raajyagudikare pramukha phasalagudiku antarbhukta karuchhi.\n_____________________________\n\nAabahaawaaa tathya IMD ru sangrahaa karayaichi.\nBajaara tathya eNAM, Agmarknet ebam raajya APMC gudikaru niaayaichi.\nMruttikaa swaasthya maargadarshana https://soilhealth.dac.gov.in/fertilizer-dosage ru niaayaichi.\nSarakaari yojanaa https://www.myscheme.gov.in/ ru niaayaichi.\nAnya krushi suchana o paraamarsha Annam.ai dwaara bishesha-yaanchita.\n\nByabahaarakaarimaane kaarya karibaa purbe supaariishagudiku swaadhina bhaabere yaancha karibaa uchita.",
+    "lateNightDisclaimer": "\"Apananka prashna amara krushi bishejagyna nikataku  patha jaichi. Apana asanta kali sakalara 8:00  Sudha uttara paebe.\"",
+    "earlyMorningDisclaimer": "\"Apananka prashna amara krushi bishejagyna nikataku  patha jaichi. Apana asanta kali sakalara 8:00  Sudha uttara paebe.\""
+  },
+  {
+    "scriptLanguage": "Gurmukhi",
+    "vocalLanguage": "Punjabi",
+    "twoHourDisclaimer": "ਤੁਹਾਡਾ ਸਵਾਲ annam.ai 'ਤੇ ਸਾਡੇ ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਨਾਲ ਸਾਂਝਾ ਕੀਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ 2 ਘੰਟਿਆਂ ਦੇ ਅੰਦਰ ਜਵਾਬ ਮਿਲੇਗਾ। ਧੰਨਵਾਦ।",
+    "stateFollowUp": "ਤੁਸੀਂ ਕਿਸ ਰਾਜ ਅਤੇ ਜ਼ਿਲ੍ਹੇ ਵਿੱਚ ਹੋ?",
+    "cropFollowUp": "ਤੁਸੀਂ ਕਿਹੜੀ ਫ਼ਸਲ ਉਗਾ ਰਹੇ ਹੋ?",
+    "testingDisclaimer": "⚠️ ਮਹੱਤਵਪੂਰਨ ਸੂਚਨਾ (ਟੈਸਟਿੰਗ) ⚠️\n\nਇਹ AjraSakha ਐਪਲੀਕੇਸ਼ਨ ਵਿਕਾਸ ਅਧੀਨ ਹੈ ਅਤੇ ਸਿਰਫ਼ ਟੈਸਟਿੰਗ ਅਤੇ ਪ੍ਰਮਾਣਿਕਤਾ ਲਈ ਹੈ।\nਸਲਾਹਾਂ ਪ੍ਰਯੋਗਾਤਮਕ ਹਨ ਅਤੇ ਇਸ ਵੇਲੇ ਚੁਣੇ ਹੋਏ ਰਾਜਾਂ ਵਿੱਚ ਮੁੱਖ ਫ਼ਸਲਾਂ ਨੂੰ ਕਵਰ ਕਰਦੀਆਂ ਹਨ।\n_____________________________\n\nਮੌਸਮ ਡੇਟਾ IMD ਤੋਂ ਲਿਆ ਗਿਆ ਹੈ।\nਮਾਰਕੀਟ ਡੇਟਾ eNAM, Agmarknet ਅਤੇ ਰਾਜ APMCs ਤੋਂ ਲਿਆ ਗਿਆ ਹੈ।\nਮਿੱਟੀ ਸਿਹਤ ਮਾਰਗਦਰਸ਼ਨ https://soilhealth.dac.gov.in/fertilizer-dosage ਤੋਂ ਲਿਆ ਗਿਆ ਹੈ।\nਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ https://www.myscheme.gov.in/ ਤੋਂ ਲਈਆਂ ਗਈਆਂ ਹਨ।\nਹੋਰ ਖੇਤੀਬਾੜੀ ਜਾਣਕਾਰੀ ਅਤੇ ਸਲਾਹਾਂ Annam.ai ਦੁਆਰਾ ਮਾਹਰਾਂ ਦੁਆਰਾ ਪ੍ਰਮਾਣਿਤ ਕੀਤੀਆਂ ਗਈਆਂ ਹਨ।\n\nਉਪਭੋਗਤਾਵਾਂ ਨੂੰ ਕੋਈ ਵੀ ਕਦਮ ਚੁੱਕਣ ਤੋਂ ਪਹਿਲਾਂ ਸਿਫ਼ਾਰਸ਼ਾਂ ਨੂੰ ਸੁਤੰਤਰ ਤੌਰ 'ਤੇ ਪ੍ਰਮਾਣਿਤ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ।",
+    "lateNightDisclaimer": "ਤੁਹਾਡਾ ਸਵਾਲ ਸਾਡੇ ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ ਕੱਲ੍ਹ ਸਵੇਰੇ 8:00 ਵਜੇ ਤੱਕ ਜਵਾਬ ਮਿਲ ਜਾਵੇਗਾ।",
+    "earlyMorningDisclaimer": "ਤੁਹਾਡਾ ਸਵਾਲ ਸਾਡੇ ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਨੂੰ ਅੱਜ ਸਵੇਰੇ 8:00 ਵਜੇ ਤੱਕ ਜਵਾਬ ਮਿਲ ਜਾਵੇਗਾ।"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Punjabi",
+    "twoHourDisclaimer": "Tuhada sawaal annam.ai 'te saade khetibadi mahar naal saanjha kita gaya hai. Tuhanu 2 ghantian de andar jawab milega. Dhannvaad.",
+    "stateFollowUp": "Tusi kis raaj te zile vich ho?",
+    "cropFollowUp": "Tusi kehdi fasal uga rahe ho?",
+    "testingDisclaimer": "⚠️ Mahatvapurn Soochna (Testing) ⚠️\n\nIh AjraSakha application vikaas adhin hai ate sirf testing ate pramanikta layi hai.\nSalaahan prayogatmak han ate is vele chunne hoye raajan vich mukhya faslan nu cover kardi han.\n_____________________________\n\nMausam data IMD ton liya gaya hai.\nMarket data eNAM, Agmarknet ate raaj APMCs ton liya gaya hai.\nMitti sihat margdarshan https://soilhealth.dac.gov.in/fertilizer-dosage ton liya gaya hai.\nSarkari yojnavan https://www.myscheme.gov.in/ ton liyan giyan han.\nHor khetibadi jaankari ate salaahan Annam.ai dwara maharan dwara pramanit kitiyan giyan han.\n\nUpbhogtavan nu koi vi kadam chukkan ton pehlan sifaarshan nu sutantar taur 'te pramanit karna chahida hai.",
+    "lateNightDisclaimer": "\"Tuhada sawaal saade khetibadi mahar nu bhej dita gaya hai. Tuhanu kal savere 8 vaje tak jawab mil jayega.\"",
+    "earlyMorningDisclaimer": "\"Tuhada sawaal saade khetibadi mahar nu bhej dita gaya hai. Tuhanu aj subah 8 vajje tak jawab mil jayega.\""
+  },
+  {
+    "scriptLanguage": "Devanagari",
+    "vocalLanguage": "Sanskrit",
+    "twoHourDisclaimer": "भवतः प्रश्नः अस्माकं कृषि-विशेषज्ञेन annam.ai इत्यत्र साझितः अस्ति। भवान् २ घण्टाभ्यन्तरे उत्तरं प्राप्स्यति। धन्यवादाः।",
+    "stateFollowUp": "भवान् कस्मिन् राज्ये जनपदे च अस्ति?",
+    "cropFollowUp": "भवान् कं शस्यं वपति?",
+    "testingDisclaimer": "⚠️ महत्त्वपूर्णं सूचनम् (परीक्षणम्) ⚠️\n\nएषः AjraSakha अनुप्रयोगः विकासाधीनः अस्ति तथा च केवलं परीक्षणाय एवं सत्यापनाय अभिप्रेतः अस्ति।\nपरामर्शाः प्रायोगिकाः सन्ति तथा च सम्प्रति चयनितेषु राज्येषु प्रमुखशस्येषु एव उपलब्धाः सन्ति।\n_____________________________\n\nवायुमण्डलीयाः आँकडाः IMD इत्यस्मात् प्राप्ताः सन्ति।\nबाजारस्य आँकडाः eNAM, Agmarknet तथा राज्य-APMC इत्येभ्यः सन्ति।\nमृत्तिका-स्वास्थ्य-मार्गदर्शनं https://soilhealth.dac.gov.in/fertilizer-dosage इत्यस्मात् प्राप्तम्।\nसर्कारीयाः योजनाः https://www.myscheme.gov.in/ इत्यस्मात् प्राप्ताः।\nअन्यानि कृषि-सम्बन्धीनि सूचनानि परामर्शाश्च Annam.ai द्वारा विशेषज्ञ-सत्यापिताः सन्ति।\n\nउपयोक्तारः कार्यं कर्तुं पूर्वं स्वतन्त्रतया अनुशंसाः सत्यापयेयुः।",
+    "lateNightDisclaimer": "आपनः प्रश्नः अस्माकं कृषिविशेषज्ञं प्रति प्रेषितः अस्ति। भवान् श्वः प्रातः अष्टवादने उत्तरं प्राप्स्यति।",
+    "earlyMorningDisclaimer": "भवतः प्रश्नः अस्माकं कृषि विशेषज्ञाय प्रेषितः। भवान् अद्य प्रातः ८:०० वादनेन उत्तरं प्राप्स्यति।"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Sanskrit",
+    "twoHourDisclaimer": "Bhavataḥ praśnaḥ asmākaṃ kṛṣi-viśeṣajñena annam.ai ityatra sājhitaḥ asti. Bhavān 2 ghaṇṭābhyantare uttaraṃ prāpsyati. Dhanyavādāḥ.",
+    "stateFollowUp": "Bhavān kasmin rājye janapadhe ca asti?",
+    "cropFollowUp": "Bhavān kaṃ śasyaṃ vapati?",
+    "testingDisclaimer": "⚠️ Mahattvapūrṇaṃ sūcanam (Parīkṣaṇam) ⚠️\n\nEṣaḥ AjraSakha anuprayogaḥ vikāsādhīnaḥ asti tathā ca kevalaṃ parīkṣaṇāya evaṃ satyāpanāya abhipretaḥ asti.\nParāmarśāḥ prāyogikāḥ santi tathā ca samprati cayiteṣu rājyeṣu pramukhaśasyeṣu eva upalabdhāḥ santi.\n_____________________________\n\nVāyumaṇḍalīyāḥ āṃkaḍāḥ IMD ityasmāt prāptāḥ santi.\nBājārasya āṃkaḍāḥ eNAM, Agmarknet tathā rājya-APMC ityebhyaḥ santi.\nMṛttikā-svāsthya-mārgadarśanaṃ https://soilhealth.dac.gov.in/fertilizer-dosage ityasmāt prāptam.\nSarkārīyāḥ yojanāḥ https://www.myscheme.gov.in/ ityasmāt prāptāḥ.\nAnyāni kṛṣi-sambandhīni sūcanāni parāmarśāśca Annam.ai dvārā viśeṣajña-satyāpitāḥ santi.\n\nUpayoktāraḥ kāryaṃ kartuṃ pūrvaṃ svatantratayā anuśaṃsāḥ satyāpayeyuḥ.",
+    "lateNightDisclaimer": "\"Bhavataḥ praśnaḥ asmākaṃ kṛṣi viśeṣajñaṃ prati preṣitaḥ astī. Bhavān śvaḥ prātaḥ aṣṭavādane uttaraṃ prāpsyati.\"",
+    "earlyMorningDisclaimer": "\"Bhavataḥ praśnaḥ asmākaṃ kṛṣi-viśeṣajñaṃ prati preṣitaḥ abhavat. Bhavān adya prātaḥ 8:00 vādane uttaraṃ prāpsyati.\""
+  },
+  {
+    "scriptLanguage": "Perso-Arabic",
+    "vocalLanguage": "Sindhi",
+    "twoHourDisclaimer": "توهانجو سوال اسانجي زرعي ماهر کي annam.ai تي شيئر ڪيو ويو آهي. توهان کي 2 ڪلاڪن اندر جواب ملندو.\nمهرباني.",
+    "stateFollowUp": "توهان ڪهڙي رياست ۽ ضلعي ۾ آهيو؟",
+    "cropFollowUp": "توهان ڪهڙي فصل جي پوکي ڪري رهيا آهيو؟",
+    "testingDisclaimer": "⚠️ اهم نوٽيس (ٽيسٽنگ) ⚠️\n\nهي AjraSakha ايپليڪيشن ترقي هيٺ آهي ۽ صرف ٽيسٽنگ ۽ تصديق لاءِ آهي.\nصلاحون تجرباتي آهن ۽ في الحال چونڊيل رياستن ۾ وڏن فصلن کي ڍڪين ٿيون.\n_____________________________\n\nموسم جو ڊيٽا IMD مان ورتو ويو آهي.\nمارڪيٽ ڊيٽا eNAM، Agmarknet، ۽ رياستي APMCs مان آهي.\nمٽيءَ جي صحت جي رهنمائي https://soilhealth.dac.gov.in/fertilizer-dosage مان آهي.\nسرڪاري اسڪيمون https://www.myscheme.gov.in/ مان آهن.\nٻيون زرعي معلومات ۽ صلاحون Annam.ai پاران ماهرن ذريعي تصديق ٿيل آهن.\n\nاستعمال ڪندڙن کي گهرجي ته عمل ڪرڻ کان اڳ سفارشن جي آزاديءَ سان تصديق ڪن.",
+    "lateNightDisclaimer": "\"توهان جو سوال اسان جي زرعي ماهر ڏانهن موڪليو ويو آهي. توهان کي سڀاڻي صبح 8:00 وڳي جواب ملي ويندو.\"",
+    "earlyMorningDisclaimer": "\"توهان جو سوال اسان جي زرعي ماهر ڏانهن موڪليو ويو آهي. توهان کي اڄ صبح 8:00 وڳي جواب ملي ويندو.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Sindhi",
+    "twoHourDisclaimer": "Tohānjo sawāl asānī zar'ī māhir khe annam.ai te share kayo wiyo āhe. Tohān khe 2 kalākan andar jawāb milandо.\nMeharbāni.",
+    "stateFollowUp": "Tohān kahrī riyāsat ۽ zilē mẽ āhiyo?",
+    "cropFollowUp": "Tohān kahrī fasal jī pokhi kari rahiyā āhiyo?",
+    "testingDisclaimer": "⚠️ Aham Notice (Testing) ⚠️\n\nHi AjraSakha application taraqqī heth āhe ۽ sirf testing ۽ tasdīq lāī āhe.\nSalāhoon tajrabātī āhen ۽ fi-al-hāl chonḍyal riyāstan mẽ waḍan faslan khe ḍhakin thiyoon.\n_____________________________\n\nMausam jo data IMD māñ warto wiyo āhe.\nMarket data eNAM, Agmarknet, ۽ riyāstī APMCs māñ āhe.\nMaṭīyā jī sehat jī rahnumāī https://soilhealth.dac.gov.in/fertilizer-dosage māñ āhe.\nSarkārī iskīmoon https://www.myscheme.gov.in/ māñ āhen.\nBiyoon zar'ī ma'lūmāt ۽ salāhoon Annam.ai pāran māhiran zariye tasdīq thyal āhen.\n\nIstimāl kandaṛan khe ghurje te amal karañ khān aga sifārshan jī āzādīyā sān tasdīq kan.",
+    "lateNightDisclaimer": "\"Tawhanji sawaal asanji ziraatiماهر ڏانهن موڪليو ويو آهي. Tawhanji کي سڀاڻي صبح جو 8:00 وڳي جواب ملي ويندو.\"",
+    "earlyMorningDisclaimer": "\"Tawhanjو sawaal asaan جي agri expert ڏانهون موڪليو ويو آهي. Tawhaan کي aaj، صبح 8:00 وڳي تائين جواب ملي ويندو.\""
+  },
+  {
+    "scriptLanguage": "Tamil",
+    "vocalLanguage": "Tamil",
+    "twoHourDisclaimer": "உங்கள் கேள்வி annam.ai-யில் உள்ள எங்கள் வேளாண் நிபுணருடன் பகிரப்பட்டது. உங்களுக்கு 2 மணி நேரத்திற்குள் பதில் கிடைக்கும். நன்றி.",
+    "stateFollowUp": "நீங்கள் எந்த மாநிலம் மற்றும் மாவட்டத்தில் இருக்கிறீர்கள்?",
+    "cropFollowUp": "நீங்கள் எந்த பயிரை பயிரிடுகிறீர்கள்?",
+    "testingDisclaimer": "⚠️ முக்கியமான அறிவிப்பு (சோதனை) ⚠️\n\nஇந்த AjraSakha பயன்பாடு மேம்பாட்டில் உள்ளது மற்றும் சோதனை மற்றும் சரிபார்ப்புக்காக மட்டுமே நோக்கப்பட்டுள்ளது.\nஆலோசனைகள் சோதனை முறையிலானவை மற்றும் தற்போது தேர்ந்தெடுக்கப்பட்ட மாநிலங்களில் முக்கிய பயிர்களை உள்ளடக்கியுள்ளன.\n_____________________________\n\nவானிலை தரவு IMD-யிலிருந்து பெறப்படுகிறது.\nசந்தை தரவு eNAM, Agmarknet மற்றும் மாநில APMC-களிலிருந்து பெறப்படுகிறது.\nமண் ஆரோக்கிய வழிகாட்டுதல் https://soilhealth.dac.gov.in/fertilizer-dosage-யிலிருந்து பெறப்படுகிறது.\nஅரசு திட்டங்கள் https://www.myscheme.gov.in/-யிலிருந்து பெறப்படுகின்றன.\nமற்ற வேளாண் தகவல்கள் மற்றும் ஆலோசனைகள் Annam.ai-யால் நிபுணர் சரிபார்ப்பு செய்யப்பட்டவை.\n\nபயனர்கள் பரிந்துரைகளின் படி செயல்படுவதற்கு முன் சுயாதீனமாக சரிபார்க்க வேண்டும்.",
+    "lateNightDisclaimer": "\"உங்கள் கேள்வி எங்கள் விவசாய நிபுணரிடம் அனுப்பப்பட்டுள்ளது. நாளை காலை 8:00 மணிக்குள் பதிலைப் பெறுவீர்கள்.\"",
+    "earlyMorningDisclaimer": "\"உங்கள் கேள்வி எங்கள் வேளாண் நிபுணரிடம் அனுப்பப்பட்டுள்ளது. இன்று காலை 8:00 மணிக்குள் பதில் கிடைக்கும்.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Tamil",
+    "twoHourDisclaimer": "Ungal kelvvi annam.ai-yilulla engal velaaN nipuNarudan pagirappattadu. Ungalukku 2 maNi nErattiRkuL badil kidaikkum. NanRi.",
+    "stateFollowUp": "Neengal enda maanilam mattum district-il irukkeeRgal?",
+    "cropFollowUp": "Neengal enda payirai payiridugeeRgal?",
+    "testingDisclaimer": "⚠️ Mukkiyamaana aRivippu (Sodanai) ⚠️\n\nInda AjraSakha payanaadu mEmpaattil ulladhu maRRum sodanai maRRum saripaarppukkaga maattumE nOkkappattulladhu.\nAalosanaikal sodanai muraiyilaanaavai maRRum tarpOdu tErndedukkapatta maanilangalil mukkiya payirgalai ulladakkiyulladhu.\n_____________________________\n\nVaanilai daravu IMD-yilirundhu peRappadugidRadu.\nSandai daravu eNAM, Agmarknet maRRum maanila APMC-galilirundhu peRappadugidRadu.\nMaN aarokkiya vazhikaattudhal https://soilhealth.dac.gov.in/fertilizer-dosage-yilirundhu peRappadugidRadu.\nAraasu thittangal https://www.myscheme.gov.in/-yilirundhu peRappadugidRana.\nMaRRa velaaN thagavalgal maRRum aalosanaikal Annam.ai-yaal nipuNar saripaarpu seyyappattatavai.\n\nPayanargal parindhuraigalin padi seyal paduvadaRku mun suyaadeenamaaga saripaarkkavendum.",
+    "lateNightDisclaimer": "\"Ungal kelviyai engal velanmai nibunar-ku anuppi vaitom. Naalai kaalai 8:00 maniku ungaluku badhil kidaikkum.\"",
+    "earlyMorningDisclaimer": "\"Ungal kelvi engal velanmai nibunar-ku anuppa pattadhu. Indru kaalai 8:00 manikku ungalukku pathil kidaikkum.\""
+  },
+  {
+    "scriptLanguage": "Telugu",
+    "vocalLanguage": "Telugu",
+    "twoHourDisclaimer": "మీ ప్రశ్న annam.ai లోని మా వ్యవసాయ నిపుణుడితో పంచుకోబడింది. మీకు 2 గంటల్లో సమాధానం వస్తుంది.\nధన్యవాదాలు.",
+    "stateFollowUp": "మీరు ఏ రాష్ట్రంలో మరియు ఏ జిల్లాలో ఉన్నారు?",
+    "cropFollowUp": "మీరు ఏ పంట పండిస్తున్నారు?",
+    "testingDisclaimer": "⚠️ ముఖ్యమైన నోటీసు (పరీక్షా దశ) ⚠️\n\nఈ AjraSakha అప్లికేషన్ అభివృద్ధిలో ఉంది మరియు కేవలం పరీక్ష మరియు ధృవీకరణ కోసం మాత్రమే ఉద్దేశించబడింది.\nసలహాలు ప్రయోగాత్మకమైనవి మరియు ప్రస్తుతం ఎంచుకున్న రాష్ట్రాల్లో ప్రధాన పంటలను మాత్రమే కవర్ చేస్తున్నాయి.\n_____________________________\n\nవాతావరణ డేటా IMD నుండి సేకరించబడింది.\nమార్కెట్ డేటా eNAM, Agmarknet మరియు రాష్ట్ర APMCల నుండి తీసుకోబడింది.\nనేల ఆరోగ్య మార్గదర్శకత్వం https://soilhealth.dac.gov.in/fertilizer-dosage నుండి తీసుకోబడింది.\nప్రభుత్వ పథకాలు https://www.myscheme.gov.in/ నుండి తీసుకోబడ్డాయి.\nఇతర వ్యవసాయ సమాచారం మరియు సలహాలు Annam.ai ద్వారా నిపుణులచే ధృవీకరించబడ్డాయి.\n\nవినియోగదారులు చర్య తీసుకునే ముందు సిఫార్సులను స్వతంత్రంగా ధృవీకరించాలి.",
+    "lateNightDisclaimer": "\"మీ ప్రశ్న మా వ్యవసాయ నిపుణులకు పంపబడింది. మీకు రేపు ఉదయం 8:00 గంటలలోపు సమాధానం అందుతుంది.\"",
+    "earlyMorningDisclaimer": "\"మీ ప్రశ్న మా వ్యవసాయ నిపుణుడికి పంపబడింది. ఈ రోజు ఉదయం 8:00 గంటలలోపు మీకు సమాధానం అందుతుంది.\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Telugu",
+    "twoHourDisclaimer": "Mee prashna annam.ai loni maa vyavasaaya nipunudito panchukobadinadi. Meeku 2 gantallo samaadhanam vasthundi.\nDhanyavaadaalu.",
+    "stateFollowUp": "Meeru ee rashtram mariyu zilla lо unnaru?",
+    "cropFollowUp": "Meeru ee panta pandistaunnaru?",
+    "testingDisclaimer": "⚠️ Mukhyamaina Notiisu (Pareeksha Dasha) ⚠️\n\nEe AjraSakha application abhivruddhilo undi mariyu kevalam pareeksha mariyu dhruveekarana kosam maatrame uddeshinchababdinadi.\nSalahaalu prayogaatmakamainavee mariyu prastutam enchukuna raashtraallo pradhaana pantalu maatrame cover chestaunnaayi.\n_____________________________\n\nVaatavarana data IMD nundi seekarinchababdinadi.\nMarket data eNAM, Agmarknet mariyu raashtra APMCla nundi teesukobababdinadi.\nNela aarogya maargadarshakathvam https://soilhealth.dac.gov.in/fertilizer-dosage nundi teesukonabadindi.\nPrabhutvaa pathakalu https://www.myscheme.gov.in/ nundi teesukobabaddaayi.\nItara vyavasaaya samaacharamu mariyu salahaalu Annam.ai dwaara nipunula dwara dhruveekarinchababdaayi.\n\nViniyogadarulu charyaa teesukune mundu sifaarsulaanu svatanthranga dhruveekarinchali.",
+    "lateNightDisclaimer": "\"Mee prashna maa krishi nippununiki pampinchamu. Mee repu udayam 8:00 gantala loga samadhanam anduthundi.\"",
+    "earlyMorningDisclaimer": "\"Mee prasna maa krishi nippunulavariki pampinchamu. Meeku ee roju udayam 8:00 ganitala lope samadhanam anduthundi.\""
+  },
+  {
+    "scriptLanguage": "Perso-Arabic",
+    "vocalLanguage": "Urdu",
+    "twoHourDisclaimer": "آپ کا سوال annam.ai پر ہمارے زرعی ماہر کے ساتھ شیئر کیا گیا ہے۔ آپ کو 2 گھنٹوں کے اندر جواب مل جائے گا۔\nشکریہ۔",
+    "stateFollowUp": "آپ کس ریاست اور ضلع میں ہیں؟",
+    "cropFollowUp": "آپ کون سی فصل اگا رہے ہیں؟",
+    "testingDisclaimer": "⚠️ اہم اطلاع (ٹیسٹنگ) ⚠️\n\nیہ AjraSakha ایپلیکیشن ابھی زیرِ تعمیر ہے اور صرف ٹیسٹنگ اور توثیق کے لیے ہے۔\nمشورے تجرباتی ہیں اور فی الحال منتخب ریاستوں میں بڑی فصلوں کا احاطہ کرتے ہیں۔\n_____________________________\n\nموسمی ڈیٹا IMD سے حاصل کیا گیا ہے۔\nمارکیٹ ڈیٹا eNAM، Agmarknet اور ریاستی APMCs سے لیا گیا ہے۔\nمٹی کی صحت سے متعلق رہنمائی https://soilhealth.dac.gov.in/fertilizer-dosage سے ہے۔\nسرکاری اسکیمیں https://www.myscheme.gov.in/ سے ہیں۔\nدیگر زرعی معلومات اور مشورے Annam.ai کے ماہرین کے ذریعے تصدیق شدہ ہیں۔\n\nصارفین کو چاہیے کہ عمل کرنے سے پہلے سفارشات کی آزادانہ طور پر تصدیق کریں۔",
+    "lateNightDisclaimer": "آپ کا سوال ہمارے زرعی ماہر کو بھیج دیا گیا ہے۔ آپ کو کل صبح 8:00 بجے تک جواب مل جائے گا۔",
+    "earlyMorningDisclaimer": "آپ کا سوال ہمارے زرعی ماہر کو بھیج دیا گیا ہے۔ آپ کو آج صبح 8:00 بجے تک جواب مل جائے گا۔"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Urdu",
+    "twoHourDisclaimer": "Aap ka sawal annam.ai par hamare zar'i mahir ke saath share kiya gaya hai. Aap ko 2 ghanton ke andar jawab mil jayega.\nShukriya.",
+    "stateFollowUp": "Aap kis riyasat aur zile mein hain?",
+    "cropFollowUp": "Aap kaun si fasal uga rahe hain?",
+    "testingDisclaimer": "⚠️ Ahem Ittila (Testing) ⚠️\n\nYeh AjraSakha application abhi zer-e-tameer hai aur sirf testing aur tauseeq ke liye hai.\nMashware tajrbaati hain aur filhaal muntakhab riyasaton mein badi faslon ka ahata karte hain.\n_____________________________\n\nMausami data IMD se haasil kiya gaya hai.\nMarket data eNAM, Agmarknet aur riyasati APMCs se liya gaya hai.\nMitti ki sehat se mutaliq rahnumai https://soilhealth.dac.gov.in/fertilizer-dosage se hai.\nSarkari iskimein https://www.myscheme.gov.in/ se hain.\nDeeegar zar'i maloomat aur mashware Annam.ai ke mahireen ke zariye tasdeeq shuda hain.\n\nSarifeen ko chahiye ke amal karne se pehle sifarishaat ki azadana taur par tasdeeq karein.",
+    "lateNightDisclaimer": "\"Aapka sawal hamare ziraati maahir ko bhej diya gaya hai. Aapko kal subah 8 baje tak jawab mil jayega.\"",
+    "earlyMorningDisclaimer": "\"Aapka sawal hamare agri expert ko bhej diya gaya hai. Aapko aaj subah 8:00 baje tak jawab mil jayega.\""
+  },
+  {
+    "scriptLanguage": "Meitei Mayek",
+    "vocalLanguage": "Manipuri (Meitei)",
+    "twoHourDisclaimer": "ꯑꯩꯈꯣꯏꯒꯤ ꯑꯒ꯭ꯔꯤ ꯑꯦꯛꯁꯄꯔꯇ annam.ai ꯗꯥ ꯑꯃꯨꯛ ꯈꯔꯥ ꯁꯤꯖꯤꯟꯅꯒꯗꯕꯥ ꯃꯇꯥꯡꯗꯥ ꯁꯦꯌꯔ ꯇꯧꯔꯦ꯫ ꯆꯥꯎꯔꯥꯛ ꯀꯥꯡꯂꯩ ꯂꯣꯏꯁꯤꯟꯅꯕꯥ ꯑꯃꯨꯛ ꯂꯃꯥꯏ ꯂꯩꯐꯝ ꯂꯩꯕꯥ ꯌꯥꯏ꯫\nꯊꯥꯒꯠꯆꯔꯤ꯫",
+    "stateFollowUp": "ꯑꯃꯨꯛ ꯀꯩꯐꯥ ꯁ꯭ꯇꯦꯇ ꯑꯃꯁꯨꯡ ꯗꯤꯁ꯭ꯠꯔꯤꯛꯇꯥ ꯂꯩꯔꯤ?",
+    "cropFollowUp": "ꯑꯃꯨꯛ ꯀꯩꯐꯥ ꯐꯥꯎꯕꯤ ꯆꯥꯅꯕꯤꯔꯤ?",
+    "testingDisclaimer": "⚠️ ꯃꯔꯨꯑꯣꯏꯕꯥ ꯈꯔꯥ (ꯇꯦꯁ꯭ꯇꯤꯡ) ⚠️\n\nꯑꯖ꯭ꯔꯥꯁꯈꯥ ꯑꯦꯞꯂꯤꯀꯦꯁꯟ ꯑꯁꯤ ꯃꯁꯛ ꯁꯦꯝꯒꯠꯂꯕꯥ ꯑꯃꯁꯨꯡ ꯇꯦꯁ꯭ꯇꯤꯡ ꯑꯃꯁꯨꯡ ꯕꯦꯂꯤꯗꯦꯁꯟꯒꯤ ꯑꯣꯏꯅꯥ ꯃꯇꯦꯡ ꯄꯥꯡꯕꯥ ꯌꯥꯏ꯫\nꯑꯦꯗꯚꯥꯏꯖꯔꯤꯁꯀꯤ ꯃꯇꯥꯡꯗꯥ ꯂꯩꯕꯥ ꯑꯁꯤ ꯑꯦꯛꯁꯄꯦꯔꯤꯃꯦꯟꯇꯦꯂ ꯑꯃꯁꯨꯡ ꯃꯁꯛ ꯁꯦꯂꯦꯛꯇꯦꯗ ꯁ꯭ꯇꯦꯇꯇꯥ ꯃꯔꯨꯑꯣꯏꯕꯥ ꯐꯥꯎꯕꯤꯁꯤꯡꯒꯤ ꯑꯣꯏꯅꯥ ꯂꯩ꯫\n_____________________________\n\nꯋꯦꯗꯔ ꯗꯦꯇꯥ IMD ꯗꯒꯤ ꯂꯩꯕꯥ꯫\nꯃꯥꯔꯀꯦꯠ ꯗꯦꯇꯥ eNAM, Agmarknet, ꯑꯃꯁꯨꯡ ꯁ꯭ꯇꯦꯠ APMC ꯁꯤꯡꯗꯒꯤ꯫\nꯁꯣꯏꯂ ꯍꯦꯜꯊ ꯒꯥꯏꯗꯦꯟꯁ https://soilhealth.dac.gov.in/fertilizer-dosage ꯗꯒꯤ꯫\nꯒꯚꯔꯅꯃꯦꯟꯇ ꯁ꯭ꯀꯤꯃꯁꯤꯡ https://www.myscheme.gov.in/ ꯗꯒꯤ꯫\nꯃꯔꯨꯑꯣꯏꯕꯥ ꯀꯦꯁꯤꯒꯤ ꯑꯒ꯭ꯔꯤꯀꯂꯆꯔꯦꯜ ꯑꯤꯟꯐꯣꯔꯃꯦꯁꯟ ꯑꯃꯁꯨꯡ ꯑꯦꯗꯚꯥꯏꯖꯔꯤꯁꯀꯤ ꯃꯇꯥꯡꯗꯥ Annam.ai ꯅꯥ ꯑꯦꯛꯁꯄꯔꯇ ꯚꯦꯔꯤꯐꯥꯏꯗ ꯇꯧꯔꯦ꯫\n\nꯌꯨꯖꯔꯁꯤꯡꯅꯥ ꯑꯦꯛꯁꯟ ꯇꯧꯕꯥ ꯃꯇꯃꯗꯥ ꯔꯦꯀꯃꯦꯟꯗꯦꯁꯟꯁꯤꯡ ꯑꯤꯟꯗꯤꯄꯦꯟꯗꯦꯟꯇꯂꯤ ꯚꯦꯂꯤꯗꯦꯠ ꯇꯧꯕꯥ ꯄꯥꯝꯕꯤ꯫",
+    "lateNightDisclaimer": "ꯅꯍꯥꯛꯀꯤ ꯋꯥꯍꯪ ꯑꯗꯨ ꯑꯩꯈꯣꯌꯒꯤ ꯂꯧꯎ-ꯁꯤꯡꯎꯒꯤ ꯃꯔꯨꯑꯣꯏꯕ ꯑꯦꯛꯁꯄꯥꯔꯇꯇꯥ ꯊꯥꯔꯦ꯫ ꯅꯍꯥꯛꯅꯥ ꯇꯃꯊꯨꯝ ꯑꯌꯨꯛ ꯸:꯰꯰ ꯕꯖꯦꯗꯥ ꯄꯥꯎꯈꯨꯝ ꯐꯪꯒꯅꯤ꯫",
+    "earlyMorningDisclaimer": "ꯅꯍꯥꯛꯀꯤ ꯋꯥꯍꯪ ꯑꯗꯨ ꯑꯩꯈꯣꯌꯒꯤ ꯂꯧꯎ-ꯁꯤꯡꯎꯒꯤ ꯃꯇꯥꯡꯗꯥ ꯈꯉꯅꯕ ꯑꯣꯏꯔꯤꯕꯥ ꯃꯤꯑꯣꯏꯗꯥ ꯊꯥꯔꯦ꯫ ꯅꯍꯥꯛꯅꯥ ꯉꯁꯤ ꯑꯌꯨꯛ ꯸:꯰꯰ ꯑꯃꯗꯥ ꯄꯥꯎꯈꯨꯝ ꯐꯪꯒꯅꯤ꯫"
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Manipuri (Meitei)",
+    "twoHourDisclaimer": "Annam.ai gi agri expert ta amuk khara sijinnagadaba matangda share tawre. Chawrak kanglei loisinnaba amuk lamai leiphom leiba yai.\nThagatchari.",
+    "stateFollowUp": "Amuk keifa state amasung district ta leiri?",
+    "cropFollowUp": "Amuk keifa phaobi chanabiri?",
+    "testingDisclaimer": "⚠️ Maruoiba khara (Testing) ⚠️\n\nAjraSakha application asi masak semgathlaba amasung testing amasung validation gi oina mateng pangba yai.\nAdvisories ki matangda leiba asi experimental amasung masak selected state ta maruoiba phaobi sigi oina lei.\n_____________________________\n\nWeather data IMD dagi leiba.\nMarket data eNAM, Agmarknet, amasung State APMC singdagi.\nSoil health guidance https://soilhealth.dac.gov.in/fertilizer-dosage dagi.\nGovernment schemes https://www.myscheme.gov.in/ dagi.\nMaruoiba kesi gi agricultural information amasung advisories ki matangda Annam.ai na expert verified tawre.\n\nUsers singna action tawba matamda recommendations independently validate tawba pambi.",
+    "lateNightDisclaimer": "\"Nahakki wahang asi eikhoigi agri expert-ta thabirak-halle. Nahakna hayeng, numit 8:00 AM da paokhum phangani.\"",
+    "earlyMorningDisclaimer": "\"Nahakki wahang asi eikhoigi agri expert-ta thare. Nahakna ngasi, numidang 8:00 AM-da paokhum phangani.\""
+  },
+  {
+    "scriptLanguage": "Ol Chiki",
+    "vocalLanguage": "Santali",
+    "twoHourDisclaimer": "ᱟᱯᱮᱱ ᱯᱩᱪᱷᱩᱱ annam.ai ᱨᱮᱱᱟᱜ ᱟᱜᱨᱤ ᱵᱤᱥᱮᱥᱚᱡᱽᱱᱟ ᱠᱟᱛᱮ ᱵᱟᱹᱫᱷᱟᱹᱭ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ᱾ ᱟᱯᱮ ᱒ ᱸᱴᱟ ᱥᱟᱦᱴᱮ ᱡᱚᱵᱟᱵ ᱯᱟᱭᱚᱜ ᱠᱟᱱᱟ᱾\nᱫᱷᱚᱱᱵᱟᱫ᱾",
+    "stateFollowUp": "ᱟᱯᱮ ᱠᱚᱱ ᱨᱟᱡᱽᱭᱚ ᱟᱨ ᱡᱤᱞᱟ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱟᱱᱟ?",
+    "cropFollowUp": "ᱟᱯᱮ ᱠᱚᱱ ᱮᱸᱫᱽᱨᱮ ᱵᱟᱭᱥᱤ ᱠᱟᱛᱮ ᱢᱮᱱᱟᱜ ᱠᱟᱱᱟ?",
+    "testingDisclaimer": "⚠️ ᱢᱩᱱᱩᱫ ᱥᱩᱪᱮᱛ (ᱯᱨᱚᱵᱷᱟ) ⚠️\n\nᱱᱚᱶᱟ AjraSakha ᱯᱨᱚᱜᱽᱨᱟᱢ ᱵᱟᱱᱟᱣ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ ᱟᱨ ᱠᱮᱣᱟᱞ ᱯᱨᱚᱵᱷᱟ ᱟᱨ ᱥᱟᱫᱷᱩ ᱡᱚᱜᱽ ᱵᱮᱵᱷᱟᱨ ᱡᱚᱜᱽ ᱛᱮᱭᱟᱨ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ᱾\nᱥᱟᱞᱟᱦ ᱯᱨᱚᱭᱚᱜᱤᱠ ᱠᱟᱱᱟ ᱟᱨ ᱱᱤᱛᱚᱜ ᱪᱷᱟᱸᱴᱤᱭᱟ ᱨᱟᱡᱽᱭᱚ ᱨᱮᱱᱟᱜ ᱢᱩᱞ ᱮᱸᱫᱽ ᱠᱚ ᱡᱚᱜᱽ ᱠᱟᱢ ᱠᱟᱛᱮ ᱢᱮᱱᱟᱜ ᱠᱟᱱᱟ᱾\n_____________________________\n\nᱵᱟᱫᱽᱞᱟ ᱫᱟᱛᱟ IMD ᱠᱟᱛᱮ ᱟᱣᱟ᱾\nᱵᱟᱡᱟᱨ ᱫᱟᱛᱟ eNAM, Agmarknet, ᱟᱨ ᱨᱟᱡᱽᱭᱚ APMC ᱠᱟᱛᱮ ᱟᱣᱟ᱾\nᱢᱤᱫᱤ ᱥᱣᱟᱥᱛᱷᱭ ᱥᱟᱞᱟᱦ https://soilhealth.dac.gov.in/fertilizer-dosage ᱠᱟᱛᱮ ᱟᱣᱟ᱾\nᱥᱚᱨᱠᱟᱨ ᱭᱚᱡᱚᱱᱟ https://www.myscheme.gov.in/ ᱠᱟᱛᱮ ᱟᱣᱟ᱾\nᱵᱮᱱᱟᱣ ᱠᱨᱤᱥᱤ ᱡᱟᱱᱠᱟᱨᱤ ᱟᱨ ᱥᱟᱞᱟᱦ Annam.ai ᱵᱤᱥᱮᱥᱚᱡᱽᱱᱟ ᱠᱟᱛᱮ ᱥᱟᱫᱷᱩ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ᱾\n\nᱵᱮᱵᱷᱟᱨᱠᱟᱨᱤ ᱠᱚ ᱠᱟᱢ ᱠᱟᱛᱮ ᱥᱟᱞᱟᱦ ᱵᱮᱵᱷᱟᱨ ᱠᱟᱛᱮ ᱟᱜᱮ ᱥᱟᱫᱷᱩ ᱠᱟᱛᱮ ᱪᱮᱪᱮᱫ ᱠᱟᱛᱮ ᱠᱟᱢ ᱠᱟᱛᱮ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ᱾",
+    "lateNightDisclaimer": "ᱟᱢᱟᱜ ᱠᱩᱠᱞᱤ ᱫᱚ ᱟᱞᱮᱭᱟᱜ ᱪᱟᱥ ᱯᱟᱹᱨᱩᱠᱷᱤᱭᱟᱹ ᱴᱷᱮᱱ ᱠᱩᱞ ᱟᱠᱟᱱᱟ᱾ ᱟᱢ ᱫᱚ ᱜᱟᱯᱟ ᱢᱟᱦᱟᱸ ᱥᱮᱛᱟᱜ ᱘:᱐᱐ ᱴᱟᱲᱟᱝ ᱨᱮ ᱛᱮᱞᱟ ᱧᱟᱢᱟᱢᱟ᱾",
+    "earlyMorningDisclaimer": "\"ᱟᱢᱟᱜ ᱠᱩᱠᱞᱤ ᱞᱮᱠᱟᱛᱮ ᱟᱞᱮᱭᱟᱜ ᱪᱟᱥ ᱜᱩᱨᱩ ᱴᱷᱮᱱ ᱠᱩᱞ ᱟᱠᱟᱱᱟ᱾ ᱛᱤᱱᱟᱹᱝ ᱫᱤᱱ, ᱥᱟᱨᱜᱤᱧ ᱘:᱐᱐ ᱴᱟᱬᱟᱝ ᱨᱮ ᱟᱢ ᱡᱚᱵᱟᱵᱽ ᱧᱟᱢᱟᱢ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ᱾\""
+  },
+  {
+    "scriptLanguage": "English",
+    "vocalLanguage": "Santali",
+    "twoHourDisclaimer": "Apem puchun annam.ai renak agri bisesojjna kate badhay huyug kana. Ape 2 ghanta sahte jobab payog kana.\nDhonbad.",
+    "stateFollowUp": "Ape kon rajyo ar distrik re menag kana?",
+    "cropFollowUp": "Ape kon edre baysi kate menag kana?",
+    "testingDisclaimer": "⚠️ Munud Suchet (Probha) ⚠️\n\nNowa AjraSakha program banaw huyug kana ar kewal probha ar sadhu jog bebahar jog teyar huyug kana.\nSalah proyogik kana ar nitog chhantiya rajyo renak mul ed ko jog kam kate menag kana.\n_____________________________\n\nBadla data IMD kate awa.\nBajar data eNAM, Agmarknet, ar rajyo APMC kate awa.\nMidi swasthya salah https://soilhealth.dac.gov.in/fertilizer-dosage kate awa.\nSorkar yojona https://www.myscheme.gov.in/ kate awa.\nBenaw krishi jankari ar salah Annam.ai bisesojjna kate sadhu huyug kana.\n\nBebaharkari ko kam kate salah bebahar kate age sadhu kate cechhed kate kam kate huyug kana.",
+    "lateNightDisclaimer": "\"ᱟᱢᱟᱜ ᱠᱩᱠᱞᱤ ᱟᱞᱮ ᱪᱟᱹᱥᱤ ᱯᱟᱹᱨᱩᱠᱷᱤᱭᱟᱹ ᱴᱷᱮᱱ ᱵᱷᱮᱡᱟ ᱠᱟᱱᱟ᱾ ᱜᱟᱯᱟ ᱫᱤᱱ ᱥᱮᱛᱟᱜ ᱘:᱐᱐ ᱴᱟᱲᱟᱝ ᱨᱮ ᱡᱚᱵᱟᱵᱽ ᱧᱟᱢᱚᱜᱼᱟ᱾\"",
+    "earlyMorningDisclaimer": "\"ᱟᱢᱟᱜ ᱠᱩᱞᱤ ᱟᱞᱮ ᱠᱟᱹᱢᱤ ᱜᱟᱹᱠᱷᱩᱲ ᱴᱷᱮᱱ ᱠᱩᱞ ᱟᱠᱟᱱᱟ᱾ ᱛᱮᱦᱮᱧ, ᱥᱮᱛᱟᱜ ᱘:᱐᱐ ᱴᱟᱬᱟᱢ ᱨᱮ ᱟᱢ ᱡᱚᱵᱟᱵᱽ ᱧᱟᱢᱟ᱾\""
+  }
+]
