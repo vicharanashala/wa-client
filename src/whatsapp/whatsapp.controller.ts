@@ -30,6 +30,7 @@ import {
   WhatsappUserRepository,
 } from './user-stats/whatsapp-user.repository';
 import { formatManualOutboundWhatsAppMessage } from './manual-outbound-message';
+import { MessageCacheService } from './message-cache/message-cache.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -180,6 +181,7 @@ export class WhatsappController {
     private readonly langGraphClientService: LangGraphClientService,
     private readonly whatsappUserRepo: WhatsappUserRepository,
     private readonly scriptDetectionService: ScriptDetectionService,
+    private readonly messageCacheService: MessageCacheService,
   ) { }
 
   private assertInternalApiKey(apiKey: string | undefined): void {
@@ -509,6 +511,56 @@ export class WhatsappController {
           .catch((err: Error) =>
             this.logger.error(`Failed to append reaction for ${reaction.from}: ${err.message}`),
           );
+        continue;
+      }
+
+      // ── Handle Interactive Button Replies ──
+      if (message.type === 'interactive') {
+        const interactive = message as any;
+        const buttonReply = interactive.interactive?.button_reply;
+
+        if (buttonReply) {
+          const payloadId = buttonReply.id as string;
+          this.logger.log(
+            `Interactive button clicked from ${message.from}: payload="${payloadId}"`,
+          );
+
+          // Check if this is a "Show More" button click
+          if (payloadId && payloadId.startsWith('show_more_')) {
+            const messageId = payloadId.replace('show_more_', '');
+            const cached = this.messageCacheService.retrieve(messageId);
+
+            if (cached) {
+              this.logger.log(
+                `Sending full message (${cached.fullMessage.length} chars) to ${message.from}`,
+              );
+              // Send the full message to the user
+              await this.whatsappService
+                .sendTextMessage(message.from, cached.fullMessage)
+                .catch((err: Error) =>
+                  this.logger.error(
+                    `Failed to send full message to ${message.from}: ${err.message}`,
+                  ),
+                );
+              // Clean up the cached entry
+              this.messageCacheService.delete(messageId);
+            } else {
+              this.logger.warn(
+                `Cache miss for Show More request: ${messageId} from ${message.from}`,
+              );
+              await this.whatsappService
+                .sendTextMessage(
+                  message.from,
+                  'Sorry, the full message is no longer available. Please request it again.',
+                )
+                .catch((err: Error) =>
+                  this.logger.error(`Failed to send error message to ${message.from}: ${err.message}`),
+                );
+            }
+          } else {
+            this.logger.debug(`Unknown interactive payload: ${payloadId}`);
+          }
+        }
         continue;
       }
 

@@ -349,4 +349,122 @@ export class WhatsappService {
     }
     throw new Error(`Failed to send voice message to ${to}: ${rawError}`);
   }
+
+  /**
+   * Send an interactive message with a single Quick Reply button.
+   * @param to Recipient phone number
+   * @param body The message body text
+   * @param buttonText The text displayed on the button
+   * @param payloadId The hidden payload ID passed when button is clicked (e.g., "show_more_msg_12345")
+   */
+  async sendInteractiveButtons(
+    to: string,
+    body: string,
+    buttonText: string,
+    payloadId: string,
+  ): Promise<void> {
+    const response = await fetch(whatsappConfig.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${whatsappConfig.accessToken}`,
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          body: {
+            text: body,
+          },
+          action: {
+            buttons: [
+              {
+                type: 'reply',
+                reply: {
+                  title: buttonText,
+                  id: payloadId,
+                },
+              },
+            ],
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      if (this.isAuthErrorPayload(error)) {
+        this.logger.warn(`WhatsApp auth error while sending interactive message to ${to}`);
+      } else {
+        this.logger.error(`Failed to send interactive message to ${to}: ${error}`);
+      }
+      throw new Error(`Failed to send interactive message to ${to}: ${error}`);
+    }
+
+    this.logger.debug(`Interactive message with button sent to ${to}`);
+  }
+
+  /**
+   * Send a text message, truncating if necessary and adding a "Show More" button.
+   * - If text <= 250 chars: send as standard text
+   * - If text > 250 chars: truncate at 250 (try word boundary), cache full text, send with button
+   * @param to Recipient phone number
+   * @param text The message text
+   * @param messageCacheService The cache service for storing full messages
+   * @param replyToMessageId Optional message ID to reply to
+   */
+  async sendTruncatedMessage(
+    to: string,
+    text: string,
+    messageCacheService: { store: (phoneNumber: string, fullMessage: string) => string },
+    replyToMessageId?: string,
+  ): Promise<void> {
+    const MAX_PREVIEW_LENGTH = 250;
+
+    if (text.length <= MAX_PREVIEW_LENGTH) {
+      // Short message - send as standard text
+      await this.sendTextMessage(to, text, replyToMessageId);
+      return;
+    }
+
+    // Long message - truncate and send with "Show More" button
+    const truncatedText = this.truncateAtWordBoundary(text, MAX_PREVIEW_LENGTH);
+    const messageId = messageCacheService.store(to, text);
+    const payloadId = `show_more_${messageId}`;
+
+    try {
+      await this.sendInteractiveButtons(to, truncatedText, 'Show More', payloadId);
+    } catch (err) {
+      // If interactive message fails, fall back to sending truncated text
+      this.logger.warn(`Interactive message failed, falling back to text: ${err}`);
+      await this.sendTextMessage(to, truncatedText, replyToMessageId);
+    }
+  }
+
+  /**
+   * Truncate text at the nearest word boundary before maxLength.
+   * @param text The text to truncate
+   * @param maxLength The maximum length (hard limit)
+   * @returns Truncated text ending at word boundary
+   */
+  private truncateAtWordBoundary(text: string, maxLength: number): string {
+    if (text.length <= maxLength) {
+      return text;
+    }
+
+    // Look for the last space before maxLength
+    const truncated = text.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+
+    if (lastSpace > maxLength * 0.7) {
+      // If we can break at a word that's at least 70% of maxLength, do so
+      return truncated.substring(0, lastSpace).trim();
+    }
+
+    // Otherwise, hard break at maxLength
+    return truncated.trim();
+  }
 }

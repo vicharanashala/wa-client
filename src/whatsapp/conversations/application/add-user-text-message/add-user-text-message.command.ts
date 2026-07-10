@@ -4,6 +4,7 @@ import { LangGraphClientService } from '../../langgraph-client.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
+import { MessageCacheService } from '../../../message-cache/message-cache.service';
 import { Result } from 'oxide.ts';
 
 export class AddUserTextMessageCommand {
@@ -25,6 +26,7 @@ export class AddUserTextMessageHandler
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappUserRepo: WhatsappUserRepository,
+    private readonly messageCacheService: MessageCacheService,
   ) {}
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
@@ -68,7 +70,13 @@ export class AddUserTextMessageHandler
     }
 
     // Send the AI reply back to the user (clean, without REV_ID line)
-    await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
+    // Use sendTruncatedMessage to enable "Show More" for long replies
+    await this.whatsappService.sendTruncatedMessage(
+      phoneNumber,
+      reply,
+      this.messageCacheService,
+      messageId,
+    );
     this.logger.log(`[${phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
   }
 }

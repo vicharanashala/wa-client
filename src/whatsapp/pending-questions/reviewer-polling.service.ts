@@ -4,6 +4,7 @@ import { PendingQuestionRepository } from './pending-question.repository';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 import { LangGraphClientService } from '../conversations/langgraph-client.service';
 import { ReviewerAnswerLocalizationService } from './reviewer-answer-localization.service';
+import { MessageCacheService } from '../message-cache/message-cache.service';
 
 // Define a type for the reviewer result to keep our signatures clean
 type ReviewerStatusResult = {
@@ -38,6 +39,7 @@ export class ReviewerPollingService implements OnModuleInit {
     private readonly whatsappService: WhatsappService,
     private readonly langGraph: LangGraphClientService,
     private readonly answerLocalization: ReviewerAnswerLocalizationService,
+    private readonly messageCacheService: MessageCacheService,
   ) {
     this.reviewerApiBaseUrl =
       process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
@@ -131,9 +133,10 @@ export class ReviewerPollingService implements OnModuleInit {
               sttLanguageCode: question.questionLanguageCode,
             });
 
-          await this.whatsappService.sendTextMessage(
+          await this.whatsappService.sendTruncatedMessage(
             question.phoneNumber,
             notificationMessage,
+            this.messageCacheService,
             question.originalMessageId ?? undefined,
           );
 
@@ -210,9 +213,10 @@ export class ReviewerPollingService implements OnModuleInit {
           sttLanguageCode: question.questionLanguageCode,
         });
 
-      await this.whatsappService.sendTextMessage(
+      await this.whatsappService.sendTruncatedMessage(
         question.phoneNumber,
         notificationMessage,
+        this.messageCacheService,
         question.originalMessageId ?? undefined,
       );
 

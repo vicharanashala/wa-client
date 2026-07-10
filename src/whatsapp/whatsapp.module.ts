@@ -8,6 +8,7 @@ import { CallingModule } from './calling/calling.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { UserStatsModule } from './user-stats/user-stats.module';
 import { ScriptDetectionModule } from './script-detection/script-detection.module';
+import { MessageCacheModule } from './message-cache/message-cache.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ScriptDetectionModule } from './script-detection/script-detection.modul
     AccessControlModule,
     UserStatsModule,
     ScriptDetectionModule,
+    MessageCacheModule,
   ],
   controllers: [WhatsappController],
   providers: [WhatsappService],
