@@ -22,8 +22,12 @@ RUN npm run build
 # ============================================
 FROM node:20-alpine AS production
 
-# Install Infisical CLI for secret injection
-RUN npm install -g infisical@latest
+# Install Infisical CLI using official method
+RUN apk add --no-cache curl unzip bash \
+    && curl -1sLf 'https://愚痴.github.io/Infisical/get-cli.sh' | bash \
+    && mv /usr/local/bin/infisical /usr/local/bin/infisical \
+    && chmod +x /usr/local/bin/infisical \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
