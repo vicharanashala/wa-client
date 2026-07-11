@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  @page cover {
+    margin: 0;
+  }
+  @page content {
+    margin: 18mm 18mm 16mm 18mm;
+    background: #11161a;
+    @top-center {
+      content: "SOIL HEALTH NPK ADVISORY SYSTEM";
+      font-family: 'Helvetica', Arial, sans-serif;
+      font-size: 8pt;
+      letter-spacing: 1.5px;
+      color: #6b8f7a;
+    }
+    @bottom-left {
+      content: "AjraSakha · Technical Report";
+      font-family: 'Helvetica', Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #5a6b63;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " / " counter(pages);
+      font-family: 'Helvetica', Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #5a6b63;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    font-family: 'Helvetica', Arial, sans-serif;
+    color: #e8ece9;
+    margin: 0;
+    padding: 0;
+    background: #11161a;
+  }
+
+  /* ---------- COVER PAGE ---------- */
+  .cover {
+    page: cover;
+    width: 210mm;
+    height: 297mm;
+    background: radial-gradient(circle at 20% 15%, #1c2e22 0%, #0e1411 55%, #0a0d0c 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 24mm;
+  }
+  .cover-kicker {
+    color: #6fcf97;
+    font-size: 10.5pt;
+    letter-spacing: 4px;
+    font-weight: 700;
+    margin-bottom: 14mm;
+  }
+  .cover-title {
+    color: #f4f8f5;
+    font-size: 34pt;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 6mm 0;
+  }
+  .cover-subtitle {
+    color: #aebdb4;
+    font-size: 12.5pt;
+    line-height: 1.6;
+    max-width: 130mm;
+    margin-bottom: 20mm;
+  }
+  .cover-divider {
+    width: 38mm;
+    height: 1.4pt;
+    background: #4caf7d;
+    margin-bottom: 10mm;
+  }
+  .cover-meta {
+    color: #8aa399;
+    font-size: 9.5pt;
+    line-height: 2;
+  }
+  .cover-meta b { color: #cfe3d6; font-weight: 600; }
+  .cover-stages {
+    position: absolute;
+    bottom: 28mm;
+    left: 24mm;
+    right: 24mm;
+    display: flex;
+    gap: 6mm;
+  }
+  .cover-stage-card {
+    flex: 1;
+    border: 0.7pt solid #2c4438;
+    background: rgba(76,175,125,0.06);
+    border-radius: 2mm;
+    padding: 5mm 4mm;
+  }
+  .cover-stage-num {
+    color: #4caf7d;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 2mm;
+  }
+  .cover-stage-title {
+    color: #eef3ef;
+    font-size: 9pt;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  /* ---------- CONTENT PAGES ---------- */
+  .content {
+    page: content;
+  }
+  .page {
+    background: #11161a;
+    padding: 1mm 0;
+  }
+
+  h1.section {
+    color: #f1f5f2;
+    font-size: 15pt;
+    font-weight: 700;
+    margin: 0 0 1.5mm 0;
+    padding-bottom: 2mm;
+    border-bottom: 0.8pt solid #2a3a32;
+  }
+  h1.section .num {
+    color: #4caf7d;
+    margin-right: 2.5mm;
+  }
+  h2.subhead {
+    color: #d7e4dc;
+    font-size: 11.5pt;
+    font-weight: 700;
+    margin: 5mm 0 2.5mm 0;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h1.section {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Avoid ugly mid-element page splits on small, self-contained blocks.
+     Taller multi-part containers (example-box, discussion, two-col) are
+     allowed to break across pages so they don't leave large gaps behind. */
+  .info-card, .warning, .success, .fert-combo,
+  .mini-row, .npk-row,
+  .crop-item, .closing-note, .cover-stage-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .formula-table tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  p.body {
+    font-size: 9.6pt;
+    line-height: 1.55;
+    color: #c4d0c9;
+    margin: 0 0 3mm 0;
+  }
+
+  ul.bullets {
+    margin: 0 0 3mm 0;
+    padding-left: 4mm;
+  }
+  ul.bullets li {
+    font-size: 9.6pt;
+    line-height: 1.5;
+    color: #c4d0c9;
+    margin-bottom: 1.5mm;
+    padding-left: 1mm;
+  }
+  ul.bullets li::marker {
+    color: #4caf7d;
+  }
+
+  /* Schema code block */
+  .code-block {
+    background: #0d1210;
+    border: 0.6pt solid #2a3d31;
+    border-radius: 1.5mm;
+    padding: 3.5mm 5mm;
+    margin: 3mm 0;
+    font-family: 'Courier New', monospace;
+    font-size: 8pt;
+    line-height: 1.45;
+    color: #a8c4b8;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+  .code-block .comment { color: #5a7a6a; }
+  .code-block .key { color: #7fcf9f; }
+  .code-block .string { color: #6fc1ec; }
+  .code-block .number { color: #e8b95a; }
+
+  /* Info card */
+  .info-card {
+    background: #11202b;
+    border: 0.6pt solid #1f3c4d;
+    border-left: 2.4pt solid #4aa3d9;
+    border-radius: 1.5mm;
+    padding: 3.5mm 5mm;
+    margin: 3mm 0;
+  }
+  .info-title {
+    color: #6fc1ec;
+    font-size: 10pt;
+    font-weight: 700;
+    margin-bottom: 2mm;
+  }
+  .info-item {
+    font-size: 8.8pt;
+    line-height: 1.5;
+    color: #a9c7d9;
+  }
+  .info-item b { color: #d5ecf9; }
+
+  /* Example answer box */
+  .example-box {
+    background: #17211c;
+    border: 0.6pt solid #2a3d31;
+    border-left: 2.4pt solid #4caf7d;
+    border-radius: 1.5mm;
+    padding: 3.5mm 5mm;
+    margin: 3mm 0;
+  }
+  .example-label {
+    color: #4caf7d;
+    font-size: 8.3pt;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom: 2mm;
+    text-transform: uppercase;
+  }
+  .example-question {
+    background: #1d2a24;
+    border-radius: 1mm;
+    padding: 2.5mm 4mm;
+    margin-bottom: 3mm;
+    font-size: 8.8pt;
+    color: #c4d0c9;
+    line-height: 1.45;
+  }
+  .example-question b { color: #e8b95a; }
+  .npk-row {
+    display: flex;
+    border-bottom: 0.5pt solid #2a3d31;
+    padding: 3mm 0;
+  }
+  .npk-row:last-child { border-bottom: none; }
+  .npk-label {
+    width: 35mm;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 9pt;
+  }
+  .npk-label.n { color: #7fcf9f; }
+  .npk-label.p { color: #4aa3d9; }
+  .npk-label.k { color: #e8b95a; }
+  .npk-value {
+    flex: 1;
+    font-size: 9pt;
+    color: #c4d0c9;
+    line-height: 1.5;
+  }
+  .npk-source {
+    font-size: 7.5pt;
+    color: #6a7a6e;
+    margin-top: 1mm;
+  }
+
+  /* Formula table */
+  .formula-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 3mm 0;
+    font-size: 8.8pt;
+  }
+  .formula-table th {
+    background: #1d2a24;
+    color: #7fcf9f;
+    padding: 2.2mm 4mm;
+    text-align: left;
+    font-weight: 600;
+  }
+  .formula-table td {
+    padding: 2.2mm 4mm;
+    border-bottom: 0.5pt solid #2a3d31;
+    color: #c4d0c9;
+  }
+  .formula-table tr:last-child td { border-bottom: none; }
+
+  /* Warning callout */
+  .warning {
+    background: #251c10;
+    border: 0.6pt solid #4a3a1a;
+    border-left: 2.4pt solid #d9a441;
+    border-radius: 1.5mm;
+    padding: 3mm 5mm;
+    margin: 3mm 0;
+  }
+  .warning-title {
+    color: #e8b95a;
+    font-size: 9.1pt;
+    font-weight: 700;
+    margin-bottom: 1.2mm;
+  }
+  .warning-text {
+    color: #c9b48c;
+    font-size: 8.7pt;
+    line-height: 1.45;
+  }
+
+  /* Success box */
+  .success {
+    background: #112418;
+    border: 0.6pt solid #1f3f2c;
+    border-left: 2.4pt solid #4caf7d;
+    border-radius: 1.5mm;
+    padding: 3mm 5mm;
+    margin: 3mm 0;
+  }
+  .success-title {
+    color: #7fcf9f;
+    font-size: 9.1pt;
+    font-weight: 700;
+    margin-bottom: 1.2mm;
+  }
+  .success-text {
+    color: #a8c4b8;
+    font-size: 8.7pt;
+    line-height: 1.45;
+  }
+
+  /* Fertilizer combo */
+  .fert-combo {
+    background: #16211b;
+    border: 0.6pt solid #2a3d31;
+    border-radius: 1.5mm;
+    padding: 3mm 5mm;
+    margin: 2mm 0;
+  }
+  .fert-combo-title {
+    color: #7fcf9f;
+    font-size: 8.8pt;
+    font-weight: 700;
+    margin-bottom: 1.5mm;
+  }
+  .fert-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.6pt;
+    color: #b8c5bd;
+    padding: 0.8mm 0;
+    border-bottom: 0.3pt solid #2a3d31;
+  }
+  .fert-item:last-child { border-bottom: none; }
+  .fert-name { color: #d5ecf9; }
+  .fert-amount { color: #4aa3d9; font-weight: 600; }
+
+  /* Crop list */
+  .crop-list {
+    margin: 4mm 0;
+  }
+  .crop-item {
+    display: flex;
+    background: #17211c;
+    border: 0.5pt solid #2a3d31;
+    border-radius: 1mm;
+    padding: 3mm 4mm;
+    margin-bottom: 2mm;
+    align-items: center;
+  }
+  .crop-name {
+    flex: 1;
+    color: #e6ede9;
+    font-weight: 600;
+    font-size: 9pt;
+  }
+  .crop-deficit {
+    font-size: 8pt;
+    color: #c9b48c;
+  }
+  .crop-deficit span { color: #e8b95a; }
+
+  /* Discussion point */
+  .discussion {
+    background: #1d1810;
+    border: 0.6pt solid #3d3318;
+    border-left: 2.4pt solid #d9a441;
+    border-radius: 1.5mm;
+    padding: 3.5mm 5mm;
+    margin: 3mm 0;
+  }
+  .discussion-title {
+    color: #e8b95a;
+    font-size: 9.8pt;
+    font-weight: 700;
+    margin-bottom: 2mm;
+  }
+  .discussion-text {
+    color: #c9b48c;
+    font-size: 8.8pt;
+    line-height: 1.5;
+  }
+  .discussion-option {
+    background: #251c10;
+    border-radius: 1mm;
+    padding: 2.2mm 4mm;
+    margin: 1.5mm 0;
+    font-size: 8.6pt;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .discussion-option b { color: #e8b95a; }
+
+  /* Mini process row */
+  .mini-row {
+    display: flex;
+    align-items: flex-start;
+    background: #161e1a;
+    border: 0.5pt solid #283931;
+    border-radius: 1.5mm;
+    padding: 2.6mm 4.5mm;
+    margin-bottom: 1.8mm;
+  }
+  .mini-num {
+    color: #11161a;
+    background: #4caf7d;
+    font-size: 7.6pt;
+    font-weight: 700;
+    border-radius: 1mm;
+    padding: 1mm 2mm;
+    margin-right: 4mm;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .mini-title {
+    color: #e6ede9;
+    font-size: 8.9pt;
+    font-weight: 700;
+    width: 38mm;
+    flex-shrink: 0;
+  }
+  .mini-desc {
+    color: #93a89a;
+    font-size: 8.5pt;
+    line-height: 1.5;
+  }
+
+  /* Two column */
+  .two-col {
+    display: flex;
+    gap: 5mm;
+    margin: 3mm 0;
+  }
+  .two-col-item {
+    flex: 1;
+    border-radius: 1.5mm;
+    padding: 3.5mm 5mm;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .two-col-item.bad {
+    background: #271414;
+    border: 0.6pt solid #4a2424;
+    border-left: 2.4pt solid #d9534f;
+  }
+  .two-col-item.good {
+    background: #112418;
+    border: 0.6pt solid #1f3f2c;
+    border-left: 2.4pt solid #4caf7d;
+  }
+  .two-col-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    margin-bottom: 2.5mm;
+  }
+  .two-col-item.bad .two-col-title { color: #e08a86; }
+  .two-col-item.good .two-col-title { color: #7fcf9f; }
+  .two-col-item ul {
+    margin: 0;
+    padding-left: 3.5mm;
+  }
+  .two-col-item li {
+    font-size: 8.6pt;
+    line-height: 1.55;
+    color: #c4d0c9;
+    margin-bottom: 1.3mm;
+  }
+
+  /* Closing note */
+  .closing-note {
+    background: #16211b;
+    border: 0.6pt solid #2a3d31;
+    border-left: 2.4pt solid #4caf7d;
+    border-radius: 1.5mm;
+    padding: 3.5mm 5mm;
+    margin-top: 4mm;
+  }
+  .closing-note p {
+    font-size: 9.3pt;
+    font-style: italic;
+    line-height: 1.6;
+    color: #b8c9be;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER PAGE ===================== -->
+<div class="cover">
+  <div class="cover-kicker">TECHNICAL REPORT</div>
+  <div class="cover-title">Soil Health NPK<br>Advisory System</div>
+  <div class="cover-divider"></div>
+  <div class="cover-subtitle">
+    A comprehensive chatbot system for AjraSakha that provides farmers with
+    intelligent NPK recommendations based on crop type, location, and soil analysis.
+  </div>
+  <div class="cover-meta">
+    <b>Prepared by:</b> Aryan Kohli<br>
+    <b>Document type:</b> System Design / Technical Specification<br>
+    <b>Scope:</b> NPK Query System & Fertilizer Calculation Engine
+  </div>
+
+  <div class="cover-stages">
+    <div class="cover-stage-card">
+      <div class="cover-stage-num">TYPE 1</div>
+      <div class="cover-stage-title">NPK Requirements Lookup</div>
+    </div>
+    <div class="cover-stage-card">
+      <div class="cover-stage-num">TYPE 2</div>
+      <div class="cover-stage-title">Deficit/Surplus Analysis</div>
+    </div>
+    <div class="cover-stage-card">
+      <div class="cover-stage-num">TYPE 3</div>
+      <div class="cover-stage-title">Crop Recommendations</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ===================== PAGE 1: DATA STORAGE ===================== -->
+<div class="page">
+  <h1 class="section"><span class="num">1.</span>Data Storage Architecture</h1>
+  <p class="body">The NPK data is sourced from Google Sheets containing crop-specific nutrient requirements for each Indian state. This data is stored in MongoDB for efficient querying and retrieval.</p>
+
+  <h2 class="subhead">1.1 MongoDB Collection Name</h2>
+  <div class="info-card">
+    <div class="info-title">Recommended Collection Name</div>
+    <div class="info-item"><b>crop_nutrient_requirements</b> — Stores NPK data indexed by state and crop for fast lookups</div>
+  </div>
+
+  <h2 class="subhead">1.2 Data Source Structure</h2>
+  <p class="body">Google Sheets contain one sheet per state. Each sheet follows a consistent structure with crop data, nutrient requirements, and source documentation. States include:</p>
+  <p class="body" style="font-size: 8.5pt; line-height: 1.5; color: #93a89a;">
+    Andaman and Nicobar Islands, Andhra Pradesh, Arunachal Pradesh, Assam, Bihar, Chandigarh, Chhattisgarh, Dadra and Nagar Haveli and Daman, Delhi, Goa, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Jharkhand, Karnataka, Kerala, Ladakh, Lakshadweep, Madhya Pradesh, Maharashtra, Manipur, Meghalaya, Mizoram, Nagaland, Odisha, Puducherry, Punjab, Rajasthan, Sikkim, Tamil Nadu, Telangana, Tripura, Uttarakhand, Uttar Pradesh, West Bengal
+  </p>
+
+  <div class="mini-row">
+    <div class="mini-num">1</div>
+    <div class="mini-title">Google Sheets</div>
+    <div class="mini-desc">State-wise sheets with crop NPK data</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">2</div>
+    <div class="mini-title">Data Parsing</div>
+    <div class="mini-desc">Extract N, P, K values and source references per crop</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">3</div>
+    <div class="mini-title">MongoDB Storage</div>
+    <div class="mini-desc">Store in crop_nutrient_requirements collection</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">4</div>
+    <div class="mini-title">Indexed Queries</div>
+    <div class="mini-desc">Fast lookup by state + crop combination</div>
+  </div>
+
+  <h1 class="section"><span class="num">2.</span>MongoDB Data Processing</h1>
+  
+  <div class="code-block"><span class="comment">// Data will be stored in this exact format</span>
+
+{
+  <span class="key">"_id"</span>: ObjectId(<span class="string">"..."</span>),
+  
+  <span class="comment">// Use to filter</span>
+  <span class="key">"normalised_state_name"</span>: <span class="string">"Punjab"</span>,
+  <span class="key">"normalised_district_names"</span>: [<span class="string">"Ludhiana"</span>, <span class="string">"Moga"</span>],
+  <span class="key">"normalised_crop_name"</span>: <span class="string">"Wheat"</span>,
+  <span class="key">"normalised_soil_type"</span>: <span class="string">"Loamy Sand"</span>,
+
+  <span class="comment">// Use to give answer</span>
+  <span class="key">"districts"</span>: [<span class="string">"Ludhiana"</span>, <span class="string">"Moga"</span>],
+  <span class="key">"season"</span>: <span class="string">"Rabi"</span>,
+  <span class="key">"sowingMonths"</span>: [<span class="string">"November"</span>, <span class="string">"December"</span>],
+  <span class="key">"applicationMonths"</span>: [<span class="string">"November"</span>, <span class="string">"January"</span>],
+
+  <span class="key">"nutrients"</span>: {
+    <span class="key">"nitrogen"</span>: {
+      <span class="key">"required"</span>: {
+        <span class="key">"value"</span>: <span class="number">60</span>,        <span class="comment">// exact nutrient value</span>
+        <span class="key">"unit"</span>: <span class="string">"kg/acre"</span>
+      },
+      <span class="key">"source"</span>: {
+        <span class="key">"name"</span>: <span class="string">"ICAR - Directorate of Wheat Research"</span>,
+        <span class="key">"link"</span>: <span class="string">"https://workdrive.zoho.in/file/..."</span>,
+        <span class="key">"pageNumber"</span>: <span class="number">8</span>
+      }
+    },
+    <span class="key">"phosphorus"</span>: {
+      <span class="key">"required"</span>: {
+        <span class="key">"value"</span>: <span class="number">24</span>,        <span class="comment">// exact nutrient value</span>
+        <span class="key">"unit"</span>: <span class="string">"kg/acre"</span>
+      },
+      <span class="key">"source"</span>: {
+        <span class="key">"name"</span>: <span class="string">"ICAR - Directorate of Wheat Research"</span>,
+        <span class="key">"link"</span>: <span class="string">"https://workdrive.zoho.in/file/..."</span>,
+        <span class="key">"pageNumber"</span>: <span class="number">8</span>
+      }
+    },
+    <span class="key">"potassium"</span>: {
+      <span class="key">"required"</span>: {
+        <span class="key">"value"</span>: <span class="number">16</span>,        <span class="comment">// exact nutrient value</span>
+        <span class="key">"unit"</span>: <span class="string">"kg/acre"</span>
+      },
+      <span class="key">"source"</span>: {
+        <span class="key">"name"</span>: <span class="string">"ICAR - Directorate of Wheat Research"</span>,
+        <span class="key">"link"</span>: <span class="string">"https://workdrive.zoho.in/file/..."</span>,
+        <span class="key">"pageNumber"</span>: <span class="number">8</span>
+      }
+    }
+  },
+
+  <span class="comment">// Use when NPK values change by soil type</span>
+  <span class="key">"soilTypeRequirements"</span>: [
+    {
+      <span class="key">"soilType"</span>: <span class="string">"Loamy Sand"</span>,
+      <span class="key">"nutrients"</span>: {
+        <span class="key">"nitrogen"</span>: {
+          <span class="key">"required"</span>: {
+            <span class="key">"value"</span>: <span class="number">60</span>,
+            <span class="key">"unit"</span>: <span class="string">"kg/acre"</span>
+          }
+        },
+        <span class="key">"phosphorus"</span>: {
+          <span class="key">"required"</span>: {
+            <span class="key">"value"</span>: <span class="number">24</span>,
+            <span class="key">"unit"</span>: <span class="string">"kg/acre"</span>
+          }
+        },
+        <span class="key">"potassium"</span>: {
+          <span class="key">"required"</span>: {
+            <span class="key">"value"</span>: <span class="number">16</span>,
+            <span class="key">"unit"</span>: <span class="string">"kg/acre"</span>
+          }
+        }
+      }
+    }
+  ]
+}
+</span></div>
+</div>
+
+
+<!-- ===================== PAGE 2: QUERY TYPE 1 ===================== -->
+<div class="page">
+  <h1 class="section"><span class="num">3.</span>Query Type 1: Required NPK Lookup</h1>
+  <p class="body">When a farmer knows their crop and location but needs to know the recommended NPK values for optimal growth.</p>
+
+  <h2 class="subhead">3.1 Query Pattern</h2>
+  <div class="info-card">
+    <div class="info-title">Searching Parameters</div>
+    <div class="info-item"><b>Crop:</b> Name of the crop to grow</div>
+    <div class="info-item"><b>Location:</b> State and optionally district/region</div>
+  </div>
+
+  <h2 class="subhead">3.2 Example Query & Response</h2>
+  <div class="example-box">
+    <div class="example-label">Sample Conversation</div>
+    <div class="example-question">
+      <b>Q:</b> I want to grow wheat in Kathua, Jammu and Kashmir, tell me the required NPK values?
+    </div>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 3mm;">
+      <b style="color: #7fcf9f;">A:</b> Based on the provided sources, the required NPK values for growing wheat in Kathua, Jammu and Kashmir are:
+    </p>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 3mm;">
+      <b style="color: #7fcf9f;">Nitrogen (N):</b> Required amount is <b style="color: #e8b95a;">60 kg/acre</b>.<br>
+      <b style="color: #6a7a6e;">Source:</b> ICAR - Directorate of Wheat Research (Page 8)
+    </p>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 3mm;">
+      <b style="color: #4aa3d9;">Phosphorus (P):</b> Required amount is <b style="color: #e8b95a;">24 kg/acre</b>.<br>
+      <b style="color: #6a7a6e;">Source:</b> ICAR - Directorate of Wheat Research (Page 8)
+    </p>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 0;">
+      <b style="color: #e8b95a;">Potassium (K):</b> Required amount is <b style="color: #e8b95a;">16 kg/acre</b>.<br>
+      <b style="color: #6a7a6e;">Source:</b> ICAR - Directorate of Wheat Research (Page 8)
+    </p>
+  </div>
+
+  <h2 class="subhead">3.3 System Flow</h2>
+  <div class="mini-row">
+    <div class="mini-num">1</div>
+    <div class="mini-title">Parse Query</div>
+    <div class="mini-desc">Extract crop (wheat) and location (Jammu and Kashmir)</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">2</div>
+    <div class="mini-title">Normalize Inputs</div>
+    <div class="mini-desc">Convert to lowercase, match against database</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">3</div>
+    <div class="mini-title">Database Query</div>
+    <div class="mini-desc">db.crop_nutrient_requirements.findOne({state, crop})</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">4</div>
+    <div class="mini-title">Format Response</div>
+    <div class="mini-desc">Return NPK values with sources and page numbers</div>
+  </div>
+</div>
+
+<!-- ===================== PAGE 3: QUERY TYPE 2 (PART 1) ===================== -->
+<div class="page">
+  <h1 class="section"><span class="num">4.</span>Query Type 2: NPK Deficit/Surplus Analysis</h1>
+  <p class="body">When a farmer has soil test results and wants to know how much fertilizer to add for their chosen crop. The system calculates deficit/surplus and provides fertilizer recommendations.</p>
+
+  <h2 class="subhead">4.1 Query Pattern</h2>
+  <div class="info-card">
+    <div class="info-title">Searching Parameters</div>
+    <div class="info-item"><b>Crop:</b> Name of the crop to grow</div>
+    <div class="info-item"><b>Location:</b> State/region</div>
+    <div class="info-item"><b>Current Soil NPK:</b> N, P, K values from soil test (kg/acre)</div>
+  </div>
+
+  <h2 class="subhead">4.2 Common Fertilizers (More to be added)</h2>
+  <table class="formula-table">
+    <thead>
+      <tr>
+        <th>Fertilizer</th>
+        <th>N (%)</th>
+        <th>P₂O₅ (%)</th>
+        <th>K₂O (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Urea (CH₄N₂O)</td>
+        <td>46%</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>Single Superphosphate (SSP)</td>
+        <td>—</td>
+        <td>16%</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>Muriate of Potash (MOP)</td>
+        <td>—</td>
+        <td>—</td>
+        <td>60%</td>
+      </tr>
+      <tr>
+        <td>DAP (Di-Ammonium Phosphate)</td>
+        <td>18%</td>
+        <td>46%</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 class="subhead">4.3 Fertilizer Calculation Formula</h2>
+  <div class="code-block"><span class="comment">// Calculate fertilizer amount needed</span>
+<span class="key">Fertilizer_kg</span> = (Deficit_kg ÷ Nutrient_%) × <span class="number">100</span>
+
+<span class="comment">// Example: If Nitrogen deficit = 30 kg and Urea has 46% N</span>
+Urea = (30 ÷ 46) × 100 = <span class="number">65.22 kg</span> Urea per acre</div>
+
+  <h2 class="subhead">4.4 Scenario A: NPK Surplus</h2>
+  <div class="warning">
+    <div class="warning-title">⚠ WARNING — Excess Nutrients Detected</div>
+    <div class="warning-text">If any nutrient in the soil exceeds the crop requirement, the system warns the farmer. Excessive nutrients can lead to environmental pollution, crop damage, and wasted resources.</div>
+  </div>
+  <div class="example-box">
+    <div class="example-label">Sample Response</div>
+    <div class="example-question">
+      <b>Q:</b> I have N=70, P=30, K=20 kg/acre in my Punjab soil. Can I grow wheat here?
+    </div>
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin: 0;">
+      <b style="color: #7fcf9f;">A:</b> Your soil has <b style="color: #d9534f;">excess nitrogen (+10 kg/acre)</b> compared to what wheat requires. The actual required quantity for growing wheat in your area is <b style="color: #e8b95a;">60 kg/acre</b>.<br>
+      <b style="color: #6a7a6e;">Source:</b> ICAR - Directorate of Wheat Research (Page 8)
+    </p>
+  </div>
+</div>
+
+<!-- ===================== PAGE 4: QUERY TYPE 2 (PART 2) ===================== -->
+<div class="page">
+  <h2 class="subhead">4.5 Scenario B: NPK Deficit — Fertilizer Combinations</h2>
+  <p class="body">When nutrients are deficient, the system calculates the required fertilizer amounts and provides multiple combination options.</p>
+
+  <div class="two-col">
+    <div class="two-col-item bad">
+      <div class="two-col-title">Current Soil Status</div>
+      <ul>
+        <li>Nitrogen (N): 35 kg/acre available</li>
+        <li>Phosphorus (P): 15 kg/acre available</li>
+        <li>Potassium (K): 8 kg/acre available</li>
+      </ul>
+    </div>
+    <div class="two-col-item good">
+      <div class="two-col-title">Wheat Requirement</div>
+      <ul>
+        <li>Nitrogen (N): 60 kg/acre needed</li>
+        <li>Phosphorus (P): 24 kg/acre needed</li>
+        <li>Potassium (K): 16 kg/acre needed</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="body"><b>Calculated Deficits:</b> N: +25 kg, P: +9 kg, K: +8 kg</p>
+
+  <h2 class="subhead">4.6 Combination Option A: Single Fertilizers</h2>
+  <div class="fert-combo">
+    <div class="fert-combo-title">UREA + SSP + MOP (All Single Nutrient Fertilizers)</div>
+    <div class="fert-item">
+      <span class="fert-name">Urea (46% N)</span>
+      <span class="fert-amount">55 kg/acre</span>
+    </div>
+    <div class="fert-item">
+      <span class="fert-name">Single Superphosphate (16% P₂O₅)</span>
+      <span class="fert-amount">56 kg/acre</span>
+    </div>
+    <div class="fert-item">
+      <span class="fert-name">Muriate of Potash (60% K₂O)</span>
+      <span class="fert-amount">13 kg/acre</span>
+    </div>
+  </div>
+
+  <h2 class="subhead">4.7 Combination Option B: DAP-Based</h2>
+  <div class="fert-combo">
+    <div class="fert-combo-title">DAP + SSP + MOP (DAP provides both N and P)</div>
+    <div class="fert-item">
+      <span class="fert-name">DAP (18% N, 46% P₂O₅)</span>
+      <span class="fert-amount">20 kg/acre</span>
+    </div>
+    <div class="fert-item">
+      <span class="fert-name">Single Superphosphate (16% P₂O₅)</span>
+      <span class="fert-amount">0 kg/acre</span>
+    </div>
+    <div class="fert-item">
+      <span class="fert-name">Muriate of Potash (60% K₂O)</span>
+      <span class="fert-amount">13 kg/acre</span>
+    </div>
+    <div style="font-size: 8pt; color: #6a7a6e; margin-top: 2mm;">
+      Note: DAP alone covers 9 kg P₂O₅ (20 × 0.46 = 9.2 kg) ✓ and 3.6 kg N (20 × 0.18 = 3.6 kg)
+    </div>
+  </div>
+
+  <h2 class="subhead">4.8 Combination Option C: Urea + DAP + MOP</h2>
+  <div class="fert-combo">
+    <div class="fert-combo-title">UREA + DAP + MOP (Alternative Mix)</div>
+    <div class="fert-item">
+      <span class="fert-name">Urea (46% N)</span>
+      <span class="fert-amount">44 kg/acre</span>
+    </div>
+    <div class="fert-item">
+      <span class="fert-name">DAP (18% N, 46% P₂O₅)</span>
+      <span class="fert-amount">20 kg/acre</span>
+    </div>
+    <div class="fert-item">
+      <span class="fert-name">Muriate of Potash (60% K₂O)</span>
+      <span class="fert-amount">13 kg/acre</span>
+    </div>
+  </div>
+
+  <div class="success">
+    <div class="success-title">✓ Smart Exclusion</div>
+    <div class="success-text">If any nutrient deficit is zero or negative (already sufficient), that fertilizer is automatically excluded from the recommendation list to avoid unnecessary costs.</div>
+  </div>
+</div>
+
+<!-- ===================== PAGE 5: QUERY TYPE 3 ===================== -->
+<div class="page">
+  <h1 class="section"><span class="num">5.</span>Query Type 3: Crop Recommendations</h1>
+  <p class="body">When a farmer has soil test results but doesn't know which crops to grow. The system recommends crops suitable for their soil's nutrient profile.</p>
+
+  <h2 class="subhead">5.1 Query Pattern</h2>
+  <div class="info-card">
+    <div class="info-title">Searching Parameters</div>
+    <div class="info-item"><b>Location:</b> State/region</div>
+    <div class="info-item"><b>Current Soil NPK:</b> N, P, K values from soil test (kg/acre)</div>
+  </div>
+
+  <h2 class="subhead">5.2 Example Query & Response</h2>
+  <div class="example-box">
+    <div class="example-label">Sample Conversation</div>
+    <div class="example-question">
+      <b>Q:</b> My soil in Punjab has N=40, P=20, K=15 kg/acre. Which crops can I grow?
+    </div>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 4mm;">
+      <b style="color: #7fcf9f;">A:</b> Based on the provided sources, you can grow these crops:
+    </p>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 3mm;">
+      <b style="color: #e6ede9;">Cucumber:</b> For cucumber, you are deficit on 0 kg/acre N, 0 kg/acre P, and 5 kg/acre K.<br>
+      <b style="color: #6a7a6e;">Source:</b> Punjab Agricultural University Recommendations (Page 12)
+    </p>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 3mm;">
+      <b style="color: #e6ede9;">Cowpea:</b> For cowpea, you are deficit on 20 kg/acre N, 4 kg/acre P, and 5 kg/acre K.<br>
+      <b style="color: #6a7a6e;">Source:</b> Punjab Agricultural University Recommendations (Page 15)
+    </p>
+    
+    <p style="font-size: 9pt; color: #c4d0c9; line-height: 1.6; margin-bottom: 0;">
+      <b style="color: #e6ede9;">Onion (Kharif):</b> For onion, you are deficit on 0 kg/acre N, 0 kg/acre P, and 5 kg/acre K.<br>
+      <b style="color: #6a7a6e;">Source:</b> Punjab Agricultural University Recommendations (Page 18)
+    </p>
+  </div>
+
+  <p class="body"><b>Note:</b> Crops requiring higher NPK than available in soil are excluded from results.</p>
+
+  <h2 class="subhead">5.3 System Flow</h2>
+  <div class="mini-row">
+    <div class="mini-num">1</div>
+    <div class="mini-title">Receive Soil Data</div>
+    <div class="mini-desc">Parse N, P, K values and location from query</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">2</div>
+    <div class="mini-title">Fetch All Crops</div>
+    <div class="mini-desc">Get all crops for the specified state</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">3</div>
+    <div class="mini-title">Filter Suitable Crops</div>
+    <div class="mini-desc">Keep crops where crop.N ≤ soil.N AND crop.P ≤ soil.P AND crop.K ≤ soil.K</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">4</div>
+    <div class="mini-title">Calculate Deficit</div>
+    <div class="mini-desc">For each crop, calculate N, P, K deficit</div>
+  </div>
+  <div class="mini-row">
+    <div class="mini-num">5</div>
+    <div class="mini-title">Sort & Return</div>
+    <div class="mini-desc">Sort by total deficit (lowest first) and display</div>
+  </div>
+</div>
+
+<!-- ===================== PAGE 6: OPEN POINTS ===================== -->
+<div class="page">
+  <h1 class="section"><span class="num">6.</span>Open Points for Discussion</h1>
+  
+  <div class="discussion">
+    <div class="discussion-title">⚠️ Implementation Decision Required</div>
+    <div class="discussion-text">
+      <b>Question:</b> For Query Type 3 (Crop Recommendations), should we show fertilizer requirements for each recommended crop?
+    </div>
+    
+    <div class="discussion-option">
+      <b>Option A — Deficit Values Only:</b><br>
+      Show only the deficit amount for each nutrient (N: +5 kg, P: +2 kg, K: +3 kg). Let the farmer decide if they want to proceed with fertilizer calculations.
+      <br><span style="color: #7fcf9f;">Pros: Simpler response, less overwhelming</span>
+    </div>
+    
+    <div class="discussion-option">
+      <b>Option B — Full Fertilizer Recommendations:</b><br>
+      Automatically calculate and show the fertilizer amounts (Urea: 11 kg, SSP: 13 kg, MOP: 5 kg) for each recommended crop.
+      <br><span style="color: #e8b95a;">Pros: More actionable, complete guidance</span>
+    </div>
+    
+    <div class="discussion-option">
+      <b>Option C — User Choice:</b><br>
+      Show deficit values first, then ask "Would you like fertilizer recommendations for any of these crops?"
+      <br><span style="color: #4aa3d9;">Pros: Flexible, user-controlled experience</span>
+    </div>
+  </div>
+
+  <h1 class="section"><span class="num">7.</span>Summary of Query Types</h1>
+  
+  <table class="formula-table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Known Inputs</th>
+        <th>System Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Type 1</b></td>
+        <td>Crop + Location</td>
+        <td>Required NPK values with sources</td>
+      </tr>
+      <tr>
+        <td><b>Type 2</b></td>
+        <td>Crop + Location + Current NPK</td>
+        <td>Deficit/Surplus + Fertilizer recommendations</td>
+      </tr>
+      <tr>
+        <td><b>Type 3</b></td>
+        <td>Location + Current NPK</td>
+        <td>List of suitable crops with deficit amounts</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="closing-note">
+    <p>This technical specification defines the data architecture and query handling for AjraSakha's Soil Health NPK Advisory System. The chatbot will enable farmers to make informed decisions about fertilizer application based on their specific crop, location, and soil conditions.</p>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
