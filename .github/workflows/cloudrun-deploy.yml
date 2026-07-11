@@ -101,11 +101,11 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
-            PORT=8080
             INFISICAL_ENVIRONMENT=staging
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=staging
+            APP_PORT=3000
           flags: --allow-unauthenticated
 
   deploy_production:
@@ -132,9 +132,9 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:production
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
-            PORT=8080
             INFISICAL_ENVIRONMENT=prod
-            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
+            INFISICAL_PROJECT_ID=${{ secrets.INFISIAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=production
+            APP_PORT=3000
           flags: --allow-unauthenticated
