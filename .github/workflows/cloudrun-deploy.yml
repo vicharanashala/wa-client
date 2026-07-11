@@ -15,7 +15,7 @@ on:
         description: "Deploy to Production?"
         required: true
         default: "false"
-        You type: choice
+        type: choice
         options:
           - "false"
           - "true"
@@ -81,26 +81,6 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
 
-      - name: Debug - Check which secrets are empty
-        run: |
-          echo "=== Checking GitHub Secrets ==="
-          echo "MONGO_URI: $([ -z '${{ secrets.MONGO_URI }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_ACCESS_TOKEN: $([ -z '${{ secrets.WHATSAPP_ACCESS_TOKEN }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_PHONE_NUMBER_ID: $([ -z '${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_WEBHOOK_VERIFY_TOKEN: $([ -z '${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_API_VERSION: $([ -z '${{ secrets.WHATSAPP_API_VERSION }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_META_APP_SECRET: $([ -z '${{ secrets.WHATSAPP_META_APP_SECRET }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "LLM_API_KEY: $([ -z '${{ secrets.LLM_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "LLM_BASE_URL: $([ -z '${{ secrets.LLM_BASE_URL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "LLM_MODEL: $([ -z '${{ secrets.LLM_MODEL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "GEMINI_API_KEY: $([ -z '${{ secrets.GEMINI_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "SARVAM_API_KEY: $([ -z '${{ secrets.SARVAM_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "REVIEWER_API_BASE_URL: $([ -z '${{ secrets.REVIEWER_API_BASE_URL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "REVIEWER_INTERNAL_API_KEY: $([ -z '${{ secrets.REVIEWER_INTERNAL_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "AEGRA_ASSISTANT_ID: $([ -z '${{ secrets.AEGRA_ASSISTANT_ID }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "AEGRA_BASE_URL: $([ -z '${{ secrets.AEGRA_BASE_URL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "=== End Check ==="
-
       - name: Deploy to Cloud Run (Staging)
         uses: google-github-actions/deploy-cloudrun@v2
         timeout-minutes: 10
@@ -141,26 +121,6 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
-
-      - name: Debug - Check which secrets are empty
-        run: |
-          echo "=== Checking GitHub Secrets ==="
-          echo "MONGO_URI: $([ -z '${{ secrets.MONGO_URI }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_ACCESS_TOKEN: $([ -z '${{ secrets.WHATSAPP_ACCESS_TOKEN }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_PHONE_NUMBER_ID: $([ -z '${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_WEBHOOK_VERIFY_TOKEN: $([ -z '${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_API_VERSION: $([ -z '${{ secrets.WHATSAPP_API_VERSION }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "WHATSAPP_META_APP_SECRET: $([ -z '${{ secrets.WHATSAPP_META_APP_SECRET }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "LLM_API_KEY: $([ -z '${{ secrets.LLM_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "LLM_BASE_URL: $([ -z '${{ secrets.LLM_BASE_URL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "LLM_MODEL: $([ -z '${{ secrets.LLM_MODEL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "GEMINI_API_KEY: $([ -z '${{ secrets.GEMINI_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "SARVAM_API_KEY: $([ -z '${{ secrets.SARVAM_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "REVIEWER_API_BASE_URL: $([ -z '${{ secrets.REVIEWER_API_BASE_URL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "REVIEWER_INTERNAL_API_KEY: $([ -z '${{ secrets.REVIEWER_INTERNAL_API_KEY }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "AEGRA_ASSISTANT_ID: $([ -z '${{ secrets.AEGRA_ASSISTANT_ID }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "AEGRA_BASE_URL: $([ -z '${{ secrets.AEGRA_BASE_URL }}' ] && echo 'EMPTY ✗' || echo 'SET ✓')"
-          echo "=== End Check ==="
 
       - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v2
