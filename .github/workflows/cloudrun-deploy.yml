@@ -39,6 +39,9 @@ env:
   GCP_REGION: asia-south1
   GCP_STAGING_SERVICE: wa-client-staging
   GCP_PRODUCTION_SERVICE: wa-client-production
+  INFISICAL_ENVIRONMENT_STAGING: staging
+  INFISICAL_ENVIRONMENT_PROD: prod
+  INFISICAL_SECRET_PATH: /annam-ajrasakha/WhatsApp
 
 jobs:
   build:
@@ -96,12 +99,24 @@ jobs:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
 
       - name: Pull Infisical Secrets (Staging)
-        uses: infisical/infisical-action@v1
-        with:
-          project_id: ${{ secrets.INFISICAL_PROJECT_ID }}
-          env: staging
-          secret_path: /annam-ajrasakha/WhatsApp
-          output_type: env
+        run: |
+          INFISICAL_TOKEN=$(npx @infisical/cli@0.43.40 login \
+            --method=universal-auth \
+            --client-id='${{ secrets.INFISICAL_CLIENT_ID }}' \
+            --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
+            --silent \
+            --plain)
+          
+          if [ -z "$INFISICAL_TOKEN" ]; then
+            echo "Infisical authentication failed"
+            exit 1
+          fi
+          
+          npx @infisical/cli@0.43.40 secrets export \
+            --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
+            --env=${{ env.INFISICAL_ENVIRONMENT_STAGING }} \
+            --path='${{ env.INFISICAL_SECRET_PATH }}' \
+            --token="$INFISICAL_TOKEN" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run (Staging)
         uses: google-github-actions/deploy-cloudrun@v1
@@ -134,12 +149,24 @@ jobs:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
 
       - name: Pull Infisical Secrets (Production)
-        uses: infisical/infisical-action@v1
-        with:
-          project_id: ${{ secrets.INFISICAL_PROJECT_ID }}
-          env: production
-          secret_path: /annam-ajrasakha/WhatsApp
-          output_type: env
+        run: |
+          INFISICAL_TOKEN=$(npx @infisical/cli@0.43.40 login \
+            --method=universal-auth \
+            --client-id='${{ secrets.INFISICAL_CLIENT_ID }}' \
+            --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
+            --silent \
+            --plain)
+          
+          if [ -z "$INFISICAL_TOKEN" ]; then
+            echo "Infisical authentication failed"
+            exit 1
+          fi
+          
+          npx @infisical/cli@0.43.40 secrets export \
+            --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
+            --env=${{ env.INFISICAL_ENVIRONMENT_PROD }} \
+            --path='${{ env.INFISICAL_SECRET_PATH }}' \
+            --token="$INFISICAL_TOKEN" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v1
