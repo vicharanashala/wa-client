@@ -107,12 +107,28 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
+            PORT=3000
+            LOG_LEVEL=${{ secrets.LOG_LEVEL }}
             MONGO_URI=${{ secrets.MONGO_URI }}
             INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_STAGING }}
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
             INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
+            WHATSAPP_API_VERSION=${{ secrets.WHATSAPP_API_VERSION }}
+            WHATSAPP_META_APP_SECRET=${{ secrets.WHATSAPP_META_APP_SECRET }}
+            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+            LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
+            LLM_MODEL=${{ secrets.LLM_MODEL }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            REVIEWER_API_BASE_URL=${{ secrets.REVIEWER_API_BASE_URL }}
+            REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
+            AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
+            AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
 
   deploy_production:
@@ -142,10 +158,27 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
+            PORT=3000
+            LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+            IS_PRODUCTION=${{ secrets.IS_PRODUCTION }}
             MONGO_URI=${{ secrets.MONGO_URI }}
             INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_PROD }}
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
             INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
+            WHATSAPP_API_VERSION=${{ secrets.WHATSAPP_API_VERSION }}
+            WHATSAPP_META_APP_SECRET=${{ secrets.WHATSAPP_META_APP_SECRET }}
+            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+            LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
+            LLM_MODEL=${{ secrets.LLM_MODEL }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            REVIEWER_API_BASE_URL=${{ secrets.REVIEWER_API_BASE_URL }}
+            REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
+            AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
+            AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
