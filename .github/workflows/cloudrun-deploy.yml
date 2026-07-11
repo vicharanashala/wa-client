@@ -19,14 +19,6 @@ on:
         options:
           - "false"
           - "true"
-      should_build:
-        description: "Build and Push Image?"
-        required: true
-        default: "true"
-        type: choice
-        options:
-          - "false"
-          - "true"
 
 permissions:
   contents: read
@@ -47,7 +39,7 @@ jobs:
   build:
     name: Build and Push Image
     runs-on: ubuntu-latest
-    if: github.event.inputs.should_build == 'true'
+    # Always build - deployment requires a fresh image
     environment:
       name: build
     steps:
