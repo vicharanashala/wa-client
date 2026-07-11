@@ -105,7 +105,7 @@ jobs:
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=staging
-            APP_PORT=3000
+            PORT=3000
           flags: --allow-unauthenticated
 
   deploy_production:
@@ -136,5 +136,5 @@ jobs:
             INFISICAL_PROJECT_ID=${{ secrets.INFISIAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=production
-            APP_PORT=3000
+            PORT=3000
           flags: --allow-unauthenticated
