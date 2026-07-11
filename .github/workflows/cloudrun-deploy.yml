@@ -111,7 +111,7 @@ jobs:
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
             INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
-          flags: --allow-unauthenticated --port=3000 --memory=1Gi --cpu-boost --min-instances=0 --timeout=600
+          flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
 
   deploy_production:
     name: Deploy to Cloud Run (Production)
@@ -145,4 +145,4 @@ jobs:
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
             INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
-          flags: --allow-unauthenticated --port=3000 --memory=1Gi --cpu-boost --min-instances=0 --timeout=600
+          flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300

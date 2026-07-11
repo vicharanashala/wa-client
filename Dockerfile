@@ -1,41 +1,54 @@
-# Use standard Node 20 image (Debian-based) which has better support for compiling native C++ modules 
-# like @discordjs/opus and werift.
-FROM node:20-bookworm-slim
+# ============================================
+# Stage 1: Build the NestJS application
+# ============================================
+FROM node:20-alpine AS builder
 
-# Install system dependencies needed to build native node modules + Infisical CLI
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    curl \
-    bash \
-    gnupg \
-    apt-transport-https \
-    ca-certificates \
-    && curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | bash \
-    && apt-get update && apt-get install -y infisical \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json first (for caching)
+# Copy package files
 COPY package*.json ./
 
-# Install project dependencies
-RUN npm install
+# Install dependencies
+RUN npm ci
 
-# Copy the rest of the application code
+# Copy source code
 COPY . .
 
-# Build the NestJS application
+# Build the application
 RUN npm run build
 
-# Make entrypoint executable
-RUN chmod +x entrypoint.sh
+# ============================================
+# Stage 2: Production
+# ============================================
+FROM node:20-alpine AS production
 
-# Expose the port your app runs on
+# Install Infisical CLI for secret injection
+RUN npm install -g infisical@latest
+
+WORKDIR /app
+
+# Copy package files and install production dependencies
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force && rm -rf /root/.npm
+
+# Copy built artifacts from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/tsconfig.json ./
+
+# Copy entrypoint script and make it executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set environment
+ENV NODE_ENV=production
+
+# Expose port (match Cloud Run port)
 EXPOSE 3000
 
-# Use entrypoint script which injects Infisical secrets before starting the app
-ENTRYPOINT ["./entrypoint.sh"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/whatsapp/health || exit 1
+
+# Use entrypoint script for Infisical secret injection
+ENTRYPOINT ["/entrypoint.sh"]
