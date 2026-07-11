@@ -48,5 +48,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/whatsapp/health || exit 1
 
-# Use entrypoint script for Infisical auth
+# Use entrypoint script - starts the Node application
 ENTRYPOINT ["/app/entrypoint.sh"]
