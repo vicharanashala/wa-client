@@ -112,10 +112,11 @@ jobs:
             exit 1
           fi
           
-          npx @infisical/cli@0.43.40 secrets export \
+          npx @infisical/cli secrets get \
             --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
             --env=${{ env.INFISICAL_ENVIRONMENT_STAGING }} \
             --path='${{ env.INFISICAL_SECRET_PATH }}' \
+            --output=dotenv \
             --token="$INFISICAL_TOKEN" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run (Staging)
@@ -162,10 +163,11 @@ jobs:
             exit 1
           fi
           
-          npx @infisical/cli@0.43.40 secrets export \
+          npx @infisical/cli secrets get \
             --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
             --env=${{ env.INFISICAL_ENVIRONMENT_PROD }} \
             --path='${{ env.INFISICAL_SECRET_PATH }}' \
+            --output=dotenv \
             --token="$INFISICAL_TOKEN" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run (Production)
