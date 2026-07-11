@@ -2,11 +2,15 @@
 # like @discordjs/opus and werift.
 FROM node:20-bookworm-slim
 
-# Install system dependencies needed to build native node modules
+# Install system dependencies needed to build native node modules + Infisical CLI
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    curl \
+    bash \
+    && curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | bash \
+    && apt-get update && apt-get install -y infisical \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
@@ -24,8 +28,11 @@ COPY . .
 # Build the NestJS application
 RUN npm run build
 
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
 # Expose the port your app runs on
 EXPOSE 3000
 
-# Start the application in production mode (secrets passed via env_vars from GitHub Actions)
-CMD ["npm", "run", "start:prod"]
+# Use entrypoint script which injects Infisical secrets before starting the app
+ENTRYPOINT ["./entrypoint.sh"]

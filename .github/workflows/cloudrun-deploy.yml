@@ -126,7 +126,7 @@ jobs:
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_TOKEN=${{ steps.infisical.outputs.token }}
-          flags: --allow-unauthenticated --port=3000
+          flags: --allow-unauthenticated --port=3000 --memory=1Gi
 
   deploy_production:
     name: Deploy to Cloud Run (Production)
@@ -175,4 +175,4 @@ jobs:
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_TOKEN=${{ steps.infisical.outputs.token }}
-          flags: --allow-unauthenticated --port=3000
+          flags: --allow-unauthenticated --port=3000 --memory=1Gi
