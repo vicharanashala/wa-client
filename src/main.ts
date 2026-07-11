@@ -1,9 +1,10 @@
+// Bootstrap global-agent FIRST to patch Node.js HTTP agents for Tailscale proxy support
+import { bootstrap as globalAgentBootstrap } from 'global-agent';
+globalAgentBootstrap();
+
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-
-// Bootstrap global-agent FIRST to patch Node.js HTTP agents for Tailscale proxy support
-require('global-agent/bootstrap');
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
