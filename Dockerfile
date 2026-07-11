@@ -32,6 +32,7 @@ RUN npm ci --omit=dev && npm cache clean --force && rm -rf /root/.npm
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/config.yaml ./
 
 # Set environment
 ENV NODE_ENV=production
