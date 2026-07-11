@@ -90,15 +90,13 @@ jobs:
     environment:
       name: staging
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
 
-      - name: Pull Infisical Secrets (Staging)
+      - name: Authenticate with Infisical
+        id: infisical
         run: |
           INFISICAL_TOKEN=$(npx @infisical/cli@0.43.40 login \
             --method=universal-auth \
@@ -106,18 +104,14 @@ jobs:
             --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
             --silent \
             --plain)
-          
+
           if [ -z "$INFISICAL_TOKEN" ]; then
             echo "Infisical authentication failed"
             exit 1
           fi
-          
-          npx @infisical/cli secrets get \
-            --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
-            --env=${{ env.INFISICAL_ENVIRONMENT_STAGING }} \
-            --path='${{ env.INFISICAL_SECRET_PATH }}' \
-            --output=dotenv \
-            --token="$INFISICAL_TOKEN" >> $GITHUB_ENV
+
+          echo "::add-mask::$INFISICAL_TOKEN"
+          echo "token=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
 
       - name: Deploy to Cloud Run (Staging)
         uses: google-github-actions/deploy-cloudrun@v1
@@ -128,6 +122,10 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
+            INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_STAGING }}
+            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
+            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
+            INFISICAL_TOKEN=${{ steps.infisical.outputs.token }}
           flags: --allow-unauthenticated --port=3000
 
   deploy_production:
@@ -141,15 +139,13 @@ jobs:
     environment:
       name: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
 
-      - name: Pull Infisical Secrets (Production)
+      - name: Authenticate with Infisical
+        id: infisical
         run: |
           INFISICAL_TOKEN=$(npx @infisical/cli@0.43.40 login \
             --method=universal-auth \
@@ -157,18 +153,14 @@ jobs:
             --client-secret='${{ secrets.INFISICAL_CLIENT_SECRET }}' \
             --silent \
             --plain)
-          
+
           if [ -z "$INFISICAL_TOKEN" ]; then
             echo "Infisical authentication failed"
             exit 1
           fi
-          
-          npx @infisical/cli secrets get \
-            --projectId='${{ secrets.INFISICAL_PROJECT_ID }}' \
-            --env=${{ env.INFISICAL_ENVIRONMENT_PROD }} \
-            --path='${{ env.INFISICAL_SECRET_PATH }}' \
-            --output=dotenv \
-            --token="$INFISICAL_TOKEN" >> $GITHUB_ENV
+
+          echo "::add-mask::$INFISICAL_TOKEN"
+          echo "token=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
 
       - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v1
@@ -179,4 +171,8 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
+            INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_PROD }}
+            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
+            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
+            INFISICAL_TOKEN=${{ steps.infisical.outputs.token }}
           flags: --allow-unauthenticated --port=3000
