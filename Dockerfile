@@ -9,14 +9,6 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y curl gnupg lsb-release ca-certificates
-
-# Install Infisical CLI
-RUN curl -1sLf \
-    'https://artifacts-cli.infisical.com/setup.deb.sh' \
-    | bash && \
-    apt-get update && apt-get install -y infisical
-
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -35,5 +27,5 @@ RUN npm run build
 # Expose the port your app runs on
 EXPOSE 3000
 
-# Start the application in production mode
-CMD ["sh", "-c", "infisical run --env=\"$INFISICAL_ENVIRONMENT\" --projectId=\"$INFISICAL_PROJECT_ID\" --path=\"$INFISICAL_SECRET_PATH\" -- npm run start:prod"]
+# Start the application in production mode (secrets passed via env_vars from GitHub Actions)
+CMD ["npm", "run", "start:prod"]

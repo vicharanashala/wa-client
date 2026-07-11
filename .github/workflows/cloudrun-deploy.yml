@@ -39,7 +39,6 @@ env:
   GCP_REGION: asia-south1
   GCP_STAGING_SERVICE: wa-client-staging
   GCP_PRODUCTION_SERVICE: wa-client-production
-  INFISICAL_SECRET_PATH: /annam-ajrasakha/WhatsApp
 
 jobs:
   build:
@@ -88,10 +87,21 @@ jobs:
     environment:
       name: staging
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
+
+      - name: Pull Infisical Secrets (Staging)
+        uses: infisical/infisical-action@v1
+        with:
+          project_id: ${{ secrets.INFISICAL_PROJECT_ID }}
+          env: staging
+          secret_path: /annam-ajrasakha/WhatsApp
+          output_type: env
 
       - name: Deploy to Cloud Run (Staging)
         uses: google-github-actions/deploy-cloudrun@v1
@@ -101,9 +111,6 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
-            INFISICAL_ENVIRONMENT=staging
-            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
-            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=staging
           flags: --allow-unauthenticated --port=3000
 
@@ -118,10 +125,21 @@ jobs:
     environment:
       name: production
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
+
+      - name: Pull Infisical Secrets (Production)
+        uses: infisical/infisical-action@v1
+        with:
+          project_id: ${{ secrets.INFISICAL_PROJECT_ID }}
+          env: production
+          secret_path: /annam-ajrasakha/WhatsApp
+          output_type: env
 
       - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v1
@@ -131,8 +149,5 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:production
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
-            INFISICAL_ENVIRONMENT=prod
-            INFISICAL_PROJECT_ID=${{ secrets.INFISIAL_PROJECT_ID }}
-            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=production
           flags: --allow-unauthenticated --port=3000
