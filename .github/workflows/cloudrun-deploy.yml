@@ -106,7 +106,7 @@ jobs:
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=staging
             PORT=3000
-          flags: --allow-unauthenticated
+          flags: --allow-unauthenticated --port=3000
 
   deploy_production:
     name: Deploy to Cloud Run (Production)
@@ -137,4 +137,4 @@ jobs:
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             NODE_ENV=production
             PORT=3000
-          flags: --allow-unauthenticated
+          flags: --allow-unauthenticated --port=3000
