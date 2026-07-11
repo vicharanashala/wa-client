@@ -40,8 +40,6 @@ jobs:
     name: Build and Push Image
     runs-on: ubuntu-latest
     # Always build - deployment requires a fresh image
-    environment:
-      name: build
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,8 +78,6 @@ jobs:
       (needs.build.result == 'success' || needs.build.result == 'skipped' || needs.build.result == null)
     needs: [build]
     runs-on: ubuntu-latest
-    environment:
-      name: staging
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -113,8 +109,6 @@ jobs:
       (needs.build.result == 'success' || needs.build.result == 'skipped' || needs.build.result == null)
     needs: [build]
     runs-on: ubuntu-latest
-    environment:
-      name: production
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
