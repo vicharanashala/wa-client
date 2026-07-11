@@ -94,15 +94,11 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
-            MONGO_URI=${{ secrets.MONGO_URI }}
-            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
-            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
-            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
-            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
-            LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
-            LLM_MODEL=${{ secrets.LLM_MODEL }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_STAGING }}
+            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
+            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
+            INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
+            INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
 
   deploy_production:
@@ -129,13 +125,9 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
-            MONGO_URI=${{ secrets.MONGO_URI }}
-            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
-            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
-            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
-            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
-            LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
-            LLM_MODEL=${{ secrets.LLM_MODEL }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_PROD }}
+            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
+            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
+            INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
+            INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300

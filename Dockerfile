@@ -34,6 +34,10 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/config.yaml ./
 
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Set environment
 ENV NODE_ENV=production
 
@@ -44,5 +48,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/whatsapp/health || exit 1
 
-# Start the application directly
-CMD ["node", "dist/main"]
+# Use entrypoint script for Infisical auth
+ENTRYPOINT ["/app/entrypoint.sh"]
