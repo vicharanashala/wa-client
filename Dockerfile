@@ -33,10 +33,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/tsconfig.json ./
 
-# Copy entrypoint script and make it executable
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 # Set environment
 ENV NODE_ENV=production
 
@@ -47,5 +43,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/whatsapp/health || exit 1
 
-# Use entrypoint script for Infisical secret injection (uses npx)
-ENTRYPOINT ["/entrypoint.sh"]
+# Start the application directly
+CMD ["node", "dist/main"]
