@@ -107,7 +107,6 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
-            PORT=3000
             LOG_LEVEL=${{ secrets.LOG_LEVEL }}
             MONGO_URI=${{ secrets.MONGO_URI }}
             INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_STAGING }}
@@ -158,7 +157,6 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
-            PORT=3000
             LOG_LEVEL=${{ secrets.LOG_LEVEL }}
             IS_PRODUCTION=${{ secrets.IS_PRODUCTION }}
             MONGO_URI=${{ secrets.MONGO_URI }}
