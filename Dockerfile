@@ -32,8 +32,9 @@ COPY . .
 # Build the NestJS application
 RUN npm run build
 
-# Expose the port your app runs on
-EXPOSE 3000
+# Expose the port your app runs on (Cloud Run uses PORT env var, default 8080)
+ENV PORT=8080
+EXPOSE $PORT
 
 # Start the application in production mode
-CMD ["sh", "-c", "infisical run --env=\"$INFISICAL_ENVIRONMENT\" --projectId=\"$INFISICAL_PROJECT_ID\" --path=\"$INFISICAL_SECRET_PATH\" -- npm run start:prod"]
+CMD ["sh", "-c", "infisical run --env=\"$INFISICAL_ENVIRONMENT\" --projectId=\"$INFISICAL_PROJECT_ID\" --path=\"$INFISICAL_SECRET_PATH\" -- npm run start:prod --port $PORT"]
