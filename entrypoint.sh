@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Verify infisical CLI is available
-if ! command -v infisical > /dev/null 2>&1; then
-  echo "❌ infisical CLI not found, starting without secrets..."
+# Verify npx is available
+if ! command -v npx > /dev/null 2>&1; then
+  echo "❌ npx not found, starting without secrets..."
   exec node dist/main
 fi
 
@@ -10,8 +10,7 @@ if [ -n "$INFISICAL_CLIENT_ID" ] && [ -n "$INFISICAL_CLIENT_SECRET" ]; then
   echo "🔐 Authenticating with Infisical Machine Identity..."
   
   # Fetch short-lived token using Machine Identity credentials
-  # Note: This is done inside Cloud Run so the IP restriction matches the runner
-  export INFISICAL_TOKEN=$(infisical login \
+  export INFISICAL_TOKEN=$(npx --yes infisical@latest login \
     --method=universal-auth \
     --client-id="$INFISICAL_CLIENT_ID" \
     --client-secret="$INFISICAL_CLIENT_SECRET" \
@@ -28,7 +27,7 @@ if [ -n "$INFISICAL_CLIENT_ID" ] && [ -n "$INFISICAL_CLIENT_SECRET" ]; then
   echo "   Path: ${INFISICAL_SECRET_PATH:-/}"
   echo "   Project ID: ${INFISICAL_PROJECT_ID}"
 
-  exec infisical run \
+  exec npx --yes infisical@latest run \
     --projectId="${INFISICAL_PROJECT_ID}" \
     --env="${INFISICAL_ENVIRONMENT:-prod}" \
     --path="${INFISICAL_SECRET_PATH:-/}" \
@@ -42,7 +41,7 @@ else
     echo "   Path: ${INFISICAL_SECRET_PATH:-/}"
     echo "   Project ID: ${INFISICAL_PROJECT_ID}"
 
-    exec infisical run \
+    exec npx --yes infisical@latest run \
       --projectId="${INFISICAL_PROJECT_ID}" \
       --env="${INFISICAL_ENVIRONMENT:-prod}" \
       --path="${INFISICAL_SECRET_PATH:-/}" \

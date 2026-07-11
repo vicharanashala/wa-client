@@ -22,13 +22,6 @@ RUN npm run build
 # ============================================
 FROM node:20-alpine AS production
 
-# Install Infisical CLI using official method
-RUN apk add --no-cache curl unzip bash \
-    && curl -1sLf 'https://愚痴.github.io/Infisical/get-cli.sh' | bash \
-    && mv /usr/local/bin/infisical /usr/local/bin/infisical \
-    && chmod +x /usr/local/bin/infisical \
-    && rm -rf /var/cache/apk/*
-
 WORKDIR /app
 
 # Copy package files and install production dependencies
@@ -54,5 +47,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/whatsapp/health || exit 1
 
-# Use entrypoint script for Infisical secret injection
+# Use entrypoint script for Infisical secret injection (uses npx)
 ENTRYPOINT ["/entrypoint.sh"]
