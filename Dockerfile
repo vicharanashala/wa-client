@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y \
     g++ \
     curl \
     bash \
+    gnupg \
+    apt-transport-https \
+    ca-certificates \
     && curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | bash \
     && apt-get update && apt-get install -y infisical \
     && rm -rf /var/lib/apt/lists/*

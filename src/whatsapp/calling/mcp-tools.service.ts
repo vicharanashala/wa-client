@@ -78,6 +78,7 @@ export class McpToolsService implements OnModuleInit {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000), // 10s timeout to avoid blocking startup on unreachable servers
     });
 
     const sessionId = res.headers.get('mcp-session-id');

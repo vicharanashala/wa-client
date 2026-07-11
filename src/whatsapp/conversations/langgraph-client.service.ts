@@ -53,7 +53,7 @@ export class LangGraphClientService implements OnModuleInit {
       this.stateAppendAsNode = appendNode;
     }
 
-    this.client = new Client({ apiUrl });
+    this.client = new Client({ apiUrl, timeoutMs: 10_000 });
     await this.resolveAssistantGraphId();
 
     this.logger.log(

@@ -114,7 +114,8 @@ jobs:
           echo "token=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
 
       - name: Deploy to Cloud Run (Staging)
-        uses: google-github-actions/deploy-cloudrun@v1
+        uses: google-github-actions/deploy-cloudrun@v2
+        timeout-minutes: 10
         with:
           service: ${{ env.GCP_STAGING_SERVICE }}
           region: ${{ env.GCP_REGION }}
@@ -126,7 +127,7 @@ jobs:
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_TOKEN=${{ steps.infisical.outputs.token }}
-          flags: --allow-unauthenticated --port=3000 --memory=1Gi
+          flags: --allow-unauthenticated --port=3000 --memory=1Gi --cpu-boost --min-instances=0 --timeout=600
 
   deploy_production:
     name: Deploy to Cloud Run (Production)
@@ -163,7 +164,8 @@ jobs:
           echo "token=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
 
       - name: Deploy to Cloud Run (Production)
-        uses: google-github-actions/deploy-cloudrun@v1
+        uses: google-github-actions/deploy-cloudrun@v2
+        timeout-minutes: 10
         with:
           service: ${{ env.GCP_PRODUCTION_SERVICE }}
           region: ${{ env.GCP_REGION }}
@@ -175,4 +177,4 @@ jobs:
             INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
             INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
             INFISICAL_TOKEN=${{ steps.infisical.outputs.token }}
-          flags: --allow-unauthenticated --port=3000 --memory=1Gi
+          flags: --allow-unauthenticated --port=3000 --memory=1Gi --cpu-boost --min-instances=0 --timeout=600
