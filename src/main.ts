@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+// Bootstrap global-agent FIRST to patch Node.js HTTP agents for Tailscale proxy support
+require('global-agent/bootstrap');
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
@@ -50,6 +53,14 @@ async function bootstrap() {
     logger.log(
       `📞 WhatsApp: ${process.env.WHATSAPP_ACCESS_TOKEN ? '✅ Configured' : '❌ Not configured'}`,
     );
+    
+    // Log Tailscale proxy status
+    const proxyUrl = process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.HTTP_PROXY;
+    if (proxyUrl) {
+      logger.log(`🌐 Tailscale Proxy: ✅ Enabled (${proxyUrl})`);
+    } else {
+      logger.log(`🌐 Tailscale Proxy: ❌ Not configured`);
+    }
   } catch (error) {
     logger.error('Failed to start application', error);
     process.exit(1);

@@ -1,0 +1,5 @@
+#!/command/with-contenv sh
+
+# Change to your app directory and start the Node application
+cd /app
+exec node dist/main

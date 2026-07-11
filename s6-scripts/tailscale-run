@@ -1,0 +1,21 @@
+#!/command/with-contenv sh
+
+# Start the tailscaled daemon in the background
+tailscaled \
+  --tun=userspace-networking \
+  --socks5-server=localhost:1055 \
+  --outbound-http-proxy-listen=localhost:1055 &
+DAEMON_PID=$!
+
+# Wait for the daemon's socket to become available
+until tailscale status &> /dev/null; do
+    sleep 1
+done
+
+# Authenticate and connect to the Tailnet
+tailscale up \
+  --authkey=${TAILSCALE_AUTHKEY} \
+  --hostname=${TS_HOSTNAME:-wa-client}
+
+# Bring the daemon back to the foreground so s6 can manage the process
+wait $DAEMON_PID
