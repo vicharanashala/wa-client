@@ -1,13 +1,5 @@
-// Bootstrap global-agent FIRST to patch Node.js HTTP agents for Tailscale proxy support
 import { bootstrap as globalAgentBootstrap } from 'global-agent';
 globalAgentBootstrap();
-
-// Patch undici/native fetch to route through Tailscale proxy
-// global-agent only patches legacy http/https modules, but LangGraph uses native fetch (undici)
-import { setGlobalDispatcher, ProxyAgent } from 'undici';
-if (process.env.GLOBAL_AGENT_HTTP_PROXY) {
-  setGlobalDispatcher(new ProxyAgent(process.env.GLOBAL_AGENT_HTTP_PROXY));
-}
 
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
