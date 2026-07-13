@@ -1,8 +1,11 @@
 #!/command/with-contenv sh
 cd /app
 
-# Give the tailscale-run script time to complete authentication
-echo "Waiting for Tailscale proxy initialization..."
+echo "Waiting for Tailscale to initialize..."
 sleep 5
+
+echo "=== TAILSCALE STATUS ==="
+tailscale status
+echo "========================"
 
 exec node dist/main
