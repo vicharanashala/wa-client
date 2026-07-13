@@ -2,4 +2,9 @@
 
 # Change to your app directory and start the Node application
 cd /app
+
+echo "=== STARTING TAILSCALE DEBUG CURL ==="
+curl -v -x http://localhost:1055 http://100.100.108.44:2026 || true
+echo "=== END TAILSCALE DEBUG CURL ==="
+
 exec node dist/main
