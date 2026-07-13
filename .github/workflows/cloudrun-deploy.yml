@@ -154,6 +154,7 @@ jobs:
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=wa-client-production
+            IS_PRODUCTION=true
             HTTP_PROXY=http://localhost:1055
             HTTPS_PROXY=http://localhost:1055
             GLOBAL_AGENT_HTTP_PROXY=http://localhost:1055
