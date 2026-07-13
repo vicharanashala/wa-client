@@ -106,7 +106,8 @@ jobs:
             REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
             AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
-            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
+            TS_CLIENT_ID=${{ secrets.TS_CLIENT_ID }}
+            TS_CLIENT_SECRET=${{ secrets.TS_CLIENT_SECRET }}
             TS_HOSTNAME=wa-client-staging
             HTTP_PROXY=http://localhost:1055
             HTTPS_PROXY=http://localhost:1055
@@ -152,7 +153,8 @@ jobs:
             REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
             AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
-            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
+            TS_CLIENT_ID=${{ secrets.TS_CLIENT_ID }}
+            TS_CLIENT_SECRET=${{ secrets.TS_CLIENT_SECRET }}
             TS_HOSTNAME=wa-client-production
             IS_PRODUCTION=true
             HTTP_PROXY=http://localhost:1055
