@@ -1,12 +1,8 @@
 #!/command/with-contenv sh
 cd /app
 
-# Give the tailscale-run script an extra moment to complete authentication
+# Give the tailscale-run script time to complete authentication
 echo "Waiting for Tailscale proxy initialization..."
 sleep 5
-
-echo "=== STARTING TAILSCALE DEBUG CURL ==="
-curl -v -x http://127.0.0.1:1055 http://100.100.108.44:2026 || true
-echo "=== END TAILSCALE DEBUG CURL ==="
 
 exec node dist/main
