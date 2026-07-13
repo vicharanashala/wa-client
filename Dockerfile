@@ -27,6 +27,9 @@ WORKDIR /app
 # Install Tailscale and curl (needed for s6-overlay)
 RUN apk update && apk add tailscale curl
 
+# Create essential runtime directories for the Tailscale daemon
+RUN mkdir -p /var/run/tailscale /var/lib/tailscale /dev/net
+
 # Install s6-overlay for process management
 ARG S6_OVERLAY_VERSION=3.2.3.0
 RUN curl -sL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz -o /tmp/s6-overlay-noarch.tar.xz && \

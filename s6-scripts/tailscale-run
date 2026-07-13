@@ -1,21 +1,23 @@
 #!/command/with-contenv sh
 
-# Start the tailscaled daemon in the background
+# Create directories just in case at runtime
+mkdir -p /var/run/tailscale /var/lib/tailscale
+
+# Start the daemon using explicit 127.0.0.1 loopback
 tailscaled \
   --tun=userspace-networking \
-  --socks5-server=localhost:1055 \
-  --outbound-http-proxy-listen=localhost:1055 &
+  --socks5-server=127.0.0.1:1055 \
+  --outbound-http-proxy-listen=127.0.0.1:1055 &
 DAEMON_PID=$!
 
-# Wait for the daemon's socket to become available
+# Wait for the daemon socket to actively respond before moving forward
 until tailscale status &> /dev/null; do
     sleep 1
 done
 
-# Authenticate and connect to the Tailnet
+# Authenticate with the Tailnet
 tailscale up \
   --authkey=${TAILSCALE_AUTHKEY} \
   --hostname=${TS_HOSTNAME:-wa-client}
 
-# Bring the daemon back to the foreground so s6 can manage the process
 wait $DAEMON_PID
