@@ -1,11 +1,3 @@
 #!/command/with-contenv sh
 cd /app
-
-echo "Waiting for Tailscale to initialize..."
-sleep 5
-
-echo "=== TAILSCALE STATUS ==="
-tailscale status
-echo "========================"
-
 exec node dist/main

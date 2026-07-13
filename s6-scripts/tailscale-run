@@ -15,11 +15,10 @@ until tailscale status &> /dev/null; do
     sleep 1
 done
 
-# Authenticate with OAuth client credentials
+# Authenticate with auth key
 tailscale up \
   --reset \
-  --oauth-client-id=${TS_CLIENT_ID} \
-  --oauth-client-secret=${TS_CLIENT_SECRET} \
+  --authkey=${TAILSCALE_AUTHKEY} \
   --hostname=${TS_HOSTNAME:-wa-client}
 
 wait $DAEMON_PID
