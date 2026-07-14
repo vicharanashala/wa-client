@@ -35,7 +35,7 @@ export class LangGraphClientService implements OnModuleInit {
 
   /** Proxy URL for Tailscale userspace networking (env var overrides default). */
   private static readonly LANGGRAPH_PROXY_URL =
-    process.env.LANGGRAPH_PROXY_URL ?? 'http://127.0.0.1:1055';
+    process.env.LANGGRAPH_PROXY_URL ?? 'http://127.0.0.1:1056';
 
   /** Proxy agent instance for LangGraph requests. */
   private proxyAgent!: ProxyAgent;

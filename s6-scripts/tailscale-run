@@ -8,7 +8,7 @@ echo "=== STARTING DAEMON ==="
 tailscaled \
   --tun=userspace-networking \
   --socks5-server=127.0.0.1:1055 \
-  --outbound-http-proxy-listen=127.0.0.1:1055 &
+  --outbound-http-proxy-listen=127.0.0.1:1056 &
 DAEMON_PID=$!
 
 echo "=== WAITING FOR SOCKET FILE ==="
