@@ -69,39 +69,10 @@ export class LangGraphClientService implements OnModuleInit {
     const socksUrl = LangGraphClientService.LANGGRAPH_SOCKS_URL;
     this.socksAgent = new SocksProxyAgent(socksUrl);
 
-    // Aggressive fetch interceptor that ensures SOCKS5 agent is always applied
-    const interceptFetch = async (url: any, init?: any) => {
-      console.log('=== 🕵️ SDK FETCH INTERCEPTOR START ===');
-      console.log('🎯 Target URL:', url?.toString ? url.toString() : url);
-      console.log('📦 Method:', init?.method || 'GET');
-      
-      // Check if the SDK stripped our agent!
-      const hasAgent = !!(init && init.agent);
-      console.log('🛡️ Did SDK keep our SOCKS agent?', hasAgent ? '✅ YES' : '❌ NO (Stripped!)');
-
-      // Violently force the agent back into the request, no matter what the SDK did
-      const finalInit = {
-        ...init,
-        agent: this.socksAgent,
-      };
-
-      try {
-        const response = await (fetch as any)(url, finalInit);
-        console.log('✅ SDK FETCH SUCCESS! Status:', response.status);
-        console.log('=== 🕵️ SDK FETCH INTERCEPTOR END ===');
-        return response;
-      } catch (error: any) {
-        console.log('❌ SDK FETCH CRASHED:', error.message);
-        console.log('=== 🕵️ SDK FETCH INTERCEPTOR END ===');
-        throw error;
-      }
-    };
-
-    // Pass interceptor to LangGraph Client constructor
+    // Pass client to LangGraph Client constructor (global fetch hijack handles proxy in main.ts)
     this.client = new Client({
       apiUrl,
       timeoutMs: 480_000,
-      fetch: interceptFetch as any,
     } as any);
     await this.resolveAssistantGraphId();
 
