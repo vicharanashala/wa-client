@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Client} from '@langchain/langgraph-sdk';
+import { Client, ClientConfig } from '@langchain/langgraph-sdk';
+import { ProxyAgent, fetch as undiciFetch } from 'undici';
 import * as crypto from 'crypto';
 import { UserDetailsRepository } from '../user-details/user-details.repository';
 export interface SendMessageResult {
@@ -32,6 +33,13 @@ export class LangGraphClientService implements OnModuleInit {
   /** Optional graph node for threads.updateState message patches (must exist on the deployed graph). */
   private stateAppendAsNode?: string;
 
+  /** Proxy URL for Tailscale userspace networking (env var overrides default). */
+  private static readonly LANGGRAPH_PROXY_URL =
+    process.env.LANGGRAPH_PROXY_URL ?? 'http://127.0.0.1:1055';
+
+  /** Proxy agent instance for LangGraph requests. */
+  private proxyAgent!: ProxyAgent;
+
   constructor(
     private readonly userDetailsRepo: UserDetailsRepository,
   ) {}
@@ -53,11 +61,24 @@ export class LangGraphClientService implements OnModuleInit {
       this.stateAppendAsNode = appendNode;
     }
 
-    this.client = new Client({ apiUrl, timeoutMs: 480_000 });
+    // Set up proxy agent for Tailscale userspace networking
+    const proxyUrl = LangGraphClientService.LANGGRAPH_PROXY_URL;
+    this.proxyAgent = new ProxyAgent(proxyUrl);
+
+    // Create a fetch wrapper that uses undici with the proxy agent
+    const proxiedFetch: typeof undiciFetch = (input, init) =>
+      undiciFetch(input, { ...init, dispatcher: this.proxyAgent });
+
+    // Pass proxied fetch to LangGraph Client (using any to bypass type check)
+    this.client = new Client({
+      apiUrl,
+      timeoutMs: 480_000,
+    } as any);
+    (this.client as any).fetch = proxiedFetch;
     await this.resolveAssistantGraphId();
 
     this.logger.log(
-      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'})`,
+      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'}, proxy=${proxyUrl})`,
     );
   }
 
@@ -694,7 +715,11 @@ export class LangGraphClientService implements OnModuleInit {
     const url = `${apiUrl}/threads/${threadId}`;
 
     try {
-      const res = await fetch(url, { method: 'DELETE' });
+      // Use undici fetch with proxy agent for LangGraph requests
+      const res = await undiciFetch(url, {
+        method: 'DELETE',
+        dispatcher: this.proxyAgent,
+      });
       if (res.ok) {
         this.logger.debug(`[${phoneNumber}] Thread deleted`);
       } else {
