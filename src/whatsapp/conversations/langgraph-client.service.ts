@@ -69,15 +69,39 @@ export class LangGraphClientService implements OnModuleInit {
     const socksUrl = LangGraphClientService.LANGGRAPH_SOCKS_URL;
     this.socksAgent = new SocksProxyAgent(socksUrl);
 
-    // Create a fetch wrapper that uses node-fetch with SOCKS5 agent
-    this.fetchWithSocks = (url: any, init?: any) =>
-      (fetch as any)(url, { ...init, agent: this.socksAgent });
+    // Aggressive fetch interceptor that ensures SOCKS5 agent is always applied
+    const interceptFetch = async (url: any, init?: any) => {
+      console.log('=== 🕵️ SDK FETCH INTERCEPTOR START ===');
+      console.log('🎯 Target URL:', url?.toString ? url.toString() : url);
+      console.log('📦 Method:', init?.method || 'GET');
+      
+      // Check if the SDK stripped our agent!
+      const hasAgent = !!(init && init.agent);
+      console.log('🛡️ Did SDK keep our SOCKS agent?', hasAgent ? '✅ YES' : '❌ NO (Stripped!)');
 
-    // Pass proxied fetch directly to LangGraph Client constructor
+      // Violently force the agent back into the request, no matter what the SDK did
+      const finalInit = {
+        ...init,
+        agent: this.socksAgent,
+      };
+
+      try {
+        const response = await (fetch as any)(url, finalInit);
+        console.log('✅ SDK FETCH SUCCESS! Status:', response.status);
+        console.log('=== 🕵️ SDK FETCH INTERCEPTOR END ===');
+        return response;
+      } catch (error: any) {
+        console.log('❌ SDK FETCH CRASHED:', error.message);
+        console.log('=== 🕵️ SDK FETCH INTERCEPTOR END ===');
+        throw error;
+      }
+    };
+
+    // Pass interceptor to LangGraph Client constructor
     this.client = new Client({
       apiUrl,
       timeoutMs: 480_000,
-      fetch: this.fetchWithSocks as any,
+      fetch: interceptFetch as any,
     } as any);
     await this.resolveAssistantGraphId();
 
@@ -754,9 +778,10 @@ export class LangGraphClientService implements OnModuleInit {
     const url = `${apiUrl}/threads/${threadId}`;
 
     try {
-      // Use node-fetch with SOCKS5 agent for LangGraph requests
-      const res = await this.fetchWithSocks(url, {
+      // Use node-fetch with SOCKS5 agent for LangGraph requests (force agent)
+      const res = await (fetch as any)(url, {
         method: 'DELETE',
+        agent: this.socksAgent,
       });
       if (res.ok) {
         this.logger.debug(`[${phoneNumber}] Thread deleted`);
