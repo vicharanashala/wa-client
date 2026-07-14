@@ -1,45 +1,31 @@
 #!/command/with-contenv sh
-set -x  # Debug mode - print each command before executing
+set -x
 
 # Create directories just in case at runtime
 mkdir -p /var/run/tailscale /var/lib/tailscale
 
-echo "=== TAILSCALE SCRIPT STARTED ==="
-
-# Validate authkey is not empty
-if [ -z "${TAILSCALE_AUTHKEY}" ]; then
-    echo "ERROR: TAILSCALE_AUTHKEY is empty or not set!"
-    exit 1
-fi
-echo "Authkey check passed (length: ${#TAILSCALE_AUTHKEY})"
-
-echo "Starting tailscaled daemon..."
-# Start the daemon using explicit 127.0.0.1 loopback
+echo "=== STARTING DAEMON ==="
 tailscaled \
   --tun=userspace-networking \
   --socks5-server=127.0.0.1:1055 \
-  --outbound-http-proxy-listen=127.0.0.1:1055 2>&1 &
+  --outbound-http-proxy-listen=127.0.0.1:1055 &
 DAEMON_PID=$!
-echo "tailscaled started with PID: $DAEMON_PID"
 
-# Wait for the daemon socket to actively respond before moving forward
-echo "Waiting for tailscaled to be ready..."
+echo "=== WAITING FOR SOCKET FILE ==="
 WAIT_COUNT=0
-until tailscale status &> /dev/null; do
-    sleep 1
+# tailscale status ke badle socket file check karenge
+until [ -S /var/run/tailscale/tailscaled.sock ]; do
     WAIT_COUNT=$((WAIT_COUNT + 1))
-    echo "Waiting for tailscaled... (${WAIT_COUNT}s)"
-    if [ $WAIT_COUNT -gt 30 ]; then
-        echo "ERROR: tailscaled did not start within 30 seconds!"
+    echo "Waiting for tailscaled.sock... ($WAIT_COUNTs)"
+    if [ $WAIT_COUNT -gt 15 ]; then
+        echo "ERROR: tailscaled.sock was not created within 15 seconds!"
         exit 1
     fi
+    sleep 1
 done
-echo "tailscaled is ready!"
 
-echo "=== EXECUTING TAILSCALE UP ==="
-# Authenticate with auth key. 
-# Added --advertise-tags (REQUIRED for OAuth secrets)
-# Added 2>&1 to force exact error messages to show in Google Cloud logs
+echo "=== DAEMON IS READY, RUNNING AUTHENTICATION ==="
+# Ab bina ruke seedhe login command chalegi
 tailscale up \
   --reset \
   --authkey=${TAILSCALE_AUTHKEY} \
@@ -49,13 +35,7 @@ tailscale up \
 UP_EXIT_CODE=$?
 echo "=== TAILSCALE UP FINISHED (EXIT CODE: $UP_EXIT_CODE) ==="
 
-if [ $UP_EXIT_CODE -ne 0 ]; then
-    echo "ERROR: tailscale up failed with exit code $UP_EXIT_CODE"
-fi
-
-# Print the final status so we can verify if it worked!
-echo "=== CURRENT TAILSCALE STATUS ==="
-tailscale status
-echo "================================"
+# Print actual status details post-login
+tailscale status 2>&1
 
 wait $DAEMON_PID
