@@ -66,15 +66,15 @@ export class LangGraphClientService implements OnModuleInit {
     this.proxyAgent = new ProxyAgent(proxyUrl);
 
     // Create a fetch wrapper that uses undici with the proxy agent
-    const proxiedFetch: typeof undiciFetch = (input, init) =>
-      undiciFetch(input, { ...init, dispatcher: this.proxyAgent });
+    const fetchWithProxy = (url: any, init?: any) =>
+      undiciFetch(url, { ...init, dispatcher: this.proxyAgent });
 
-    // Pass proxied fetch to LangGraph Client (using any to bypass type check)
+    // Pass proxied fetch directly to LangGraph Client constructor
     this.client = new Client({
       apiUrl,
       timeoutMs: 480_000,
+      fetch: fetchWithProxy as any,
     } as any);
-    (this.client as any).fetch = proxiedFetch;
     await this.resolveAssistantGraphId();
 
     this.logger.log(
