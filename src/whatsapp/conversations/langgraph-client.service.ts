@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Client, ClientConfig } from '@langchain/langgraph-sdk';
-import { ProxyAgent, fetch as undiciFetch } from 'undici';
+import { Client } from '@langchain/langgraph-sdk';
 import * as crypto from 'crypto';
+import * as fetch from 'node-fetch';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 import { UserDetailsRepository } from '../user-details/user-details.repository';
 export interface SendMessageResult {
   reply: string;
@@ -34,11 +35,14 @@ export class LangGraphClientService implements OnModuleInit {
   private stateAppendAsNode?: string;
 
   /** Proxy URL for Tailscale userspace networking (env var overrides default). */
-  private static readonly LANGGRAPH_PROXY_URL =
-    process.env.LANGGRAPH_PROXY_URL ?? 'http://127.0.0.1:1056';
+  private static readonly LANGGRAPH_SOCKS_URL =
+    process.env.LANGGRAPH_SOCKS_URL ?? 'socks://127.0.0.1:1055';
 
-  /** Proxy agent instance for LangGraph requests. */
-  private proxyAgent!: ProxyAgent;
+  /** SOCKS5 agent instance for LangGraph requests. */
+  private socksAgent!: any;
+
+  /** Fetch function with SOCKS5 proxy. */
+  private fetchWithSocks!: any;
 
   constructor(
     private readonly userDetailsRepo: UserDetailsRepository,
@@ -61,24 +65,24 @@ export class LangGraphClientService implements OnModuleInit {
       this.stateAppendAsNode = appendNode;
     }
 
-    // Set up proxy agent for Tailscale userspace networking
-    const proxyUrl = LangGraphClientService.LANGGRAPH_PROXY_URL;
-    this.proxyAgent = new ProxyAgent(proxyUrl);
+    // Set up SOCKS5 proxy for Tailscale userspace networking
+    const socksUrl = LangGraphClientService.LANGGRAPH_SOCKS_URL;
+    this.socksAgent = new SocksProxyAgent(socksUrl);
 
-    // Create a fetch wrapper that uses undici with the proxy agent
-    const fetchWithProxy = (url: any, init?: any) =>
-      undiciFetch(url, { ...init, dispatcher: this.proxyAgent });
+    // Create a fetch wrapper that uses node-fetch with SOCKS5 agent
+    this.fetchWithSocks = (url: any, init?: any) =>
+      (fetch as any)(url, { ...init, agent: this.socksAgent });
 
     // Pass proxied fetch directly to LangGraph Client constructor
     this.client = new Client({
       apiUrl,
       timeoutMs: 480_000,
-      fetch: fetchWithProxy as any,
+      fetch: this.fetchWithSocks as any,
     } as any);
     await this.resolveAssistantGraphId();
 
     this.logger.log(
-      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'}, proxy=${proxyUrl})`,
+      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'}, socks=${socksUrl})`,
     );
   }
 
@@ -715,10 +719,9 @@ export class LangGraphClientService implements OnModuleInit {
     const url = `${apiUrl}/threads/${threadId}`;
 
     try {
-      // Use undici fetch with proxy agent for LangGraph requests
-      const res = await undiciFetch(url, {
+      // Use node-fetch with SOCKS5 agent for LangGraph requests
+      const res = await this.fetchWithSocks(url, {
         method: 'DELETE',
-        dispatcher: this.proxyAgent,
       });
       if (res.ok) {
         this.logger.debug(`[${phoneNumber}] Thread deleted`);
@@ -1019,8 +1022,8 @@ export class LangGraphClientService implements OnModuleInit {
       'x-internal-api-key': process.env.REVIEWER_INTERNAL_API_KEY || '',
     };
 
-    // Primary payload
-    let res = await fetch(url, {
+    // Primary payload - use node-fetch directly (no proxy for public internet API)
+    let res = await (fetch as any)(url, {
       method: 'PUT',
       headers,
       body: JSON.stringify({ threadId }),
@@ -1033,7 +1036,7 @@ export class LangGraphClientService implements OnModuleInit {
       );
 
       // Compatibility retry for backends expecting snake_case.
-      res = await fetch(url, {
+      res = await (fetch as any)(url, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ thread_id: threadId }),
