@@ -3,6 +3,7 @@
 # Create directories just in case at runtime
 mkdir -p /var/run/tailscale /var/lib/tailscale
 
+echo "Starting tailscaled daemon..."
 # Start the daemon using explicit 127.0.0.1 loopback
 tailscaled \
   --tun=userspace-networking \
@@ -15,10 +16,22 @@ until tailscale status &> /dev/null; do
     sleep 1
 done
 
-# Authenticate with auth key
+echo "=== EXECUTING TAILSCALE UP ==="
+# Authenticate with auth key. 
+# Added --advertise-tags (REQUIRED for OAuth secrets)
+# Added 2>&1 to force exact error messages to show in Google Cloud logs
 tailscale up \
   --reset \
   --authkey=${TAILSCALE_AUTHKEY} \
-  --hostname=${TS_HOSTNAME:-wa-client}
+  --hostname=${TS_HOSTNAME:-wa-client} \
+  --advertise-tags=tag:ci-cd \
+  --accept-routes 2>&1
+UP_EXIT_CODE=$?
+echo "=== TAILSCALE UP FINISHED (EXIT CODE: $UP_EXIT_CODE) ==="
+
+# Print the final status so we can verify if it worked!
+echo "=== CURRENT TAILSCALE STATUS ==="
+tailscale status
+echo "================================"
 
 wait $DAEMON_PID
