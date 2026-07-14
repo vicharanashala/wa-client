@@ -1,16 +1,32 @@
 # Tailscale Integration
 
+<!-- 
+  This document describes the Tailscale mesh networking setup for wa-client.
+  Last updated: 2026-07-14
+  
+  IMPORTANT: This documents the ACTUAL implementation, not theoretical config.
+  If you change main.ts or s6-scripts, update this file too.
+-->
+
 This document describes how to configure and use Tailscale for mesh networking in the wa-client container.
 
 ## Overview
 
 The wa-client container includes Tailscale for secure, low-latency mesh networking. This allows containers to communicate over Tailscale's encrypted network without exposing services to the public internet.
 
+<!-- ============================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================ -->
+
 ## Architecture
 
 - **Single Container**: Tailscale runs in userspace networking mode inside the same container
 - **Process Management**: s6-overlay manages both tailscaled and the Node.js application
-- **Proxy Routing**: Node.js HTTP traffic is routed through Tailscale's local proxy
+- **SOCKS5 Proxy**: Node.js HTTP traffic to LangGraph server is routed through Tailscale's SOCKS5 proxy
+
+<!-- ============================================ -->
+<!-- SETUP STEPS -->
+<!-- ============================================ -->
 
 ## Setup
 
@@ -24,21 +40,21 @@ The wa-client container includes Tailscale for secure, low-latency mesh networki
 
 ### 2. Add the Secret to GitHub
 
-Add `TS_AUTHKEY` to your GitHub repository secrets:
+Add `TAILSCALE_AUTHKEY` to your GitHub repository secrets:
 1. Go to repository **Settings** > **Secrets and variables** > **Actions**
 2. Add a new secret: `TAILSCALE_AUTHKEY` = `tskey-auth-your-key-here`
 
 ### 3. Environment Variables
 
-The following environment variables are automatically set by the CI/CD pipeline:
-
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TAILSCALE_AUTHKEY` | Tailscale auth key | `tskey-auth-...` |
 | `TS_HOSTNAME` | Hostname on tailnet | `wa-client-staging` |
-| `HTTP_PROXY` | HTTP proxy URL | `http://localhost:1055` |
-| `HTTPS_PROXY` | HTTPS proxy URL | `http://localhost:1055` |
-| `GLOBAL_AGENT_HTTP_PROXY` | Node.js proxy | `http://localhost:1055` |
+| `LANGGRAPH_SOCKS_URL` | SOCKS5 proxy URL for LangGraph traffic | `socks://127.0.0.1:1055` |
+
+<!-- ============================================ -->
+<!-- LOCAL DEVELOPMENT -->
+<!-- ============================================ -->
 
 ## Local Development
 
@@ -51,12 +67,14 @@ docker run -d \
   --name wa-client \
   -e TAILSCALE_AUTHKEY=tskey-auth-YOUR_KEY \
   -e TS_HOSTNAME=wa-client-local \
-  -e HTTP_PROXY=http://localhost:1055 \
-  -e HTTPS_PROXY=http://localhost:1055 \
-  -e GLOBAL_AGENT_HTTP_PROXY=http://localhost:1055 \
+  -e LANGGRAPH_SOCKS_URL=socks://127.0.0.1:1055 \
   -p 3000:3000 \
   wa-client
 ```
+
+<!-- ============================================ -->
+<!-- HOW IT WORKS -->
+<!-- ============================================ -->
 
 ## How It Works
 
@@ -69,22 +87,45 @@ The container uses s6-overlay to manage multiple processes:
 
 ### 2. Tailscale Daemon
 
+<!-- See: s6-scripts/tailscale-run -->
+
 The `tailscaled` service:
 1. Starts in userspace networking mode (`--tun=userspace-networking`)
-2. Exposes a SOCKS5/HTTP proxy on port 1055
+2. Exposes a SOCKS5 proxy on port 1055
 3. Authenticates using the auth key
 4. Registers with the tailnet
 
 ### 3. Node.js Application
 
-The Node.js application uses `global-agent` to route HTTP traffic through the Tailscale proxy:
+<!-- See: src/main.ts - fetch interceptor section -->
+
+The Node.js application uses a custom fetch interceptor to route traffic through the Tailscale SOCKS5 proxy:
 
 ```typescript
-// At the very top of main.ts
-require('global-agent/bootstrap');
+import { SocksProxyAgent } from 'socks-proxy-agent';
+
+// Only proxy requests going to the LangGraph Server (100.100.108.44)
+const globalSocksAgent = new SocksProxyAgent('socks5://127.0.0.1:1055');
+const originalFetch = globalThis.fetch;
+
+globalThis.fetch = async (url: any, options: any = {}) => {
+  // Route LangGraph traffic through Tailscale SOCKS5 proxy
+  if (url?.toString?.().includes('100.100.108.44')) {
+    return originalFetch(url, { ...options, agent: globalSocksAgent });
+  }
+  // Let all other traffic (like WhatsApp webhooks) go through normally
+  return originalFetch(url, options);
+};
 ```
 
-This patches Node.js's global HTTP agents to respect `GLOBAL_AGENT_HTTP_PROXY`.
+**Key Points:**
+- Only LangGraph server traffic (IP: `100.100.108.44`) is routed through Tailscale
+- WhatsApp webhooks and other external traffic bypass the proxy
+- Uses `socks-proxy-agent` package for SOCKS5 support
+
+<!-- ============================================ -->
+<!-- VERIFICATION -->
+<!-- ============================================ -->
 
 ## Verifying Tailscale Connection
 
@@ -106,6 +147,10 @@ docker exec -it wa-client sh
 tailscale status
 ```
 
+<!-- ============================================ -->
+<!-- TROUBLESHOOTING -->
+<!-- ============================================ -->
+
 ## Troubleshooting
 
 ### Container fails to start
@@ -119,20 +164,20 @@ Verify:
 2. Container has network access
 3. Tailscale console shows the node
 
-### App can't reach services via Tailscale IP
+### App can't reach LangGraph server via Tailscale IP
 
-Ensure `GLOBAL_AGENT_HTTP_PROXY` is set correctly and the Node.js app is restarted after setting the env var.
+Ensure:
+1. The LangGraph server is reachable on the Tailscale network
+2. The correct Tailscale IP (`100.100.108.44`) is configured in the fetch interceptor
+3. The SOCKS5 proxy is running on port 1055
+
+<!-- ============================================ -->
+<!-- SECURITY NOTES -->
+<!-- ============================================ -->
 
 ## Security Notes
 
 - Use **ephemeral auth keys** for containers that can be recreated freely
 - The auth key is passed as an environment variable, so ensure it's stored as a GitHub secret
 - Tailscale encrypts all traffic between nodes
-- No ports need to be exposed for inter-container communication
-
-## Cloud Run Limitations
-
-Note: Running Tailscale in Cloud Run containers may have limitations due to Cloud Run's sandboxed environment. For production Kubernetes or VM deployments, consider:
-- Running Tailscale as a sidecar container
-- Using Tailscale's `netfilter` module on VMs
-- Tailscale SSH for secure access
+- Only LangGraph traffic is routed through Tailscale; other services use normal routing
