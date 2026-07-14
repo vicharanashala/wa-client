@@ -51,13 +51,9 @@ async function bootstrap() {
       `📞 WhatsApp: ${process.env.WHATSAPP_ACCESS_TOKEN ? '✅ Configured' : '❌ Not configured'}`,
     );
     
-    // Log Tailscale proxy status
-    const proxyUrl = process.env.GLOBAL_AGENT_HTTP_PROXY || process.env.HTTP_PROXY;
-    if (proxyUrl) {
-      logger.log(`🌐 Tailscale Proxy: ✅ Enabled (${proxyUrl})`);
-    } else {
-      logger.log(`🌐 Tailscale Proxy: ❌ Not configured`);
-    }
+    // Log Tailscale SOCKS5 proxy status
+    const socksUrl = process.env.LANGGRAPH_SOCKS_URL || 'socks://127.0.0.1:1055';
+    logger.log(`🌐 Tailscale SOCKS5 Proxy: ✅ Using ${socksUrl}`);
   } catch (error) {
     logger.error('Failed to start application', error);
     process.exit(1);
