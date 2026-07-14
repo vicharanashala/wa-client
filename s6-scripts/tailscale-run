@@ -30,7 +30,6 @@ tailscale up \
   --reset \
   --authkey=${TAILSCALE_AUTHKEY} \
   --hostname=${TS_HOSTNAME:-wa-client} \
-  --advertise-tags=tag:ci-cd \
   --accept-routes 2>&1
 UP_EXIT_CODE=$?
 echo "=== TAILSCALE UP FINISHED (EXIT CODE: $UP_EXIT_CODE) ==="
