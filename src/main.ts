@@ -1,6 +1,3 @@
-import { bootstrap as globalAgentBootstrap } from 'global-agent';
-globalAgentBootstrap();
-
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
