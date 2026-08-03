@@ -110,10 +110,9 @@ export class ResponseProgressService implements OnModuleInit {
       const currentSession = this.sessions.get(session.phoneNumber);
       if (currentSession !== session) return;
 
-      session.pendingSend = this.sendForElapsedTime(
-        session,
-        (Date.now() - session.startedAt) / 1000,
-      );
+      // Use the nextThreshold we scheduled for, not current elapsed time
+      // This ensures we show each message at its intended time, not when timer fires
+      session.pendingSend = this.sendForElapsedTime(session, nextThreshold);
       await session.pendingSend;
       session.pendingSend = undefined;
       this.scheduleNext(session);
