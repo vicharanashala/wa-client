@@ -54,7 +54,8 @@ export class ResponseProgressService implements OnModuleInit {
     messageId: string;
     sourceText: string;
   }): Promise<ResponseProgressSession> {
-    const existing = this.sessions.get(params.messageId);
+    // Stop any existing session for this phone number
+    const existing = this.sessions.get(params.phoneNumber);
     if (existing) {
       await this.stop(existing);
     }
@@ -66,7 +67,7 @@ export class ResponseProgressService implements OnModuleInit {
       script: this.scriptDetectionService.detect_script(params.sourceText),
       startedAt: Date.now(),
     };
-    this.sessions.set(session.messageId, session);
+    this.sessions.set(session.phoneNumber, session);
 
     await this.sendForElapsedTime(session, 0);
     this.scheduleNext(session);
@@ -77,13 +78,37 @@ export class ResponseProgressService implements OnModuleInit {
   private scheduleNext(session: ActiveSession): void {
     if (!session.active) return;
 
-    const intervalMs = this.config.update_interval_seconds * 1000;
     const elapsedMs = Date.now() - session.startedAt;
-    const nextTickMs = (Math.floor(elapsedMs / intervalMs) + 1) * intervalMs;
-    const delayMs = Math.max(0, nextTickMs - elapsedMs);
+    const elapsedSeconds = elapsedMs / 1000;
+
+    // Find the next threshold in the timeline
+    const messageSet =
+      this.config.scripts[session.script] ??
+      this.config.scripts[this.config.default_script];
+    const thresholds = messageSet.timeline.map((entry) => entry.after_seconds);
+
+    // Find the next threshold that's after current elapsed time
+    let nextThreshold: number | undefined;
+    for (const threshold of thresholds) {
+      if (threshold > elapsedSeconds) {
+        nextThreshold = threshold;
+        break;
+      }
+    }
+
+    // If no next threshold, stop scheduling
+    if (nextThreshold === undefined) {
+      return;
+    }
+
+    const delayMs = Math.max(0, (nextThreshold - elapsedSeconds) * 1000);
 
     session.timer = setTimeout(async () => {
       if (!session.active) return;
+
+      // Double-check the session is still the current one for this phone
+      const currentSession = this.sessions.get(session.phoneNumber);
+      if (currentSession !== session) return;
 
       session.pendingSend = this.sendForElapsedTime(
         session,
@@ -146,8 +171,8 @@ export class ResponseProgressService implements OnModuleInit {
 
     session.active = false;
     if (session.timer) clearTimeout(session.timer);
-    if (this.sessions.get(session.messageId) === session) {
-      this.sessions.delete(session.messageId);
+    if (this.sessions.get(session.phoneNumber) === session) {
+      this.sessions.delete(session.phoneNumber);
     }
     await session.pendingSend;
   }

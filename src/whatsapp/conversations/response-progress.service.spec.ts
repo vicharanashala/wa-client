@@ -50,11 +50,12 @@ describe('ResponseProgressService', () => {
     await jest.advanceTimersByTimeAsync(5_000);
     expect(sendTextMessage).toHaveBeenLastCalledWith(
       '919999999999',
-      '🚀 Thanks for waiting. I'm still working on your response.',
+      '🚀 Thanks for waiting. I\'m still working on your response.',
     );
 
     await session.stop();
     await jest.advanceTimersByTimeAsync(10_000);
+    // Messages are sent at 0s, 5s, 10s, 15s, 20s, 25s = 6 messages total
     expect(sendTextMessage).toHaveBeenCalledTimes(6);
   });
 });
