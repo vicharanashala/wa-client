@@ -132,6 +132,12 @@ export class ResponseProgressService implements OnModuleInit {
       elapsedSeconds,
       session.lastMessage,
     );
+
+    // Skip if same message was just sent (prevents duplicates)
+    if (message === session.lastMessage) {
+      return;
+    }
+
     session.lastMessage = message;
 
     try {
