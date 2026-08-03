@@ -9,6 +9,8 @@ import { SarvamModule } from '../sarvam-api/sarvam.module';
 import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
 import { UserStatsModule } from '../user-stats/user-stats.module';
 import { UserDetailsModule } from '../user-details/user-details.module';
+import { ScriptDetectionModule } from '../script-detection/script-detection.module';
+import { ResponseProgressService } from './response-progress.service';
 
 @Module({
   imports: [
@@ -19,11 +21,13 @@ import { UserDetailsModule } from '../user-details/user-details.module';
     PendingQuestionsModule,
     UserStatsModule,
     UserDetailsModule,
+    ScriptDetectionModule,
   ],
   providers: [
     AddUserTextMessageHandler,
     SetUserLocationHandler,
     AddUserVoiceMessageHandler,
+    ResponseProgressService,
   ],
   exports: [LangGraphModule],
 })

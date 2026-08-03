@@ -16,15 +16,12 @@ import {
 import { CommandBus } from '@nestjs/cqrs';
 import { AddUserTextMessageCommand } from './conversations/application/add-user-text-message/add-user-text-message.command';
 import { SetUserLocationCommand } from './conversations/application/set-user-location/set-user-location.command';
-import {
-  AddUserVoiceMessageCommand
-} from './conversations/application/add-user-voice-message/add-user-voice-message.command';
+import { AddUserVoiceMessageCommand } from './conversations/application/add-user-voice-message/add-user-voice-message.command';
 import { CallingService } from './calling/calling.service';
 import { ReviewerPollingService } from './pending-questions/reviewer-polling.service';
 import { WhatsappService } from './whatsapp-api/whatsapp.service';
 import { AccessControlService } from './access-control/access-control.service';
 import { LangGraphClientService } from './conversations/langgraph-client.service';
-import { ScriptDetectionService } from './script-detection/script-detection.service';
 import {
   FindUsersResult,
   WhatsappUserRepository,
@@ -57,18 +54,18 @@ interface NonTextMessage {
   id: string;
   timestamp: string;
   type:
-  | 'audio'
-  | 'document'
-  | 'image'
-  | 'video'
-  | 'sticker'
-  | 'location'
-  | 'contacts'
-  | 'reaction'
-  | 'interactive'
-  | 'order'
-  | 'system'
-  | 'unsupported';
+    | 'audio'
+    | 'document'
+    | 'image'
+    | 'video'
+    | 'sticker'
+    | 'location'
+    | 'contacts'
+    | 'reaction'
+    | 'interactive'
+    | 'order'
+    | 'system'
+    | 'unsupported';
 }
 
 type IncomingMessage = TextMessage | NonTextMessage;
@@ -128,16 +125,14 @@ interface GroupValue {
 }
 
 type ChangeValue =
-  | IncomingMessageValueGeneral
-  | StatusMessageValue
-  | GroupValue;
+  IncomingMessageValueGeneral | StatusMessageValue | GroupValue;
 
 interface Change {
   field:
-  | 'messages'
-  | 'group_lifecycle_update'
-  | 'group_settings_update'
-  | 'group_participant_update';
+    | 'messages'
+    | 'group_lifecycle_update'
+    | 'group_settings_update'
+    | 'group_participant_update';
   value: ChangeValue;
 }
 
@@ -164,7 +159,6 @@ interface LocationMessage {
   };
 }
 
-
 // ── Controller ───────────────────────────────────────────────────────────────
 
 @Controller('whatsapp')
@@ -179,8 +173,7 @@ export class WhatsappController {
     private readonly accessControlService: AccessControlService,
     private readonly langGraphClientService: LangGraphClientService,
     private readonly whatsappUserRepo: WhatsappUserRepository,
-    private readonly scriptDetectionService: ScriptDetectionService,
-  ) { }
+  ) {}
 
   private assertInternalApiKey(apiKey: string | undefined): void {
     const expectedKey = process.env.REVIEWER_INTERNAL_API_KEY;
@@ -220,16 +213,12 @@ export class WhatsappController {
 
   private parseIsPaginated(raw: string | undefined): boolean {
     if (raw === undefined || raw.trim() === '') {
-      throw new BadRequestException(
-        'isPaginated is required (true or false)',
-      );
+      throw new BadRequestException('isPaginated is required (true or false)');
     }
     const normalized = raw.trim().toLowerCase();
     if (normalized === 'true') return true;
     if (normalized === 'false') return false;
-    throw new BadRequestException(
-      'isPaginated must be "true" or "false"',
-    );
+    throw new BadRequestException('isPaginated must be "true" or "false"');
   }
 
   private parseNonNegativeInt(
@@ -358,20 +347,22 @@ export class WhatsappController {
       throw new ForbiddenException('Invalid API Key');
     }
 
-    this.logger.log(`📥 Received webhook from reviewer system for question: ${body.question_id}`);
+    this.logger.log(
+      `📥 Received webhook from reviewer system for question: ${body.question_id}`,
+    );
 
     // Process the webhook in the background so we don't block the response
     this.reviewerPollingService.processWebhookAnswer(body).catch((err) => {
-      this.logger.error(`Failed to process webhook for question ${body.question_id}: ${err.message}`);
+      this.logger.error(
+        `Failed to process webhook for question ${body.question_id}: ${err.message}`,
+      );
     });
 
     return 'OK';
   }
 
   @Get('webhook')
-  verify(
-    @Query() query: Record<string, string>,
-  ): string {
+  verify(@Query() query: Record<string, string>): string {
     const mode = query['hub.mode'];
     const challenge = query['hub.challenge'];
     const token = query['hub.verify_token'];
@@ -425,7 +416,9 @@ export class WhatsappController {
 
     for (const message of messages) {
       // ── Access Control Gate ──
-      const isAllowed = await this.accessControlService.isNumberAllowed(message.from);
+      const isAllowed = await this.accessControlService.isNumberAllowed(
+        message.from,
+      );
       if (!isAllowed) {
         this.logger.debug(
           `🚫 Access denied for ${message.from} — sending rejection message`,
@@ -438,7 +431,9 @@ export class WhatsappController {
               'Thank you for reaching out to ANNAM.AI. Your number is not currently whitelisted. For access, please contact Annam.ai Foundation at communications@annam.ai',
             )
             .catch((err: Error) =>
-              this.logger.error(`Failed to send rejection message to ${message.from}: ${err.message}`),
+              this.logger.error(
+                `Failed to send rejection message to ${message.from}: ${err.message}`,
+              ),
             );
         }
         continue;
@@ -465,14 +460,6 @@ export class WhatsappController {
       if (message.type === 'audio') {
         const audioMsg = message as unknown as AudioMessage;
         if (audioMsg.audio.voice) {
-          // Send acknowledgment for voice notes (use English default for audio)
-          const localizedMessage = this.scriptDetectionService.getLocalizedMessage('');
-          this.whatsappService
-            .sendTextMessage(audioMsg.from, localizedMessage)
-            .catch((err: Error) =>
-              this.logger.error(`Failed to send ack message to ${audioMsg.from}: ${err.message}`),
-            );
-
           this.commandBus
             .execute(
               new AddUserVoiceMessageCommand(
@@ -507,7 +494,9 @@ export class WhatsappController {
         this.langGraphClientService
           .appendUserReaction(reaction.from, reactedMessageId, emoji)
           .catch((err: Error) =>
-            this.logger.error(`Failed to append reaction for ${reaction.from}: ${err.message}`),
+            this.logger.error(
+              `Failed to append reaction for ${reaction.from}: ${err.message}`,
+            ),
           );
         continue;
       }
@@ -527,14 +516,6 @@ export class WhatsappController {
       this.logger.log(
         `Incoming [${phoneNumber}]: "${messageText.slice(0, 60)}${messageText.length > 60 ? '…' : ''}"`,
       );
-
-      // Send localized acknowledgment for text messages
-      const localizedMessage = this.scriptDetectionService.getLocalizedMessage(messageText);
-      this.whatsappService
-        .sendTextMessage(phoneNumber, localizedMessage)
-        .catch((err: Error) =>
-          this.logger.error(`Failed to send ack message to ${phoneNumber}: ${err.message}`),
-        );
 
       this.commandBus
         .execute(
@@ -567,7 +548,9 @@ export class WhatsappController {
     }
 
     for (const call of calls) {
-      this.logger.debug(`📞 Call: id=${call.call_id || call.id} event=${call.event || call.type}`);
+      this.logger.debug(
+        `📞 Call: id=${call.call_id || call.id} event=${call.event || call.type}`,
+      );
       const callId = call.call_id || call.id;
       const event = call.event || call.type;
       const from = call.from;

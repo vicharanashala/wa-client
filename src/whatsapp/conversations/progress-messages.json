@@ -1,0 +1,88 @@
+{
+  "default_script": "English",
+  "update_interval_seconds": 5,
+  "scripts": {
+    "English": {
+      "timeline": [
+        {
+          "after_seconds": 0,
+          "messages": [
+            "⏳ Your request is being processed. This usually takes around 10–20 seconds."
+          ]
+        },
+        {
+          "after_seconds": 5,
+          "messages": [
+            "🧠 Still working on your request. Thanks for your patience."
+          ]
+        },
+        {
+          "after_seconds": 10,
+          "messages": [
+            "⚙️ Your response is still being generated. It'll be sent automatically as soon as it's ready."
+          ]
+        },
+        {
+          "after_seconds": 15,
+          "messages": [
+            "✨ Almost there. Some requests take a little longer depending on their complexity."
+          ]
+        },
+        {
+          "after_seconds": 20,
+          "messages": [
+            "⏳ This is taking longer than usual, but your request is still being processed."
+          ]
+        },
+        {
+          "after_seconds": 25,
+          "messages": [
+            "🚀 Thanks for waiting. I'm still working on your response."
+          ]
+        },
+        {
+          "after_seconds": 30,
+          "messages": [
+            "📄 The response is still being generated. No action is needed—I'll send it automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 45,
+          "messages": [
+            "⏱️ This request is taking longer than expected, but it's still progressing. Thanks for your patience."
+          ]
+        },
+        {
+          "after_seconds": 60,
+          "messages": [
+            "🔄 I'm still processing your request. Complex requests can occasionally take up to a minute or more."
+          ]
+        },
+        {
+          "after_seconds": 90,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 120,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 150,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 180,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        }
+      ]
+    }
+  }
+}
