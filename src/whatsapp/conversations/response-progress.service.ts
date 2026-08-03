@@ -22,6 +22,7 @@ interface ProgressMessagesConfig {
 interface ActiveSession {
   active: boolean;
   lastMessage?: string;
+  lastSentThreshold?: number;
   messageId: string;
   pendingSend?: Promise<void>;
   phoneNumber: string;
@@ -122,20 +123,21 @@ export class ResponseProgressService implements OnModuleInit {
 
   private async sendForElapsedTime(
     session: ActiveSession,
-    elapsedSeconds: number,
+    threshold: number,
   ): Promise<void> {
     if (!session.active) return;
 
-    const message = this.selectMessage(
-      session.script,
-      elapsedSeconds,
-      session.lastMessage,
-    );
-
-    // Skip if same message was just sent (prevents duplicates)
-    if (message === session.lastMessage) {
+    // Skip if we already sent a message for this threshold (prevents duplicates)
+    if (session.lastSentThreshold === threshold) {
       return;
     }
+    session.lastSentThreshold = threshold;
+
+    const message = this.selectMessage(
+      session.script,
+      threshold,
+      session.lastMessage,
+    );
 
     session.lastMessage = message;
 
