@@ -1,0 +1,61 @@
+{
+  "default_script": "English",
+  "update_interval_seconds": 5,
+  "scripts": {
+    "English": {
+      "timeline": [
+        {
+          "after_seconds": 0,
+          "messages": [
+            "🤖 Generating your response...",
+            "⏳ Working on your request...",
+            "🚀 Getting started..."
+          ]
+        },
+        {
+          "after_seconds": 5,
+          "messages": [
+            "🔍 Understanding your question...",
+            "📖 Gathering relevant information...",
+            "🧠 Breaking down the problem...",
+            "🔎 Looking through available knowledge..."
+          ]
+        },
+        {
+          "after_seconds": 10,
+          "messages": [
+            "⚙️ Analyzing the information...",
+            "🧩 Connecting the dots...",
+            "📝 Organizing the response...",
+            "💡 Identifying the most relevant details..."
+          ]
+        },
+        {
+          "after_seconds": 15,
+          "messages": [
+            "✨ Refining the answer...",
+            "🎯 Making sure everything is accurate...",
+            "📚 Double-checking the response...",
+            "🛠️ Polishing the final output..."
+          ]
+        },
+        {
+          "after_seconds": 20,
+          "messages": [
+            "☕ Brewing ideas...",
+            "🔨 Tinkering with the details...",
+            "🧵 Weaving everything together...",
+            "🥣 Mixing knowledge...",
+            "🧠 Crunching through possibilities...",
+            "🪄 Adding the finishing touches...",
+            "📦 Packaging your answer...",
+            "🎨 Making the response clearer...",
+            "🚀 Almost there...",
+            "⚡ Just a few more moments...",
+            "🌟 Putting on the final polish..."
+          ]
+        }
+      ]
+    }
+  }
+}
