@@ -32,25 +32,25 @@ describe('ResponseProgressService', () => {
     expect(detectScript).toHaveBeenCalledWith('नमस्ते');
     expect(sendTextMessage).toHaveBeenLastCalledWith(
       '919999999999',
-      '🤖 Generating your response...',
+      '⏳ Your request is being processed. This usually takes around 10–20 seconds.',
     );
 
     await jest.advanceTimersByTimeAsync(5_000);
     expect(sendTextMessage).toHaveBeenLastCalledWith(
       '919999999999',
-      '🔍 Understanding your question...',
+      '🧠 Still working on your request. Thanks for your patience.',
     );
 
     await jest.advanceTimersByTimeAsync(15_000);
     expect(sendTextMessage).toHaveBeenLastCalledWith(
       '919999999999',
-      '☕ Brewing ideas...',
+      '⏳ This is taking longer than usual, but your request is still being processed.',
     );
 
     await jest.advanceTimersByTimeAsync(5_000);
     expect(sendTextMessage).toHaveBeenLastCalledWith(
       '919999999999',
-      '🔨 Tinkering with the details...',
+      '🚀 Thanks for waiting. I'm still working on your response.',
     );
 
     await session.stop();

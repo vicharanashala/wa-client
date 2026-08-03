@@ -7,52 +7,79 @@
         {
           "after_seconds": 0,
           "messages": [
-            "🤖 Generating your response...",
-            "⏳ Working on your request...",
-            "🚀 Getting started..."
+            "⏳ Your request is being processed. This usually takes around 10–20 seconds."
           ]
         },
         {
           "after_seconds": 5,
           "messages": [
-            "🔍 Understanding your question...",
-            "📖 Gathering relevant information...",
-            "🧠 Breaking down the problem...",
-            "🔎 Looking through available knowledge..."
+            "🧠 Still working on your request. Thanks for your patience."
           ]
         },
         {
           "after_seconds": 10,
           "messages": [
-            "⚙️ Analyzing the information...",
-            "🧩 Connecting the dots...",
-            "📝 Organizing the response...",
-            "💡 Identifying the most relevant details..."
+            "⚙️ Your response is still being generated. It'll be sent automatically as soon as it's ready."
           ]
         },
         {
           "after_seconds": 15,
           "messages": [
-            "✨ Refining the answer...",
-            "🎯 Making sure everything is accurate...",
-            "📚 Double-checking the response...",
-            "🛠️ Polishing the final output..."
+            "✨ Almost there. Some requests take a little longer depending on their complexity."
           ]
         },
         {
           "after_seconds": 20,
           "messages": [
-            "☕ Brewing ideas...",
-            "🔨 Tinkering with the details...",
-            "🧵 Weaving everything together...",
-            "🥣 Mixing knowledge...",
-            "🧠 Crunching through possibilities...",
-            "🪄 Adding the finishing touches...",
-            "📦 Packaging your answer...",
-            "🎨 Making the response clearer...",
-            "🚀 Almost there...",
-            "⚡ Just a few more moments...",
-            "🌟 Putting on the final polish..."
+            "⏳ This is taking longer than usual, but your request is still being processed."
+          ]
+        },
+        {
+          "after_seconds": 25,
+          "messages": [
+            "🚀 Thanks for waiting. I'm still working on your response."
+          ]
+        },
+        {
+          "after_seconds": 30,
+          "messages": [
+            "📄 The response is still being generated. No action is needed—I'll send it automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 45,
+          "messages": [
+            "⏱️ This request is taking longer than expected, but it's still progressing. Thanks for your patience."
+          ]
+        },
+        {
+          "after_seconds": 60,
+          "messages": [
+            "🔄 I'm still processing your request. Complex requests can occasionally take up to a minute or more."
+          ]
+        },
+        {
+          "after_seconds": 90,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 120,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 150,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
+          ]
+        },
+        {
+          "after_seconds": 180,
+          "messages": [
+            "⏳ Still working on your request. I'll send the response automatically once it's ready."
           ]
         }
       ]
