@@ -19,14 +19,6 @@ on:
         options:
           - "false"
           - "true"
-      should_build:
-        description: "Build and Push Image?"
-        required: true
-        default: "true"
-        type: choice
-        options:
-          - "false"
-          - "true"
 
 permissions:
   contents: read
@@ -39,17 +31,12 @@ env:
   GCP_REGION: asia-south1
   GCP_STAGING_SERVICE: wa-client-staging
   GCP_PRODUCTION_SERVICE: wa-client-production
-  INFISICAL_ENVIRONMENT_STAGING: staging
-  INFISICAL_ENVIRONMENT_PROD: prod
-  INFISICAL_SECRET_PATH: /annam-ajrasakha/WhatsApp
 
 jobs:
   build:
     name: Build and Push Image
     runs-on: ubuntu-latest
-    if: github.event.inputs.should_build == 'true'
-    environment:
-      name: build
+    # Always build - deployment requires a fresh image
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,6 +58,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
+          no-cache: true
           platforms: linux/amd64
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging
@@ -87,14 +75,11 @@ jobs:
       (needs.build.result == 'success' || needs.build.result == 'skipped' || needs.build.result == null)
     needs: [build]
     runs-on: ubuntu-latest
-    environment:
-      name: staging
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
-
 
       - name: Deploy to Cloud Run (Staging)
         uses: google-github-actions/deploy-cloudrun@v2
@@ -102,15 +87,27 @@ jobs:
         with:
           service: ${{ env.GCP_STAGING_SERVICE }}
           region: ${{ env.GCP_REGION }}
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
-            INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_STAGING }}
-            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
-            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
-            INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
-            INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
+            MONGO_URI=${{ secrets.MONGO_URI }}
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
+            WHATSAPP_API_VERSION=${{ secrets.WHATSAPP_API_VERSION }}
+            WHATSAPP_META_APP_SECRET=${{ secrets.WHATSAPP_META_APP_SECRET }}
+            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+            LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
+            LLM_MODEL=${{ secrets.LLM_MODEL }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            REVIEWER_API_BASE_URL=${{ secrets.REVIEWER_API_BASE_URL }}
+            REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
+            AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
+            AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
+            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
+            TS_HOSTNAME=wa-client-staging
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
 
   deploy_production:
@@ -121,14 +118,11 @@ jobs:
       (needs.build.result == 'success' || needs.build.result == 'skipped' || needs.build.result == null)
     needs: [build]
     runs-on: ubuntu-latest
-    environment:
-      name: production
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_GH_SA_KEY }}'
-
 
       - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v2
@@ -136,13 +130,26 @@ jobs:
         with:
           service: ${{ env.GCP_PRODUCTION_SERVICE }}
           region: ${{ env.GCP_REGION }}
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:production
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: |
             NODE_ENV=production
-            INFISICAL_ENVIRONMENT=${{ env.INFISICAL_ENVIRONMENT_PROD }}
-            INFISICAL_PROJECT_ID=${{ secrets.INFISICAL_PROJECT_ID }}
-            INFISICAL_SECRET_PATH=${{ env.INFISICAL_SECRET_PATH }}
-            INFISICAL_CLIENT_ID=${{ secrets.INFISICAL_CLIENT_ID }}
-            INFISICAL_CLIENT_SECRET=${{ secrets.INFISICAL_CLIENT_SECRET }}
+            MONGO_URI=${{ secrets.MONGO_URI }}
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
+            WHATSAPP_API_VERSION=${{ secrets.WHATSAPP_API_VERSION }}
+            WHATSAPP_META_APP_SECRET=${{ secrets.WHATSAPP_META_APP_SECRET }}
+            LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+            LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
+            LLM_MODEL=${{ secrets.LLM_MODEL }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            REVIEWER_API_BASE_URL=${{ secrets.REVIEWER_API_BASE_URL }}
+            REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
+            AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
+            AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
+            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
+            TS_HOSTNAME=wa-client-production
+            IS_PRODUCTION=true
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300

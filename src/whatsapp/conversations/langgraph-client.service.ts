@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Client} from '@langchain/langgraph-sdk';
+import { Client } from '@langchain/langgraph-sdk';
 import * as crypto from 'crypto';
+import * as fetch from 'node-fetch';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 import { UserDetailsRepository } from '../user-details/user-details.repository';
 export interface SendMessageResult {
   reply: string;
@@ -32,6 +34,16 @@ export class LangGraphClientService implements OnModuleInit {
   /** Optional graph node for threads.updateState message patches (must exist on the deployed graph). */
   private stateAppendAsNode?: string;
 
+  /** Proxy URL for Tailscale userspace networking (env var overrides default). */
+  private static readonly LANGGRAPH_SOCKS_URL =
+    process.env.LANGGRAPH_SOCKS_URL ?? 'socks5://127.0.0.1:1055';
+
+  /** SOCKS5 agent instance for LangGraph requests. */
+  private socksAgent!: any;
+
+  /** Fetch function with SOCKS5 proxy. */
+  private fetchWithSocks!: any;
+
   constructor(
     private readonly userDetailsRepo: UserDetailsRepository,
   ) {}
@@ -53,12 +65,55 @@ export class LangGraphClientService implements OnModuleInit {
       this.stateAppendAsNode = appendNode;
     }
 
-    this.client = new Client({ apiUrl, timeoutMs: 10_000 });
+    // Set up SOCKS5 proxy for Tailscale userspace networking
+    const socksUrl = LangGraphClientService.LANGGRAPH_SOCKS_URL;
+    this.socksAgent = new SocksProxyAgent(socksUrl);
+
+    // Pass client to LangGraph Client constructor (global fetch hijack handles proxy in main.ts)
+    this.client = new Client({
+      apiUrl,
+      timeoutMs: 480_000,
+    } as any);
     await this.resolveAssistantGraphId();
 
     this.logger.log(
-      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'})`,
+      `LangGraph client ready (assistant=${this.assistantId || 'MISSING'}, socks=${socksUrl})`,
     );
+
+    // Schedule SOCKS5 proxy test after 15 seconds (give Tailscale time to connect to peers)
+    setTimeout(async () => {
+      console.log('=== SOCKS5 PROXY TEST START ===');
+      console.log('Testing proxy connection to:', `${apiUrl}/health`);
+      console.log('Using SOCKS5 URL:', socksUrl);
+      
+      try {
+        const testRes = await (fetch as any)(`${apiUrl}/health`, {
+          method: 'GET',
+          agent: this.socksAgent,
+          timeout: 10000,
+        });
+        console.log('=== SOCKS5 PROXY TEST SUCCESS ===');
+        console.log('Response status:', testRes.status);
+        console.log('Response headers:', JSON.stringify(testRes.headers?.raw ? testRes.headers.raw() : {}));
+        try {
+          const body = await testRes.text();
+          console.log('Response body:', body);
+        } catch (e) {
+          console.log('Could not read response body:', e);
+        }
+        console.log('=== SOCKS5 PROXY TEST END ===');
+      } catch (err: any) {
+        console.log('=== SOCKS5 PROXY TEST FAILED ===');
+        console.log('Error type:', err?.constructor?.name);
+        console.log('Error message:', err?.message);
+        console.log('Error code:', err?.code);
+        console.log('Error errno:', err?.errno);
+        console.log('Error syscall:', err?.syscall);
+        console.log('Full error object:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        console.log('Stack trace:', err?.stack);
+        console.log('=== SOCKS5 PROXY TEST END ===');
+      }
+    }, 15000);
   }
 
   /**
@@ -694,7 +749,11 @@ export class LangGraphClientService implements OnModuleInit {
     const url = `${apiUrl}/threads/${threadId}`;
 
     try {
-      const res = await fetch(url, { method: 'DELETE' });
+      // Use node-fetch with SOCKS5 agent for LangGraph requests (force agent)
+      const res = await (fetch as any)(url, {
+        method: 'DELETE',
+        agent: this.socksAgent,
+      });
       if (res.ok) {
         this.logger.debug(`[${phoneNumber}] Thread deleted`);
       } else {
@@ -994,8 +1053,8 @@ export class LangGraphClientService implements OnModuleInit {
       'x-internal-api-key': process.env.REVIEWER_INTERNAL_API_KEY || '',
     };
 
-    // Primary payload
-    let res = await fetch(url, {
+    // Primary payload - use node-fetch directly (no proxy for public internet API)
+    let res = await (fetch as any)(url, {
       method: 'PUT',
       headers,
       body: JSON.stringify({ threadId }),
@@ -1008,7 +1067,7 @@ export class LangGraphClientService implements OnModuleInit {
       );
 
       // Compatibility retry for backends expecting snake_case.
-      res = await fetch(url, {
+      res = await (fetch as any)(url, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ thread_id: threadId }),

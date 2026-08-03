@@ -1,6 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import * as fetch from 'node-fetch';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+
+// Global fetch hijack - route LangGraph server traffic through SOCKS5 proxy
+const globalSocksAgent = new SocksProxyAgent('socks5://127.0.0.1:1055');
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (url: any, options: any = {}) => {
+  // Only proxy requests going to the LangGraph Server (100.100.108.44)
+  if (url?.toString?.().includes('100.100.108.44')) {
+    return (fetch as any)(url, { ...options, agent: globalSocksAgent });
+  }
+  // Let all other traffic (like WhatsApp webhooks) go through normally
+  return originalFetch ? originalFetch(url, options) : (fetch as any)(url, options);
+};
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -50,6 +64,10 @@ async function bootstrap() {
     logger.log(
       `📞 WhatsApp: ${process.env.WHATSAPP_ACCESS_TOKEN ? '✅ Configured' : '❌ Not configured'}`,
     );
+    
+    // Log Tailscale SOCKS5 proxy status
+    const socksUrl = process.env.LANGGRAPH_SOCKS_URL || 'socks://127.0.0.1:1055';
+    logger.log(`🌐 Tailscale SOCKS5 Proxy: ✅ Using ${socksUrl}`);
   } catch (error) {
     logger.error('Failed to start application', error);
     process.exit(1);
