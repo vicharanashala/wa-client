@@ -108,7 +108,7 @@ jobs:
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL_STAGING }}
             AEGRA_API_URL=${{ secrets.AEGRA_API_URL_STAGING }}
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
-            TS_HOSTNAME=wa-client-staging
+            TS_HOSTNAME=wa-client-production
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
 
   deploy_production:
