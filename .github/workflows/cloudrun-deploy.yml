@@ -106,6 +106,7 @@ jobs:
             REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
             AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID_STAGING }}
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL_STAGING }}
+            AEGRA_API_URL=${{ secrets.AEGRA_API_URL_STAGING }}
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=wa-client-staging
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
@@ -149,6 +150,7 @@ jobs:
             REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
             AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
+            AEGRA_API_URL=${{ secrets.AEGRA_API_URL }}
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=wa-client-production
             IS_PRODUCTION=true
