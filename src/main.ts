@@ -8,8 +8,11 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 const globalSocksAgent = new SocksProxyAgent('socks5://127.0.0.1:1055');
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (url: any, options: any = {}) => {
-  // Only proxy requests going to the LangGraph Server (100.100.108.44)
-  if (url?.toString?.().includes('100.100.108.44')) {
+  // Only proxy requests going to the LangGraph Server (Tailscale IPs)
+  if (
+    url?.toString?.().includes('100.100.108.44') ||
+    url?.toString?.().includes('100.100.108.43')
+  ) {
     return (fetch as any)(url, { ...options, agent: globalSocksAgent });
   }
   // Let all other traffic (like WhatsApp webhooks) go through normally
