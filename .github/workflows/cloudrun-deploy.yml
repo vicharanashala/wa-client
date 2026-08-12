@@ -92,20 +92,20 @@ jobs:
           env_vars: |
             NODE_ENV=staging
             MONGO_URI=${{ secrets.MONGO_URI }}
-            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
-            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
-            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN_STAGING }}
+            WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID_STAGING }}
+            WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN_STAGING }}
             WHATSAPP_API_VERSION=${{ secrets.WHATSAPP_API_VERSION }}
-            WHATSAPP_META_APP_SECRET=${{ secrets.WHATSAPP_META_APP_SECRET }}
+            WHATSAPP_META_APP_SECRET=${{ secrets.WHATSAPP_META_APP_SECRET_STAGING }}
             LLM_API_KEY=${{ secrets.LLM_API_KEY }}
             LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
             LLM_MODEL=${{ secrets.LLM_MODEL }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
-            REVIEWER_API_BASE_URL=${{ secrets.REVIEWER_API_BASE_URL }}
+            REVIEWER_API_BASE_URL=${{ secrets.REVIEWER_API_BASE_URL_STAGING }}
             REVIEWER_INTERNAL_API_KEY=${{ secrets.REVIEWER_INTERNAL_API_KEY }}
-            AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID }}
-            AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL }}
+            AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID_STAGING }}
+            AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL_STAGING }}
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=wa-client-staging
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
