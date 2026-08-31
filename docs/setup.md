@@ -35,7 +35,8 @@
 |---|---|---|
 | **Meta Business Platform** | WhatsApp Cloud API | ✅ Required |
 | **LangGraph/Aegra Server** | AI agent orchestration | ✅ Required |
-| **Sarvam AI** | Indian-language STT/TTS | ✅ Required for voice |
+| **Sarvam AI** | Indian-language STT | ✅ Required for voice input |
+| **Murf API** | Falcon 2 TTS | ✅ Required for voice replies |
 | **Google Gemini** | Real-time voice calls (Gemini Live) | ✅ Required for VoIP |
 | **Anthropic** | Expert answer localization (Claude) | ⬜ Optional |
 
@@ -75,6 +76,7 @@ The `.env` file contains **secrets only**. All non-secret configuration lives in
 | `WHATSAPP_META_APP_SECRET` | Meta app secret for HMAC signature verification | `abc123...` |
 | `LLM_API_KEY` | API key for the primary LLM provider | `sk-...` |
 | `SARVAM_API_KEY` | Sarvam AI API subscription key | `sarvam-...` |
+| `MURF_API_KEY` | Murf Falcon 2 API key | `...` |
 | `GEMINI_API_KEY` | Google Gemini API key for voice calls | `AIza...` |
 | `AEGRA_ASSISTANT_ID` | LangGraph assistant UUID on Aegra server | `9c6b5487-...` |
 
@@ -116,7 +118,7 @@ whatsapp:               # WhatsApp API version, message templates
 llm:                    # LLM model settings, system prompt
 mcp:                    # MCP server URLs and feature toggles
 audio:                  # Opus codec and Gemini audio parameters
-sarvam:                 # Sarvam AI STT/TTS configuration
+sarvam:                 # Sarvam AI STT configuration
 gemini:                 # Gemini Live WebSocket settings
 reviewer:               # Reviewer polling intervals and API endpoints
 conversation:           # Message history limits, context memory settings

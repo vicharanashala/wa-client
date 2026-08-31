@@ -25,7 +25,8 @@ These environment variables **MUST** be set in your `.env` file for the applicat
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Webhook verification token               | `my_verify_token_123`                    | Webhook subscription          |
 | `WHATSAPP_META_APP_SECRET`      | Meta app secret for signature validation | `abc123...`                              | Webhook security              |
 | `LLM_API_KEY`                   | LLM service API key                      | `sk-...`                                 | LLM authentication            |
-| `SARVAM_API_KEY`                | Sarvam AI API key                        | `sarvam_...`                             | Speech-to-Text/Text-to-Speech |
+| `SARVAM_API_KEY`                | Sarvam AI API key                        | `sarvam_...`                             | Speech-to-Text                |
+| `MURF_API_KEY`                  | Murf Falcon 2 API key                    | `...`                                    | Text-to-Speech                |
 | `GEMINI_API_KEY`                | Google Gemini API key                    | `AIza...`                                | Voice call features           |
 
 ---
@@ -238,16 +239,23 @@ These variables are referenced in `.env.example` but are **not currently used** 
 
 ### External AI Services
 
-#### `SARVAM_API_KEY` **(REQUIRED for voice features)**
+#### `SARVAM_API_KEY` **(REQUIRED for voice input)**
 
 - **Type**: String (API Key)
-- **Purpose**: Authenticate with Sarvam AI for STT/TTS
+- **Purpose**: Authenticate with Sarvam AI for Speech-to-Text
 - **Used in**: `src/whatsapp/sarvam-api/sarvam.service.ts:12`
 - **Example**: `sarvam_...`
-- **Features enabled**:
-  - Speech-to-Text (voice message transcription)
-  - Text-to-Speech (audio response generation)
+- **Features enabled**: Speech-to-Text (voice message transcription)
 - **How to get**: Sign up at Sarvam AI
+
+#### `MURF_API_KEY` **(REQUIRED for voice replies)**
+
+- **Type**: String (API Key)
+- **Purpose**: Authenticate with Murf Falcon 2 for Text-to-Speech
+- **Used in**: `src/whatsapp/murf-api/murf.service.ts`
+- **Features enabled**: Text-to-Speech audio responses in OGG format for WhatsApp voice notes
+- **How to get**: Generate an API key in the Murf API dashboard
+- **Optional settings**: `MURF_TTS_VOICE_ID` overrides the language-specific defaults (Hindi: `hi-IN-namrita`); `MURF_TTS_ENDPOINT` overrides the India-region Falcon endpoint.
 
 #### `GEMINI_API_KEY` **(REQUIRED for voice calls)**
 
@@ -425,6 +433,7 @@ WHATSAPP_WEBHOOK_VERIFY_TOKEN=
 WHATSAPP_META_APP_SECRET=
 LLM_API_KEY=
 SARVAM_API_KEY=
+MURF_API_KEY=
 GEMINI_API_KEY=
 
 # === OPTIONAL (Overrides) ===

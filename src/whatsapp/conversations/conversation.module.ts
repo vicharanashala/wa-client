@@ -6,6 +6,7 @@ import { SetUserLocationHandler } from './application/set-user-location/set-user
 import { AddUserVoiceMessageHandler } from './application/add-user-voice-message/add-user-voice-message.command';
 import { WhatsappApiModule } from '../whatsapp-api/whatsapp-api.module';
 import { SarvamModule } from '../sarvam-api/sarvam.module';
+import { MurfModule } from '../murf-api/murf.module';
 import { PendingQuestionsModule } from '../pending-questions/pending-questions.module';
 import { UserStatsModule } from '../user-stats/user-stats.module';
 import { UserDetailsModule } from '../user-details/user-details.module';
@@ -18,6 +19,7 @@ import { ResponseProgressService } from './response-progress.service';
     LangGraphModule,
     WhatsappApiModule,
     SarvamModule,
+    MurfModule,
     PendingQuestionsModule,
     UserStatsModule,
     UserDetailsModule,

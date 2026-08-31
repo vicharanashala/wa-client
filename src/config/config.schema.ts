@@ -212,20 +212,6 @@ export class SarvamSttConfig {
   defaultLanguage: string;
 }
 
-export class SarvamTtsConfig {
-  @IsString()
-  model: string;
-
-  @IsString()
-  outputCodec: string;
-
-  @IsNumber()
-  sampleRate: number;
-
-  @IsNumber()
-  textChunkSize: number;
-}
-
 export class SarvamConfig {
   @IsString()
   @IsUrl()
@@ -234,10 +220,6 @@ export class SarvamConfig {
   @ValidateNested()
   @Type(() => SarvamSttConfig)
   stt: SarvamSttConfig;
-
-  @ValidateNested()
-  @Type(() => SarvamTtsConfig)
-  tts: SarvamTtsConfig;
 }
 
 // Gemini Live Configuration

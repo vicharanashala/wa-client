@@ -250,7 +250,6 @@ mcp:
 ### 6. Sarvam AI (`sarvam`)
 
 - STT (Speech-to-Text) configuration
-- TTS (Text-to-Speech) configuration
 
 ### 7. Gemini Live (`gemini`)
 

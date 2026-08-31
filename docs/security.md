@@ -169,7 +169,8 @@ Even after passing access control, users must share their location before the AI
 | WhatsApp App Secret | `WHATSAPP_META_APP_SECRET` | Forge webhooks | Via Meta Dashboard |
 | Webhook Verify Token | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Subscribe to webhooks | Manual |
 | LLM API Key | `LLM_API_KEY` | LLM API costs, data access | Manual |
-| Sarvam API Key | `SARVAM_API_KEY` | STT/TTS API costs | Manual |
+| Sarvam API Key | `SARVAM_API_KEY` | STT API costs | Manual |
+| Murf API Key | `MURF_API_KEY` | Falcon 2 TTS API costs | Manual |
 | Gemini API Key | `GEMINI_API_KEY` | Gemini Live usage | Via Google Console |
 | Internal API Key | `REVIEWER_INTERNAL_API_KEY` | Admin API access | Manual |
 | Aegra Assistant ID | `AEGRA_ASSISTANT_ID` | Route to wrong agent | Manual |

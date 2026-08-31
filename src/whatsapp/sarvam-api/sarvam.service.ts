@@ -64,8 +64,7 @@ interface BatchDownloadResponse {
 @Injectable()
 export class SarvamService {
   private readonly logger = new Logger(SarvamService.name);
-  private readonly apiKey =
-    process.env.SARVAM_API_KEY! || '';
+  private readonly apiKey = process.env.SARVAM_API_KEY! || '';
   private readonly baseUrl = 'https://api.sarvam.ai';
 
   // ── Speech to Text ─────────────────────────────────────────────────
@@ -74,7 +73,7 @@ export class SarvamService {
    * Transcribe audio to text. Automatically routes to the async batch
    * API when the audio is estimated to be longer than 25 seconds
    * (the sync endpoint hard-caps at 30 s).
-   * 
+   *
    * Throws AudioTooLongError if audio exceeds MAX_AUDIO_DURATION_SECONDS (2 minutes).
    */
   async transcribeToEnglish(
@@ -91,7 +90,10 @@ export class SarvamService {
       this.logger.warn(
         `Audio ~${estimatedDuration.toFixed(0)}s exceeds ${MAX_AUDIO_DURATION_SECONDS}s limit`,
       );
-      throw new AudioTooLongError(estimatedDuration, MAX_AUDIO_DURATION_SECONDS);
+      throw new AudioTooLongError(
+        estimatedDuration,
+        MAX_AUDIO_DURATION_SECONDS,
+      );
     }
 
     if (estimatedDuration > BATCH_STT_DURATION_THRESHOLD) {
@@ -183,17 +185,14 @@ export class SarvamService {
     this.logger.log(`Batch STT job initiated: ${job_id}`);
 
     // ── Step 2: Get presigned upload URL ────────────────────────────
-    const uploadUrlRes = await fetch(
-      this.batchJobUrl('/upload-files'),
-      {
-        method: 'POST',
-        headers: {
-          'api-subscription-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ job_id, files: [fileName] }),
+    const uploadUrlRes = await fetch(this.batchJobUrl('/upload-files'), {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': this.apiKey,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({ job_id, files: [fileName] }),
+    });
 
     if (!uploadUrlRes.ok) {
       const err = await uploadUrlRes.text();
@@ -225,16 +224,13 @@ export class SarvamService {
     this.logger.debug(`Batch STT: file uploaded (${audioBuffer.length} bytes)`);
 
     // ── Step 4: Start job ───────────────────────────────────────────
-    const startRes = await fetch(
-      this.batchJobUrl(`/${job_id}/start`),
-      {
-        method: 'POST',
-        headers: {
-          'api-subscription-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
+    const startRes = await fetch(this.batchJobUrl(`/${job_id}/start`), {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': this.apiKey,
+        'Content-Type': 'application/json',
       },
-    );
+    });
 
     if (!startRes.ok) {
       const err = await startRes.text();
@@ -266,17 +262,14 @@ export class SarvamService {
     }
 
     // ── Step 6: Download result ─────────────────────────────────────
-    const dlRes = await fetch(
-      this.batchJobUrl('/download-files'),
-      {
-        method: 'POST',
-        headers: {
-          'api-subscription-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ job_id, files: outputFiles }),
+    const dlRes = await fetch(this.batchJobUrl('/download-files'), {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': this.apiKey,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({ job_id, files: outputFiles }),
+    });
 
     if (!dlRes.ok) {
       const err = await dlRes.text();
@@ -289,9 +282,7 @@ export class SarvamService {
     const firstFile = outputFiles[0];
     const dlEntry = dlData.download_urls[firstFile];
     if (!dlEntry?.file_url) {
-      throw new Error(
-        `Sarvam batch STT: no download URL for "${firstFile}"`,
-      );
+      throw new Error(`Sarvam batch STT: no download URL for "${firstFile}"`);
     }
 
     const transcriptRes = await fetch(dlEntry.file_url);
@@ -308,8 +299,7 @@ export class SarvamService {
       lang?: string;
     };
 
-    const transcript =
-      transcriptData.transcript ?? transcriptData.text ?? '';
+    const transcript = transcriptData.transcript ?? transcriptData.text ?? '';
     const languageCode =
       transcriptData.language_code ?? transcriptData.lang ?? null;
 
@@ -326,19 +316,14 @@ export class SarvamService {
     return `${this.baseUrl}/speech-to-text/job/v1${suffix}`;
   }
 
-  private async pollJobUntilDone(
-    jobId: string,
-  ): Promise<BatchStatusResponse> {
+  private async pollJobUntilDone(jobId: string): Promise<BatchStatusResponse> {
     for (let attempt = 1; attempt <= BATCH_MAX_POLLS; attempt++) {
       await new Promise((r) => setTimeout(r, BATCH_POLL_INTERVAL_MS));
 
-      const res = await fetch(
-        this.batchJobUrl(`/${jobId}/status`),
-        {
-          method: 'GET',
-          headers: { 'api-subscription-key': this.apiKey },
-        },
-      );
+      const res = await fetch(this.batchJobUrl(`/${jobId}/status`), {
+        method: 'GET',
+        headers: { 'api-subscription-key': this.apiKey },
+      });
 
       if (!res.ok) {
         this.logger.warn(
@@ -349,7 +334,11 @@ export class SarvamService {
 
       const data = (await res.json()) as BatchStatusResponse;
 
-      if (attempt % 5 === 0 || data.job_state === 'Completed' || data.job_state === 'Failed') {
+      if (
+        attempt % 5 === 0 ||
+        data.job_state === 'Completed' ||
+        data.job_state === 'Failed'
+      ) {
         this.logger.debug(
           `Batch STT poll ${attempt}: state=${data.job_state} (${data.successful_files_count}/${data.total_files} done)`,
         );
@@ -394,100 +383,5 @@ export class SarvamService {
     if (mt.includes('wav')) return 32_000;
     // Fallback: assume low bitrate like OGG
     return 2_000;
-  }
-
-  // ── Text to Speech ─────────────────────────────────────────────────
-
-  /**
-   * One valid OGG/Opus buffer per text chunk. Do NOT concatenate buffers — each
-   * Sarvam response is a complete file; byte-concatenation breaks long replies.
-   */
-  async synthesizeChunks(
-    text: string,
-    languageCode: string | null,
-  ): Promise<Buffer[]> {
-    const targetLanguage = this.mapToSarvamLanguage(languageCode);
-    const chunks = this.chunkText(text, 2500);
-    const audioBuffers: Buffer[] = [];
-
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      const response = await fetch(`${this.baseUrl}/text-to-speech`, {
-        method: 'POST',
-        headers: {
-          'api-subscription-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: chunk,
-          target_language_code: targetLanguage,
-          model: 'bulbul:v3',
-          output_audio_codec: 'opus',
-          speech_sample_rate: 16000,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(
-          `Sarvam TTS failed (chunk ${i + 1}/${chunks.length}): ${error}`,
-        );
-      }
-
-      const data = (await response.json()) as { audios: string[] };
-      if (!data.audios?.[0]) {
-        throw new Error(
-          `Sarvam TTS returned no audio (chunk ${i + 1}/${chunks.length})`,
-        );
-      }
-      audioBuffers.push(Buffer.from(data.audios[0], 'base64'));
-    }
-
-    return audioBuffers;
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────
-
-  private chunkText(text: string, maxLength: number): string[] {
-    const chunks: string[] = [];
-    let remaining = text.trim();
-
-    while (remaining.length > 0) {
-      if (remaining.length <= maxLength) {
-        chunks.push(remaining);
-        break;
-      }
-
-      let breakAt = remaining.lastIndexOf('.', maxLength);
-      if (breakAt === -1) breakAt = remaining.lastIndexOf(' ', maxLength);
-      if (breakAt === -1) breakAt = maxLength;
-
-      chunks.push(remaining.slice(0, breakAt + 1).trim());
-      remaining = remaining.slice(breakAt + 1).trim();
-    }
-
-    return chunks;
-  }
-
-  // ── Language Mapping ───────────────────────────────────────────────
-
-  private mapToSarvamLanguage(bcp47Code: string | null): string {
-    if (!bcp47Code) return 'hi-IN';
-
-    const map: Record<string, string> = {
-      'hi-IN': 'hi-IN',
-      'te-IN': 'te-IN',
-      'ta-IN': 'ta-IN',
-      'mr-IN': 'mr-IN',
-      'bn-IN': 'bn-IN',
-      'gu-IN': 'gu-IN',
-      'kn-IN': 'kn-IN',
-      'ml-IN': 'ml-IN',
-      'pa-IN': 'pa-IN',
-      'od-IN': 'od-IN',
-      'en-IN': 'en-IN',
-    };
-
-    return map[bcp47Code] ?? 'hi-IN';
   }
 }

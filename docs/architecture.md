@@ -25,8 +25,9 @@ AjraSakha is a **NestJS monolithic application** structured as a modular monolit
 2. **LangGraph/Aegra Server** — AI agent orchestration with tool calling
 3. **MCP Tool Servers** — Domain-specific data sources (crop prices, weather, government schemes)
 4. **Reviewer System (Vicharanashala Desk)** — Human expert review platform
-5. **Sarvam AI** — Indian-language Speech-to-Text and Text-to-Speech
-6. **Gemini Live** — Real-time voice conversation via WebSocket
+5. **Sarvam AI** — Indian-language Speech-to-Text
+6. **Murf Falcon 2** — Indian-language Text-to-Speech
+7. **Gemini Live** — Real-time voice conversation via WebSocket
 
 ```mermaid
 graph TB
@@ -35,7 +36,8 @@ graph TB
         AEGRA["LangGraph<br/>Aegra Server"]
         MCP["MCP Tool Servers<br/>(7+ services)"]
         REVIEWER["Reviewer Desk<br/>(Vicharanashala)"]
-        SARVAM["Sarvam AI<br/>(STT/TTS)"]
+        SARVAM["Sarvam AI<br/>(STT)"]
+        MURF["Murf Falcon 2<br/>(TTS)"]
         GEMINI["Gemini Live<br/>(Voice AI)"]
         ANTHROPIC["Anthropic<br/>(Localization)"]
     end
@@ -48,6 +50,7 @@ graph TB
         POLL["Reviewer Polling"]
         WA_SVC["WhatsApp Service"]
         SARVAM_SVC["Sarvam Service"]
+        MURF_SVC["Murf Service"]
         ACC["Access Control"]
         STATS["User Stats"]
         LOCALIZE["Answer Localization"]
@@ -61,7 +64,8 @@ graph TB
     CTRL -->|Commands| CMD
     CTRL -->|Call events| CALL
     CMD -->|Text/Voice| LANG
-    CMD -->|Voice| SARVAM_SVC
+    CMD -->|Voice transcription| SARVAM_SVC
+    CMD -->|Voice synthesis| MURF_SVC
     LANG -->|Runs| AEGRA
     AEGRA -->|Tools| MCP
     CALL -->|Audio stream| GEMINI
@@ -72,6 +76,7 @@ graph TB
     POLL -->|Notify user| WA_SVC
     WA_SVC -->|Graph API| META
     SARVAM_SVC -->|API| SARVAM
+    MURF_SVC -->|API| MURF
     ACC -->|Query| MONGO
     STATS -->|Upsert| MONGO
     POLL -->|Pending Qs| MONGO
@@ -101,6 +106,7 @@ graph TD
     CONV --> LG["LangGraphModule"]
     CONV --> WA_API["WhatsappApiModule"]
     CONV --> SARV["SarvamModule"]
+    CONV --> MURF["MurfModule"]
     CONV --> PQ
     CONV --> US
 ```
@@ -117,7 +123,8 @@ graph TD
 | `PendingQuestionsModule` | `src/whatsapp/pending-questions/pending-questions.module.ts` | Expert review pipeline: persistence, polling, webhook, localization |
 | `AccessControlModule` | `src/whatsapp/access-control/access-control.module.ts` | Whitelist/blacklist phone number gating |
 | `UserStatsModule` | `src/whatsapp/user-stats/user-stats.module.ts` | User engagement tracking and analytics |
-| `SarvamModule` | `src/whatsapp/sarvam-api/sarvam.module.ts` | Sarvam AI integration for STT and TTS |
+| `SarvamModule` | `src/whatsapp/sarvam-api/sarvam.module.ts` | Sarvam AI integration for STT |
+| `MurfModule` | `src/whatsapp/murf-api/murf.module.ts` | Murf Falcon 2 integration for TTS |
 | `WhatsappApiModule` | `src/whatsapp/whatsapp-api/whatsapp-api.module.ts` | Meta Graph API wrapper for outbound messaging |
 
 ---

@@ -42,7 +42,7 @@ Provide accessible, multilingual agricultural advisory services to Indian farmer
 |---|---|
 | **Multi-Modal Input** | Text messages, voice notes (STT via Sarvam AI), real-time VoIP calls |
 | **AI-Powered Responses** | LangGraph agent orchestration with MCP tool integration |
-| **Voice Output** | Text-to-Speech via Sarvam AI, delivered as WhatsApp voice notes |
+| **Voice Output** | Text-to-Speech via Murf Falcon 2, delivered as WhatsApp voice notes |
 | **Real-Time Calling** | WebRTC ↔ Gemini Live bridge for live voice conversations |
 | **Expert Review Pipeline** | Questions auto-uploaded to reviewer system; answers polled/webhoooked and localized |
 | **Multi-Lingual** | Auto-detects 10+ Indian languages; translates expert answers via Claude |
@@ -113,7 +113,7 @@ For complete architecture documentation including data flow diagrams and sequenc
 | **Cache** | Redis 7 (ioredis) — *referenced but not actively used* |
 | **AI Orchestration** | LangGraph SDK (`@langchain/langgraph-sdk`) via Aegra server |
 | **LLM Providers** | OpenAI-compatible APIs, Anthropic (Claude), Google Gemini |
-| **Voice AI** | Sarvam AI (STT/TTS), Gemini Live (real-time voice) |
+| **Voice AI** | Sarvam AI (STT), Murf Falcon 2 (TTS), Gemini Live (real-time voice) |
 | **WebRTC** | werift (Node.js WebRTC), @discordjs/opus |
 | **Protocol** | MCP (Model Context Protocol) for tool integration |
 | **Secrets** | Infisical (production), `.env` (development) |

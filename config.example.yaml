@@ -195,7 +195,7 @@ audio:
     sampleRate: 16000 # For Gemini Live input (PCM)
     defaultSampleRate: 24000 # Default output sample rate
 
-# Sarvam AI Configuration (STT/TTS)
+# Sarvam AI Configuration (STT)
 sarvam:
   baseUrl: 'https://api.sarvam.ai'
 
@@ -204,13 +204,6 @@ sarvam:
     model: 'saaras:v3'
     mode: 'codemix' # codemix or standard
     defaultLanguage: 'unknown' # Auto-detect
-
-  # Text-to-Speech Settings
-  tts:
-    model: 'bulbul:v3'
-    outputCodec: 'opus'
-    sampleRate: 16000
-    textChunkSize: 2500 # Max characters per TTS request
 
 # Gemini Live Configuration (for Voice Calls)
 gemini:

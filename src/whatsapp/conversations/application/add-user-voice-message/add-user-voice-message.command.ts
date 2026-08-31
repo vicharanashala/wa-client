@@ -5,12 +5,13 @@ import {
   SarvamService,
   AudioTooLongError,
 } from '../../../sarvam-api/sarvam.service';
+import { MurfService } from '../../../murf-api/murf.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
 import { ResponseProgressService } from '../../response-progress.service';
 
-/** Sarvam TTS chunk size — each chunk becomes one valid WhatsApp voice note. */
+/** TTS chunk size — each chunk becomes one valid WhatsApp voice note. */
 const TTS_CHARS_PER_VOICE_NOTE = 2500;
 /** Cap voice notes so very long answers still deliver quickly; full text always sent. */
 const MAX_VOICE_NOTES = 4;
@@ -30,6 +31,7 @@ export class AddUserVoiceMessageHandler implements ICommandHandler<AddUserVoiceM
   constructor(
     private readonly langGraph: LangGraphClientService,
     private readonly sarvamService: SarvamService,
+    private readonly murfService: MurfService,
     private readonly whatsappService: WhatsappService,
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappUserRepo: WhatsappUserRepository,
@@ -199,7 +201,7 @@ export class AddUserVoiceMessageHandler implements ICommandHandler<AddUserVoiceM
     if (!text.trim()) return;
 
     try {
-      const audioBuffers = await this.sarvamService.synthesizeChunks(
+      const audioBuffers = await this.murfService.synthesizeChunks(
         text,
         languageCode,
       );

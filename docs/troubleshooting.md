@@ -217,8 +217,8 @@ node-pre-gyp ERR! build error
 **Root Cause**: TTS synthesis produced empty or invalid audio buffers.
 
 **Resolution**:
-1. Check logs for `Sarvam TTS failed` or `TTS returned no audio`
-2. Verify the `targetLanguage` code is supported (check `mapToSarvamLanguage()` mapping)
+1. Check logs for `Murf Falcon TTS failed` or `Murf Falcon TTS returned no audio`
+2. Verify the selected Murf voice supports the requested locale
 3. The user always receives a text reply as fallback, even if voice fails
 
 ---
