@@ -52,12 +52,13 @@ COPY --from=builder /app/config.yaml ./
 # Verify dist was copied correctly
 RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found after COPY!" && exit 1)
 
-# Copy package files and install production dependencies
+# Copy package files
 COPY package*.json ./
 
-# Use npm ci with --omit=dev to get production-only dependencies
-# Note: We don't copy node_modules from builder to avoid dev dependencies
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force && rm -rf /root/.npm
+# Copy node_modules from builder (includes all native bindings for Linux)
+# This is required because @discordjs/opus has native bindings that need
+# to be built for the target platform
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy s6 service scripts
 COPY s6-scripts/tailscale-run /etc/services.d/tailscale/run
