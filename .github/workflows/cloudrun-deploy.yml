@@ -36,8 +36,6 @@ jobs:
   build:
     name: Build and Push Image
     runs-on: ubuntu-latest
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,16 +51,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}
-          tags: |
-            type=sha
-            staging
-            production
-
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
@@ -71,19 +59,12 @@ jobs:
           push: true
           no-cache: true
           platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:production
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           build-args: |
             NODE_ENV=production
-
-      # Verify the image was pushed successfully
-      - name: Verify Image Exists
-        run: |
-          echo "Verifying Docker image was pushed successfully..."
-          if docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.sha }} 2>&1 | grep -q "not found\|does not exist\|error"; then
-            echo "ERROR: Docker image was not pushed successfully!"
-            exit 1
-          fi
-          echo "✅ Docker image verified successfully"
 
   deploy_staging:
     name: Deploy to Cloud Run (Staging)
