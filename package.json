@@ -12,7 +12,7 @@
     "start": "nest start",
     "start:dev": "dotenv -e .env -- nest start --watch",
     "start:debug": "dotenv -e .env -- nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/main.js",
     "docker:dev": "docker-compose up -d mongodb redis && npm run start:dev",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",

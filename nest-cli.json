@@ -5,6 +5,8 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": ["**/*.yaml", "**/*.json"],
-    "watchAssets": true
+    "watchAssets": true,
+    "webpack": false,
+    "tsConfigPath": "tsconfig.build.json"
   }
 }

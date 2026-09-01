@@ -15,4 +15,4 @@ done
 echo "=== TAILSCALE IS ONLINE, STARTING NODE ==="
 
 cd /app
-exec node dist/main
+exec node dist/main.js

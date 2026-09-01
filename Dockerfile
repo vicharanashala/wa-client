@@ -8,7 +8,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including dev for build)
 RUN npm ci
 
 # Copy source code
@@ -16,6 +16,9 @@ COPY . .
 
 # Build the application
 RUN npm run build
+
+# Verify build output exists
+RUN ls -la dist/ && test -f dist/main.js || (echo "ERROR: dist/main.js not found after build!" && exit 1)
 
 # ============================================
 # Stage 2: Production
@@ -41,15 +44,20 @@ RUN curl -sL https://github.com/just-containers/s6-overlay/releases/download/v${
 # Create s6 service directories
 RUN mkdir -p /etc/services.d/tailscale /etc/services.d/node
 
+# Copy built artifacts from builder FIRST (before any other operations)
+# This ensures dist is available for verification
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/config.yaml ./
+
+# Verify dist was copied correctly
+RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found after COPY!" && exit 1)
+
 # Copy package files and install production dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force && rm -rf /root/.npm
 
-# Copy built artifacts from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/tsconfig.json ./
-COPY --from=builder /app/config.yaml ./
+# Use npm ci with --omit=dev to get production-only dependencies
+# Note: We don't copy node_modules from builder to avoid dev dependencies
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force && rm -rf /root/.npm
 
 # Copy s6 service scripts
 COPY s6-scripts/tailscale-run /etc/services.d/tailscale/run
