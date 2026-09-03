@@ -1,6 +1,6 @@
 # AjraSakha — WhatsApp AI Agricultural Assistant
 
-> An AI-powered WhatsApp bot built for Indian farmers, delivering expert agricultural advice through text, voice, and real-time phone calls — backed by human reviewer verification, multi-lingual localization, and a rich ecosystem of domain-specific MCP tool servers.
+> A WhatsApp bot for Indian farmers that delivers agricultural assistance through text, voice notes, location sharing, and expert-review integration.
 
 ---
 
@@ -23,16 +23,16 @@
 
 ## Overview
 
-**AjraSakha** (`wa-client`) is a production-grade WhatsApp Business API integration built on [NestJS](https://nestjs.com/) using CQRS architecture. It serves as the communication layer of the **Annam.AI Foundation** platform — connecting Indian farmers with AI-driven agricultural intelligence through WhatsApp text, voice notes, and real-time VoIP calls.
+**AjraSakha** (`wa-client`) is a [NestJS](https://nestjs.com/) WhatsApp Business API integration that uses CQRS to handle text, voice-note, and location messages. It connects each WhatsApp user to the configured LangGraph service and sends replies through the WhatsApp Business API.
 
 ### Business Objective
 
-Provide accessible, multilingual agricultural advisory services to Indian farmers who may be illiterate or semi-literate, by:
+Make agricultural assistance accessible to farmers by:
 
-1. **Answering farming questions** via text or voice in the farmer's local language
-2. **Routing unanswered questions** to human expert reviewers for quality assurance
-3. **Delivering expert-reviewed answers** back to farmers, automatically localized
-4. **Providing real-time voice consultations** via WhatsApp VoIP calls powered by Gemini Live
+1. **Answering farming questions** received as text messages or voice notes
+2. **Passing conversation and location context** to the configured LangGraph assistant
+3. **Routing selected questions** to the expert-review workflow
+4. **Delivering answers** back to farmers through WhatsApp text and voice notes
 
 ---
 
@@ -40,16 +40,16 @@ Provide accessible, multilingual agricultural advisory services to Indian farmer
 
 | Category | Capability |
 |---|---|
-| **Multi-Modal Input** | Text messages, voice notes (STT via Sarvam AI), real-time VoIP calls |
-| **AI-Powered Responses** | LangGraph agent orchestration with MCP tool integration |
-| **Voice Output** | Text-to-Speech via Sarvam AI, delivered as WhatsApp voice notes |
-| **Real-Time Calling** | WebRTC ↔ Gemini Live bridge for live voice conversations |
-| **Expert Review Pipeline** | Questions auto-uploaded to reviewer system; answers polled/webhoooked and localized |
-| **Multi-Lingual** | Auto-detects 10+ Indian languages; translates expert answers via Claude |
-| **Access Control** | Whitelist (dev) / Blacklist (prod) system backed by MongoDB |
-| **User Analytics** | Unique user counts, message history, engagement tracking |
-| **CQRS Architecture** | Clean command/query separation for maintainable business logic |
-| **Production Hardened** | Webhook signature verification, thread repair, graceful error handling |
+| **Multi-Modal Input** | Text messages, voice notes, and location messages |
+| **AI-Powered Responses** | LangGraph conversation orchestration with configured MCP tools |
+| **Voice Processing** | Sarvam AI speech-to-text for voice notes and text-to-speech for replies |
+| **Progress Updates** | Configurable WhatsApp messages while a text or voice response is being prepared |
+| **Expert Review Pipeline** | Reviewer polling, reviewer webhooks, and manual outbound reviewer messages |
+| **Location Context** | Shared locations are written to the associated LangGraph conversation state |
+| **Access Control** | MongoDB-backed whitelist and blacklist rules |
+| **User Analytics** | User records, unique-user counts, and authenticated user-list endpoints |
+| **CQRS Architecture** | Dedicated command handlers for text, voice, and location flows |
+| **Webhook Security** | Meta subscription verification and HMAC-SHA256 signature validation |
 
 ---
 
@@ -57,14 +57,14 @@ Provide accessible, multilingual agricultural advisory services to Indian farmer
 
 ```
 ┌──────────────────────┐
-│  Meta WhatsApp Cloud  │
-│    Business API       │
+│  Meta WhatsApp Cloud │
+│    Business API      │
 └──────────┬───────────┘
            │ Webhook (POST /whatsapp/webhook)
            ▼
 ┌──────────────────────┐     ┌─────────────────┐
-│  WhatsApp Controller │────▶│   CQRS Command  │
-│  (Signature verify)  │     │   Bus (NestJS)   │
+│  WhatsApp Controller │────▶│ CQRS Command Bus │
+│  (Signature verify)  │     │    (NestJS)      │
 └──────────────────────┘     └────────┬────────┘
                                       │
            ┌──────────────────────────┼──────────────────────────┐
@@ -83,22 +83,22 @@ Provide accessible, multilingual agricultural advisory services to Indian farmer
                      ▼                                     ▼
           ┌─────────────────────┐              ┌────────────────────┐
           │  LangGraph Client   │              │  LangGraph Client  │
-          │  (Aegra Server)     │              │  (Location Update) │
+          │ Conversation thread │              │ (Location Update)  │
           │  ┌───────────────┐  │              └────────────────────┘
-          │  │ MCP Tool      │  │
-          │  │ Servers (7+)  │  │
+          │  │ Configured    │  │
+          │  │ MCP Tools     │  │
           │  └───────────────┘  │
           └──────────┬──────────┘
                      │
         ┌────────────┼────────────┐
         ▼            ▼            ▼
 ┌──────────┐  ┌──────────┐  ┌──────────────┐
-│ MongoDB  │  │ Reviewer  │  │ WhatsApp API │
-│ (State)  │  │ System    │  │ (Outbound)   │
+│ MongoDB  │  │ Reviewer │  │ WhatsApp API │
+│ (State)  │  │ System   │  │ (Outbound)   │
 └──────────┘  └──────────┘  └──────────────┘
 ```
 
-For complete architecture documentation including data flow diagrams and sequence diagrams, see [docs/architecture.md](docs/architecture.md).
+For complete architecture documentation including data-flow diagrams and sequence diagrams, see [docs/architecture.md](docs/architecture.md).
 
 ---
 
@@ -106,19 +106,16 @@ For complete architecture documentation including data flow diagrams and sequenc
 
 | Layer | Technology |
 |---|---|
-| **Runtime** | Node.js 20 (Debian Bookworm Slim) |
+| **Runtime** | Node.js 20 on Alpine Linux in the production container |
 | **Framework** | NestJS 11 with CQRS (`@nestjs/cqrs`) |
 | **Language** | TypeScript 5.7 |
-| **Database** | MongoDB 7 (Mongoose 9) |
-| **Cache** | Redis 7 (ioredis) — *referenced but not actively used* |
-| **AI Orchestration** | LangGraph SDK (`@langchain/langgraph-sdk`) via Aegra server |
-| **LLM Providers** | OpenAI-compatible APIs, Anthropic (Claude), Google Gemini |
-| **Voice AI** | Sarvam AI (STT/TTS), Gemini Live (real-time voice) |
-| **WebRTC** | werift (Node.js WebRTC), @discordjs/opus |
-| **Protocol** | MCP (Model Context Protocol) for tool integration |
-| **Secrets** | Infisical (production), `.env` (development) |
-| **Container** | Docker (single-stage), docker-compose |
-| **CI/CD** | GitHub Actions → Docker Hub → GCP VM via Tailscale |
+| **Database** | MongoDB with Mongoose 9 |
+| **Local Infrastructure** | Docker Compose with MongoDB 7 and Redis 7 |
+| **AI Orchestration** | LangGraph SDK with a configured LangGraph service |
+| **Voice AI** | Sarvam AI (speech-to-text and text-to-speech) |
+| **Protocol** | Model Context Protocol (MCP) adapters for configured tools |
+| **Container** | Multi-stage Docker build with s6-overlay and Tailscale userspace networking |
+| **CI/CD** | GitHub Actions → Docker Hub → Google Cloud Run |
 
 ---
 
@@ -126,11 +123,11 @@ For complete architecture documentation including data flow diagrams and sequenc
 
 ### Prerequisites
 
-- **Node.js** ≥ 20.x
-- **MongoDB** ≥ 7.x (local or cloud — e.g., MongoDB Atlas)
-- **Redis** ≥ 7.x *(optional — not actively used)*
-- **Meta WhatsApp Business API** account with verified phone number
-- **API Keys**: Sarvam AI, Gemini, LLM provider, LangGraph/Aegra server
+- **Node.js** 20.x
+- **MongoDB** (local or managed)
+- **Docker and Docker Compose** for the included local services
+- **Meta WhatsApp Business API** credentials for a verified phone number
+- Credentials for the LangGraph service, LLM provider, Sarvam AI, and reviewer system
 
 ### 1. Clone & Install
 
@@ -144,36 +141,39 @@ npm install
 
 ```bash
 cp .env.example .env
-cp config.example.yaml config.yaml
 ```
 
-Edit `.env` with your secrets (API keys, tokens, MongoDB URI).
-Edit `config.yaml` for non-secret configuration (system prompts, MCP servers, feature flags).
+Edit `.env` with the required credentials and connection values. Review `config.yaml` for version-controlled application settings; `config.example.yaml` is a reference template.
 
-See [docs/setup.md](docs/setup.md) for detailed configuration guide.
+See [docs/setup.md](docs/setup.md), [CONFIG_README.md](CONFIG_README.md), and [ENV_VARIABLES.md](ENV_VARIABLES.md) for configuration details.
 
 ### 3. Start Infrastructure
 
 ```bash
-# Option A: Docker (MongoDB + Redis)
+# Start MongoDB and Redis, then run the application with hot reload
 npm run docker:dev
 
-# Option B: Use managed cloud services
-# Set MONGO_URI in .env to your Atlas connection string
+# Or, use an existing MongoDB instance and run the application locally
 npm run start:dev
+```
+
+To start the full Docker Compose stack, including the application, run:
+
+```bash
+npm run docker:up
 ```
 
 ### 4. Configure WhatsApp Webhook
 
-1. Go to [Meta Developer Dashboard](https://developers.facebook.com/)
-2. Set webhook URL: `https://yourdomain.com/whatsapp/webhook`
-3. Set verify token to match `WHATSAPP_WEBHOOK_VERIFY_TOKEN` in `.env`
-4. Subscribe to `messages` and `calls` fields
+1. Go to the [Meta Developer Dashboard](https://developers.facebook.com/)
+2. Set the webhook URL to `https://<your-domain>/whatsapp/webhook`
+3. Set the verify token to match `WHATSAPP_WEBHOOK_VERIFY_TOKEN` in `.env`
+4. Subscribe to the `messages` field
 
 ### 5. Run
 
 ```bash
-# Development (with hot-reload)
+# Development (with hot reload)
 npm run start:dev
 
 # Production
@@ -188,66 +188,55 @@ npm run start:prod
 ```
 wa-client/
 ├── src/
-│   ├── main.ts                          # Application bootstrap
-│   ├── app.module.ts                    # Root module (Config, MongoDB, WhatsApp)
-│   ├── config/                          # Configuration subsystem
-│   │   ├── configuration.ts             # YAML loader with env overrides
-│   │   ├── config.schema.ts             # class-validator schemas
-│   │   ├── validate-config.ts           # Validation logic
-│   │   ├── app-config.service.ts        # Typed config accessor
+│   ├── main.ts                          # Application bootstrap and global validation
+│   ├── app.module.ts                    # Root module (configuration, MongoDB, WhatsApp)
+│   ├── config/                          # YAML configuration and validation
+│   │   ├── configuration.ts             # YAML loader with environment overrides
+│   │   ├── config.schema.ts             # Validation schemas
+│   │   ├── validate-config.ts           # Configuration validation
+│   │   ├── app-config.service.ts        # Typed configuration accessor
 │   │   └── index.ts                     # Barrel exports
 │   └── whatsapp/                        # Core WhatsApp module
 │       ├── whatsapp.module.ts           # Module registration
-│       ├── whatsapp.controller.ts       # HTTP endpoints (webhook, API)
-│       ├── manual-outbound-message.ts   # Expert message formatting
+│       ├── whatsapp.controller.ts       # Webhook and internal HTTP endpoints
+│       ├── manual-outbound-message.ts   # Reviewer message formatting
 │       ├── whatsapp-api/                # Meta Graph API integration
-│       │   ├── whatsapp.service.ts      # Send text/voice/location/media
+│       │   ├── whatsapp.service.ts      # Send text, voice, location, and media
 │       │   ├── whatsapp.config.ts       # API URL construction
 │       │   └── whatsapp-api.module.ts   # Module
 │       ├── conversations/               # CQRS conversation pipeline
 │       │   ├── conversation.module.ts   # Module registration
-│       │   ├── langgraph-client.service.ts  # LangGraph SDK wrapper
+│       │   ├── langgraph-client.service.ts # LangGraph SDK wrapper
+│       │   ├── response-progress.service.ts # Progress-message lifecycle
 │       │   ├── langgraph.module.ts      # Module
 │       │   └── application/             # Command handlers
 │       │       ├── add-user-text-message/
 │       │       ├── add-user-voice-message/
 │       │       └── set-user-location/
-│       ├── calling/                     # Real-time VoIP module
-│       │   ├── calling.service.ts       # WebRTC lifecycle & RTP pacing
-│       │   ├── gemini-live.service.ts   # Gemini Live WebSocket bridge
-│       │   ├── audio-codec.service.ts   # Opus ↔ PCM transcoding
-│       │   ├── mcp-tools.service.ts     # MCP tool discovery for voice
-│       │   └── calling.module.ts        # Module
-│       ├── pending-questions/           # Expert review pipeline
-│       │   ├── reviewer-polling.service.ts      # Cron polling + webhook handler
-│       │   ├── reviewer-answer-localization.service.ts # Multi-lingual translation
+│       ├── pending-questions/           # Expert-review pipeline
+│       │   ├── reviewer-polling.service.ts      # Polling and webhook answer handling
+│       │   ├── reviewer-answer-localization.service.ts # Reviewer answer localization
 │       │   ├── pending-question.schema.ts       # Mongoose schema
 │       │   ├── pending-question.repository.ts   # Abstract repository
 │       │   ├── mongo-pending-question.repository.ts # MongoDB implementation
-│       │   └── pending-questions.module.ts       # Module
-│       ├── access-control/             # Whitelist/Blacklist system
-│       │   ├── access-control.service.ts
-│       │   ├── whitelist.schema.ts
-│       │   ├── blacklist.schema.ts
-│       │   └── access-control.module.ts
-│       ├── sarvam-api/                 # Speech-to-Text & Text-to-Speech
-│       │   ├── sarvam.service.ts
-│       │   └── sarvam.module.ts
-│       └── user-stats/                 # User analytics
-│           ├── whatsapp-user.schema.ts
-│           ├── whatsapp-user.repository.ts
-│           ├── mongo-whatsapp-user.repository.ts
-│           └── user-stats.module.ts
-├── test/                               # E2E tests
-├── config.yaml                         # Non-secret configuration
-├── config.example.yaml                 # Example config (version-controlled)
-├── .env                                # Secrets (git-ignored)
-├── .env.example                        # Secret template
-├── Dockerfile                          # Production container
-├── docker-compose.yml                  # Local dev infrastructure
-├── .github/workflows/                  # CI/CD
-│   └── dockerhub-build.yml             # Build → Deploy pipeline
-└── package.json                        # Dependencies & scripts
+│       │   └── pending-questions.module.ts      # Module
+│       ├── access-control/              # Whitelist and blacklist rules
+│       ├── sarvam-api/                  # Speech-to-text and text-to-speech
+│       ├── script-detection/            # Message-script detection
+│       ├── user-details/                # User-detail persistence
+│       └── user-stats/                  # User analytics and records
+├── test/                                # End-to-end tests
+├── docs/                                # Detailed technical documentation
+├── s6-scripts/                          # Tailscale and Node container services
+├── config.yaml                          # Application configuration
+├── config.example.yaml                  # Example configuration
+├── .env.example                         # Environment variable template
+├── Dockerfile                           # Production container image
+├── docker-compose.yml                   # Local application and infrastructure services
+├── .github/workflows/
+│   └── cloudrun-deploy.yml              # Staging and production deployment
+├── TAILSCALE.md                         # Runtime networking guide
+└── package.json                         # Dependencies and scripts
 ```
 
 ---
@@ -256,14 +245,13 @@ wa-client/
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `GET` | `/whatsapp/webhook` | Verify Token | WhatsApp webhook subscription verification |
-| `POST` | `/whatsapp/webhook` | HMAC-SHA256 | Incoming messages, statuses, and call events |
-| `GET` | `/whatsapp/health` | None | Health check |
-| `POST` | `/whatsapp/send-message` | `x-internal-api-key` | Send outbound message (expert/admin) |
-| `POST` | `/whatsapp/reviewer-webhook` | `x-internal-api-key` | Receive real-time expert answers |
+| `GET` | `/whatsapp/webhook` | Verify token | WhatsApp webhook subscription verification |
+| `POST` | `/whatsapp/webhook` | HMAC-SHA256 | Incoming message and status events |
+| `POST` | `/whatsapp/send-message` | `x-internal-api-key` | Send an outbound reviewer or administrator message |
+| `POST` | `/whatsapp/reviewer-webhook` | `x-internal-api-key` | Receive reviewer-system answers |
 | `GET` | `/whatsapp/test-poll` | `x-internal-api-key` | Manually trigger reviewer polling |
-| `GET` | `/whatsapp/users/count` | `x-internal-api-key` | Unique user count |
-| `GET` | `/whatsapp/users` | `x-internal-api-key` | Paginated user list |
+| `GET` | `/whatsapp/users/count` | `x-internal-api-key` | Return the unique-user count |
+| `GET` | `/whatsapp/users` | `x-internal-api-key` | List tracked users; supports pagination parameters |
 
 Full API documentation: [docs/api-reference.md](docs/api-reference.md)
 
@@ -275,33 +263,31 @@ The application uses a **dual-layer configuration** system:
 
 | Layer | File | Purpose |
 |---|---|---|
-| **Secrets** | `.env` | API keys, tokens, database URIs — never committed |
-| **Config** | `config.yaml` | System prompts, MCP servers, feature flags, thresholds — safe to commit |
+| **Environment** | `.env` | Credentials, service URLs, database connections, and deployment-specific values |
+| **Application Config** | `config.yaml` | Application settings, MCP servers, feature flags, audio settings, and logging |
 
-Environment variables in `.env` can override `config.yaml` values at runtime.
-
-Full configuration reference: [docs/setup.md](docs/setup.md)
+Environment variables are validated at startup and can override supported `config.yaml` values. Start with `.env.example`, then consult [CONFIG_README.md](CONFIG_README.md) and [ENV_VARIABLES.md](ENV_VARIABLES.md).
 
 ---
 
 ## Deployment
 
 Production deployment uses:
-- **Docker** containers on a GCP VM
-- **Infisical** for secrets management in production
-- **Tailscale** mesh VPN for secure CI/CD access
-- **GitHub Actions** for automated build → push → deploy pipeline
+
+- **Docker** images published to Docker Hub
+- **Google Cloud Run** for staging and production services
+- **Tailscale** userspace networking for configured LangGraph traffic
+- **GitHub Actions** in [cloudrun-deploy.yml](.github/workflows/cloudrun-deploy.yml) for build and deployment
 
 ```bash
-# Manual Docker deployment
-docker build -t wa-bot .
-docker run -d --env-file .env -p 3000:3000 wa-bot
+# Build the production image
+docker build -t wa-client .
 
-# Via docker-compose (includes MongoDB + Redis)
-docker-compose up -d
+# Start the local Docker Compose stack
+npm run docker:up
 ```
 
-Full deployment guide: [docs/deployment.md](docs/deployment.md)
+For deployment requirements and operational guidance, see [docs/deployment.md](docs/deployment.md) and [TAILSCALE.md](TAILSCALE.md).
 
 ---
 
@@ -309,13 +295,16 @@ Full deployment guide: [docs/deployment.md](docs/deployment.md)
 
 | Document | Description |
 |---|---|
-| [Architecture](docs/architecture.md) | System design, data flows, sequence diagrams |
-| [Setup Guide](docs/setup.md) | Prerequisites, environment variables, local development |
-| [API Reference](docs/api-reference.md) | All endpoints, payloads, authentication |
-| [Database](docs/database.md) | MongoDB collections, schemas, indexes |
-| [Deployment](docs/deployment.md) | CI/CD, Docker, infrastructure, rollback |
-| [Security](docs/security.md) | Auth, secrets, webhook verification |
-| [Troubleshooting](docs/troubleshooting.md) | Common errors and resolution steps |
+| [Architecture](docs/architecture.md) | System design, data flows, and sequence diagrams |
+| [Setup Guide](docs/setup.md) | Prerequisites, environment variables, and local development |
+| [API Reference](docs/api-reference.md) | Endpoints, payloads, authentication, and webhook events |
+| [Database](docs/database.md) | MongoDB collections, schemas, and indexes |
+| [Deployment](docs/deployment.md) | Docker, CI/CD, infrastructure, and operations guidance |
+| [Security](docs/security.md) | Authentication, secrets, and webhook verification |
+| [Troubleshooting](docs/troubleshooting.md) | Common setup, webhook, voice, and deployment issues |
+| [Configuration Guide](CONFIG_README.md) | YAML configuration and configuration access patterns |
+| [Environment Variables](ENV_VARIABLES.md) | Required and optional environment settings |
+| [Tailscale Integration](TAILSCALE.md) | Container networking and Tailscale setup |
 
 ---
 
@@ -324,10 +313,10 @@ Full deployment guide: [docs/deployment.md](docs/deployment.md)
 1. Create a feature branch from `main`
 2. Follow the existing NestJS module pattern (module → service → repository)
 3. Use the CQRS pattern for new message-handling flows
-4. Add entries to `config.yaml` for new configurable values
-5. Keep secrets in `.env` only
-6. Run `npm run lint` and `npm run format` before committing
-7. See [docs/architecture.md](docs/architecture.md) for detailed developer guidance
+4. Add entries to `config.yaml` and its validation schema for new configurable values
+5. Keep credentials and other sensitive values out of version control
+6. Run `npm run lint` and relevant tests before committing
+7. See [docs/architecture.md](docs/architecture.md) for developer guidance
 
 ---
 
