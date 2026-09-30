@@ -31,98 +31,85 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
     const { phoneNumber, content, messageId } = command;
-    const progress = await this.responseProgressService.start({
-      phoneNumber,
-      messageId,
-      sourceText: content,
-    });
 
-    try {
-      this.logger.debug(
-        `[${phoneNumber}] User text: "${content.slice(0, 60)}"`,
-      );
+    this.logger.debug(
+      `[${phoneNumber}] User text: "${content.slice(0, 60)}"`,
+    );
 
-      // ── FFV Check: Check if this question matches a predefined FFV Q&A ──
-      if (this.ffvService.isEnabled()) {
-        const normalizedContent = content.toLowerCase().trim();
+    // ── FFV Check FIRST: Skip progress messages for FFV responses ──
+    if (this.ffvService.isEnabled()) {
+      const normalizedContent = content.toLowerCase().trim();
+      
+      // Handle "more" keyword OR button title text to show full answer
+      if (
+        normalizedContent === 'more' || 
+        normalizedContent === 'show more' || 
+        normalizedContent === 'full answer' || 
+        normalizedContent === 'more details' || 
+        normalizedContent === 'पूरा उत्तर' || 
+        normalizedContent === 'ज्यादा जानकारी' ||
+        normalizedContent.includes('get full info') ||
+        content.includes('🔎 Get Full Info')
+      ) {
+        this.logger.log(`[${phoneNumber}] FFV show more request`);
         
-        // Handle "more" keyword OR button title text to show full answer
-        if (
-          normalizedContent === 'more' || 
-          normalizedContent === 'show more' || 
-          normalizedContent === 'full answer' || 
-          normalizedContent === 'more details' || 
-          normalizedContent === 'पूरा उत्तर' || 
-          normalizedContent === 'ज्यादा जानकारी' ||
-          normalizedContent.includes('get full info') ||
-          content.includes('🔎 Get Full Info')
-        ) {
-          this.logger.log(`[${phoneNumber}] FFV show more request`);
-          
-          const lastQuestionId = this.ffvService.getLastQuestionId(phoneNumber);
-          if (lastQuestionId) {
-            const fullAnswer = this.ffvService.getByQuestionId(lastQuestionId);
-            if (fullAnswer.found && fullAnswer.bigAnswer) {
-              await this.whatsappService.sendTextMessage(
-                phoneNumber,
-                `📖 *Full Detailed Answer:*\n\n${fullAnswer.bigAnswer}`,
-                messageId,
-              );
-              await this.whatsappUserRepo.recordMessage(phoneNumber, content);
-              await progress.stop();
-              return;
-            }
-          }
-          // Fallback to first question if no last question found
-          const firstQuestion = this.ffvService.getByQuestionId('ffv_q_1');
-          if (firstQuestion.found && firstQuestion.bigAnswer) {
+        const lastQuestionId = this.ffvService.getLastQuestionId(phoneNumber);
+        if (lastQuestionId) {
+          const fullAnswer = this.ffvService.getByQuestionId(lastQuestionId);
+          if (fullAnswer.found && fullAnswer.bigAnswer) {
             await this.whatsappService.sendTextMessage(
               phoneNumber,
-              `📖 *Full Detailed Answer:*\n\n${firstQuestion.bigAnswer}`,
+              `📖 *Full Detailed Answer:*\n\n${fullAnswer.bigAnswer}`,
               messageId,
             );
             await this.whatsappUserRepo.recordMessage(phoneNumber, content);
-            await progress.stop();
             return;
           }
         }
-
-        const ffvResult = this.ffvService.findMatchingQA(content);
-        
-        if (ffvResult.found && ffvResult.shortAnswer && ffvResult.questionId) {
-          this.logger.log(
-            `[${phoneNumber}] FFV match found for: "${content.slice(0, 60)}"`,
-          );
-
-          // Store question ID for "more" flow
-          this.ffvService.setLastQuestionId(phoneNumber, ffvResult.questionId);
-
-          // Send short answer with WhatsApp Interactive Button
-          await this.whatsappService.sendInteractiveButtonMessage(
+        // Fallback to first question if no last question found
+        const firstQuestion = this.ffvService.getByQuestionId('ffv_q_1');
+        if (firstQuestion.found && firstQuestion.bigAnswer) {
+          await this.whatsappService.sendTextMessage(
             phoneNumber,
-            ffvResult.shortAnswer,
-            [{ id: `ffv_show_more_${ffvResult.questionId}`, title: '🔎 Get Full Info' }],
+            `📖 *Full Detailed Answer:*\n\n${firstQuestion.bigAnswer}`,
             messageId,
           );
-
           await this.whatsappUserRepo.recordMessage(phoneNumber, content);
-          await progress.stop();
           return;
         }
       }
 
-      // ── No FFV match - Send friendly message with available questions ──
-      const allQuestions = this.ffvService.getAllQuestions().join('\n');
-      await this.whatsappService.sendTextMessage(
-        phoneNumber,
-        `🌾 *This is a DEMO version.*\n\n*Available Questions:*\n${allQuestions}\n\nPlease copy-paste any question above!`,
-        messageId,
-      );
-      await this.whatsappUserRepo.recordMessage(phoneNumber, content);
-      await progress.stop();
-      return;
-    } finally {
-      await progress.stop();
+      const ffvResult = this.ffvService.findMatchingQA(content);
+      
+      if (ffvResult.found && ffvResult.shortAnswer && ffvResult.questionId) {
+        this.logger.log(
+          `[${phoneNumber}] FFV match found for: "${content.slice(0, 60)}"`,
+        );
+
+        // Store question ID for "more" flow
+        this.ffvService.setLastQuestionId(phoneNumber, ffvResult.questionId);
+
+        // Send short answer with WhatsApp Interactive Button (no progress message)
+        await this.whatsappService.sendInteractiveButtonMessage(
+          phoneNumber,
+          ffvResult.shortAnswer,
+          [{ id: `ffv_show_more_${ffvResult.questionId}`, title: '🔎 Get Full Info' }],
+          messageId,
+        );
+
+        await this.whatsappUserRepo.recordMessage(phoneNumber, content);
+        return;
+      }
     }
+
+    // ── No FFV match - Send friendly message with available questions ──
+    const allQuestions = this.ffvService.getAllQuestions().join('\n');
+    await this.whatsappService.sendTextMessage(
+      phoneNumber,
+      `🌾 *This is a DEMO version.*\n\n*Available Questions:*\n${allQuestions}\n\nPlease copy-paste any question above!`,
+      messageId,
+    );
+    await this.whatsappUserRepo.recordMessage(phoneNumber, content);
+    return;
   }
 }
