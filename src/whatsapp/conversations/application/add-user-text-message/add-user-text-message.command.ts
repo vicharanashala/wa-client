@@ -88,10 +88,11 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
           // Store question ID for "more" flow
           this.ffvService.setLastQuestionId(phoneNumber, ffvResult.questionId);
 
-          // Send short answer as text with Show More instruction
-          await this.whatsappService.sendTextMessage(
+          // Send short answer with WhatsApp Interactive Button
+          await this.whatsappService.sendInteractiveButtonMessage(
             phoneNumber,
-            `${ffvResult.shortAnswer}\n\n🔽 Reply "more" for full detailed answer.`,
+            ffvResult.shortAnswer,
+            [{ id: `ffv_show_more_${ffvResult.questionId}`, title: '📖 Show Full Details' }],
             messageId,
           );
 
