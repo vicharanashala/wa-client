@@ -6,6 +6,7 @@ import { ResponseProgressService } from '../../response-progress.service';
 import { WhatsappService } from '../../../whatsapp-api/whatsapp.service';
 import { PendingQuestionRepository } from '../../../pending-questions/pending-question.repository';
 import { WhatsappUserRepository } from '../../../user-stats/whatsapp-user.repository';
+import { FFVService } from '../../../farmer-friendly/ffv-service';
 
 export class AddUserTextMessageCommand {
   constructor(
@@ -25,6 +26,7 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
     private readonly pendingQuestionRepo: PendingQuestionRepository,
     private readonly whatsappUserRepo: WhatsappUserRepository,
     private readonly responseProgressService: ResponseProgressService,
+    private readonly ffvService: FFVService,
   ) {}
 
   async execute(command: AddUserTextMessageCommand): Promise<void> {
@@ -40,48 +42,74 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
         `[${phoneNumber}] User text: "${content.slice(0, 60)}"`,
       );
 
-      // Ensure daily thread handover is completed (IST day boundary).
-      await this.langGraph.prepareDailyThread(phoneNumber);
+      // ── FFV Check: Check if this question matches a predefined FFV Q&A ──
+      if (this.ffvService.isEnabled()) {
+        const normalizedContent = content.toLowerCase().trim();
+        
+        // Handle "more" keyword to show full answer
+        if (normalizedContent === 'more' || normalizedContent === 'show more' || normalizedContent === 'full answer' || normalizedContent === 'more details' || normalizedContent === 'पूरा उत्तर' || normalizedContent === 'ज्यादा जानकारी') {
+          this.logger.log(`[${phoneNumber}] FFV show more request`);
+          
+          const lastQuestionId = this.ffvService.getLastQuestionId(phoneNumber);
+          if (lastQuestionId) {
+            const fullAnswer = this.ffvService.getByQuestionId(lastQuestionId);
+            if (fullAnswer.found && fullAnswer.bigAnswer) {
+              await this.whatsappService.sendTextMessage(
+                phoneNumber,
+                `📖 *Full Detailed Answer:*\n\n${fullAnswer.bigAnswer}`,
+                messageId,
+              );
+              await this.whatsappUserRepo.recordMessage(phoneNumber, content);
+              await progress.stop();
+              return;
+            }
+          }
+          // Fallback to first question if no last question found
+          const firstQuestion = this.ffvService.getByQuestionId('ffv_q_1');
+          if (firstQuestion.found && firstQuestion.bigAnswer) {
+            await this.whatsappService.sendTextMessage(
+              phoneNumber,
+              `📖 *Full Detailed Answer:*\n\n${firstQuestion.bigAnswer}`,
+              messageId,
+            );
+            await this.whatsappUserRepo.recordMessage(phoneNumber, content);
+            await progress.stop();
+            return;
+          }
+        }
 
-      // Show typing indicator (non-fatal)
-      const typingResult = await Result.safe(
-        this.whatsappService.showTyping(messageId),
-      );
-      if (typingResult.isErr()) {
-        this.logger.warn(
-          `[${phoneNumber}] showTyping failed: ${typingResult.unwrapErr().message}`,
-        );
+        const ffvResult = this.ffvService.findMatchingQA(content);
+        
+        if (ffvResult.found && ffvResult.shortAnswer && ffvResult.questionId) {
+          this.logger.log(
+            `[${phoneNumber}] FFV match found for: "${content.slice(0, 60)}"`,
+          );
+
+          // Store question ID for "more" flow
+          this.ffvService.setLastQuestionId(phoneNumber, ffvResult.questionId);
+
+          // Send short answer as text with Show More instruction
+          await this.whatsappService.sendTextMessage(
+            phoneNumber,
+            `${ffvResult.shortAnswer}\n\n🔽 Reply "more" for full detailed answer.`,
+            messageId,
+          );
+
+          await this.whatsappUserRepo.recordMessage(phoneNumber, content);
+          await progress.stop();
+          return;
+        }
       }
 
-      // Send message to LangGraph; thread is created/reused automatically.
-      const { reply, reviewId } = await this.langGraph.sendMessage(
+      // ── No FFV match - Send friendly message ──
+      await this.whatsappService.sendTextMessage(
         phoneNumber,
-        content,
+        '🙏 Sorry, I don\'t have information on this topic yet. Please ask me about pea crop diseases, pests, or management practices.',
+        messageId,
       );
-
       await this.whatsappUserRepo.recordMessage(phoneNumber, content);
-
-      // If LangGraph flagged this for human review, save to pending_questions.
-      if (reviewId) {
-        const langGraphThreadId =
-          await this.langGraph.ensureThread(phoneNumber);
-        await this.pendingQuestionRepo.create({
-          questionId: reviewId,
-          phoneNumber,
-          queryText: content,
-          toolCallId: `force-${Date.now()}`,
-          originalMessageId: messageId,
-          langGraphThreadId,
-        });
-        this.logger.log(
-          `[${phoneNumber}] Pending question created — REV_ID: ${reviewId}`,
-        );
-      }
-
-      // Await any in-flight progress send before the final answer can be sent.
       await progress.stop();
-      await this.whatsappService.sendTextMessage(phoneNumber, reply, messageId);
-      this.logger.log(`[${phoneNumber}] Sent: "${reply.slice(0, 60)}"`);
+      return;
     } finally {
       await progress.stop();
     }

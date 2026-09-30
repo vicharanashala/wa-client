@@ -10,6 +10,7 @@ import { PendingQuestionsModule } from '../pending-questions/pending-questions.m
 import { UserStatsModule } from '../user-stats/user-stats.module';
 import { UserDetailsModule } from '../user-details/user-details.module';
 import { ScriptDetectionModule } from '../script-detection/script-detection.module';
+import { FarmerFriendlyModule } from '../farmer-friendly/farmer-friendly.module';
 import { ResponseProgressService } from './response-progress.service';
 
 @Module({
@@ -22,6 +23,7 @@ import { ResponseProgressService } from './response-progress.service';
     UserStatsModule,
     UserDetailsModule,
     ScriptDetectionModule,
+    FarmerFriendlyModule,
   ],
   providers: [
     AddUserTextMessageHandler,

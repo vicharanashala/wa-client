@@ -27,6 +27,7 @@ import {
   WhatsappUserRepository,
 } from './user-stats/whatsapp-user.repository';
 import { formatManualOutboundWhatsAppMessage } from './manual-outbound-message';
+import { FFVService } from './farmer-friendly/ffv-service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -173,6 +174,7 @@ export class WhatsappController {
     private readonly accessControlService: AccessControlService,
     private readonly langGraphClientService: LangGraphClientService,
     private readonly whatsappUserRepo: WhatsappUserRepository,
+    private readonly ffvService: FFVService,
   ) {}
 
   private assertInternalApiKey(apiKey: string | undefined): void {
@@ -387,10 +389,14 @@ export class WhatsappController {
     this.logger.log('Webhook received');
     // ── Signature Verification ──
     const appSecret = process.env.WHATSAPP_META_APP_SECRET || '';
+    this.logger.debug(`App secret length: ${appSecret.length}, rawBody length: ${rawBody?.length || 0}`);
+    
     const expected =
       'sha256=' +
       crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
-
+    
+    this.logger.debug(`Signature from Meta: ${signature?.slice(0, 20)}..., expected: ${expected.slice(0, 20)}...`);
+    
     if (!signature || signature !== expected) {
       this.logger.warn('Rejected webhook: invalid signature');
       throw new ForbiddenException('Invalid signature');
@@ -499,6 +505,53 @@ export class WhatsappController {
             ),
           );
         continue;
+      }
+
+      // ── Handle Interactive Button Replies (FFV Show More) ──
+      if (message.type === 'interactive') {
+        const interactiveMsg = message as any;
+        const interactive = interactiveMsg.interactive;
+
+        if (interactive?.type === 'button_reply') {
+          const buttonId = interactive.button_reply?.id;
+          const buttonTitle = interactive.button_reply?.title;
+
+          this.logger.log(
+            `FFV Button clicked: id=${buttonId}, title=${buttonTitle} from ${message.from}`,
+          );
+
+          // Check if this is an FFV Show More button
+          if (buttonId?.startsWith('ffv_show_more_')) {
+            const questionId = buttonId.replace('ffv_show_more_', '');
+            const result = this.ffvService.getByQuestionId(questionId);
+
+            if (result.found && result.bigAnswer) {
+              // Send the full answer directly (author is hardcoded in the big answer)
+              this.whatsappService
+                .sendTextMessage(
+                  message.from,
+                  result.bigAnswer,
+                  message.id,
+                )
+                .catch((err: Error) =>
+                  this.logger.error(
+                    `Failed to send FFV big answer to ${message.from}: ${err.message}`,
+                  ),
+                );
+            } else {
+              this.whatsappService
+                .sendTextMessage(
+                  message.from,
+                  'Sorry, the detailed answer is not available right now. Please try again later.',
+                  message.id,
+                )
+                .catch((err: Error) =>
+                  this.logger.error(`Failed to send error message: ${err.message}`),
+                );
+            }
+          }
+          continue;
+        }
       }
 
       if (message.type !== 'text') {

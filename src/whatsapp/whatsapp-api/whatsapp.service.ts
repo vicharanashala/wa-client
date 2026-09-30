@@ -90,9 +90,12 @@ export class WhatsappService {
           Authorization: `Bearer ${whatsappConfig.accessToken}`,
         },
         body,
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
+    this.logger.debug(`Sending text message to ${to}: "${text.slice(0, 50)}..."`);
     let response = await post(buildBody(true));
+    this.logger.debug(`Text message response status: ${response.status}`);
 
     // If a reply-context send failed because the referenced message is
     // stale/invalid (common when reviewer answers come back days later or
@@ -348,5 +351,77 @@ export class WhatsappService {
       this.logger.warn(`WhatsApp auth error while sending voice message to ${to}`);
     }
     throw new Error(`Failed to send voice message to ${to}: ${rawError}`);
+  }
+
+  /**
+   * Send an interactive message with buttons (e.g., "Show More" button for FFV)
+   */
+  async sendInteractiveButtonMessage(
+    to: string,
+    bodyText: string,
+    buttons: Array<{ id: string; title: string }>,
+    replyToMessageId?: string,
+  ): Promise<void> {
+    const buildBody = (withContext: boolean) =>
+      JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        ...(withContext && replyToMessageId
+          ? { context: { message_id: replyToMessageId } }
+          : {}),
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          body: {
+            text: bodyText.slice(0, 1024), // WhatsApp body text limit
+          },
+          action: {
+            buttons: buttons.slice(0, 3).map((btn) => ({
+              type: 'reply',
+              reply: {
+                id: btn.id,
+                title: btn.title.slice(0, 25), // WhatsApp button title limit
+              },
+            })),
+          },
+        },
+      });
+
+    this.logger.debug(`Sending button message to ${to}: ${bodyText.slice(0, 50)}...`);
+
+    const post = (body: string) =>
+      fetch(whatsappConfig.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${whatsappConfig.accessToken}`,
+        },
+        body,
+      });
+
+    let response = await post(buildBody(true));
+    let responseBody = await response.text();
+    
+    this.logger.debug(`Button message response status: ${response.status}, body: ${responseBody}`);
+
+    if (!response.ok && replyToMessageId) {
+      if (this.isContextRejectionPayload(responseBody)) {
+        this.logger.warn(
+          `WhatsApp rejected button reply context for ${to}; retrying without quote.`,
+        );
+        response = await post(buildBody(false));
+        responseBody = await response.text();
+        this.logger.debug(`Retry response status: ${response.status}, body: ${responseBody}`);
+      } else {
+        throw new Error(`Failed to send button message to ${to}: ${responseBody}`);
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to send button message to ${to}: ${responseBody}`);
+    }
+
+    this.logger.log(`Button message sent to ${to}`);
   }
 }
