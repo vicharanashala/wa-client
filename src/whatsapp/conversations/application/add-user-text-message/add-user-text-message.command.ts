@@ -54,8 +54,8 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
           normalizedContent === 'more details' || 
           normalizedContent === 'पूरा उत्तर' || 
           normalizedContent === 'ज्यादा जानकारी' ||
-          normalizedContent.includes('show full details') ||
-          content.includes('📖 Show Full Details')
+          normalizedContent.includes('get full info') ||
+          content.includes('🔎 Get Full Info')
         ) {
           this.logger.log(`[${phoneNumber}] FFV show more request`);
           
@@ -101,7 +101,7 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
           await this.whatsappService.sendInteractiveButtonMessage(
             phoneNumber,
             ffvResult.shortAnswer,
-            [{ id: `ffv_show_more_${ffvResult.questionId}`, title: '📖 Show Full Details' }],
+            [{ id: `ffv_show_more_${ffvResult.questionId}`, title: '🔎 Get Full Info' }],
             messageId,
           );
 
