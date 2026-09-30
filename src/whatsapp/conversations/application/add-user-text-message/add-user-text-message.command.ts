@@ -53,10 +53,17 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
       ) {
         this.logger.log(`[${phoneNumber}] FFV show more request`);
         
+        // Show typing indicator
+        await this.whatsappService.showTyping(messageId);
+        
+        // Small delay for realistic feel
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         const lastQuestionId = this.ffvService.getLastQuestionId(phoneNumber);
         if (lastQuestionId) {
           const fullAnswer = this.ffvService.getByQuestionId(lastQuestionId);
           if (fullAnswer.found && fullAnswer.bigAnswer) {
+            await this.whatsappService.markAsRead(messageId);
             await this.whatsappService.sendTextMessage(
               phoneNumber,
               `📖 *Full Detailed Answer:*\n\n${fullAnswer.bigAnswer}`,
@@ -69,6 +76,7 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
         // Fallback to first question if no last question found
         const firstQuestion = this.ffvService.getByQuestionId('ffv_q_1');
         if (firstQuestion.found && firstQuestion.bigAnswer) {
+          await this.whatsappService.markAsRead(messageId);
           await this.whatsappService.sendTextMessage(
             phoneNumber,
             `📖 *Full Detailed Answer:*\n\n${firstQuestion.bigAnswer}`,
@@ -89,7 +97,16 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
         // Store question ID for "more" flow
         this.ffvService.setLastQuestionId(phoneNumber, ffvResult.questionId);
 
-        // Send short answer with WhatsApp Interactive Button (no progress message)
+        // Show typing indicator
+        await this.whatsappService.showTyping(messageId);
+        
+        // Small delay for realistic feel
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mark as read
+        await this.whatsappService.markAsRead(messageId);
+
+        // Send short answer with WhatsApp Interactive Button
         await this.whatsappService.sendInteractiveButtonMessage(
           phoneNumber,
           ffvResult.shortAnswer,
