@@ -1,7 +1,4 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
-import { ConfigService } from '@nestjs/config';
 
 export interface FFVQARecord {
   question: string;
@@ -16,101 +13,75 @@ export interface FFVQAResult {
   questionId?: string;
 }
 
+// Hardcoded Q&A for demo - Leaf Miner in Pea
+const DEMO_QAS: FFVQARecord[] = [
+  {
+    question: "How can I identify Leaf Miner Pest in Pea crop?",
+    shortAnswer: "The adult leaf miner is a pale yellowish fly about 1.5 mm long. The female punctures the upper surface of the leaf and lays eggs singly. The larva is an apodous maggot that feeds on chlorophyll between the upper and lower epidermal layers and grows to about 3 mm in length, with a larval period of about 7 days. Pupation occurs inside a thin, loose mesh of silken cocoon and lasts about 7 days.",
+    bigAnswer: "1. Identification of leaf miner\n\nThe adult leaf miner is a pale yellowish fly about 1.5 mm long. The female punctures the upper surface of the leaf and lays eggs singly. The eggs are minute and orange-yellow and hatch in about 4 days. The larva is an apodous maggot that feeds on chlorophyll between the upper and lower epidermal layers and grows to about 3 mm in length, with a larval period of about 7 days. Pupation occurs inside a thin, loose mesh of silken cocoon and lasts about 7 days. The complete life cycle takes about 3 weeks."
+  },
+  {
+    question: "What are the damage symptoms of Leaf Miner infestation in Pea crop?",
+    shortAnswer: "The larvae make numerous tunnels or mines between the upper and lower epidermis of the leaves, which interfere with photosynthesis and proper plant growth. The affected leaves develop characteristic serpentine mines and blotches and may become unattractive. In severe infestations, the leaves may dry and drop.",
+    bigAnswer: "2. Damage symptoms\n\nThe larvae make numerous tunnels or mines between the upper and lower epidermis of the leaves, which interfere with photosynthesis and proper plant growth. The affected leaves develop characteristic serpentine mines and blotches and may become unattractive. In severe infestations, the leaves may dry and drop. The pest also sucks the juice of the stem and leaves, further affecting plant growth."
+  },
+  {
+    question: "How should a farmer monitor leaf miner infestation in Pea?",
+    shortAnswer: "Regular monitoring is important for detecting leaf miner infestation at an early stage. For monitoring, count and record only the number of live mines on five randomly selected leaves per plant. This observation can help assess the level of infestation and guide the need for management measures.",
+    bigAnswer: "3. Monitoring and ETL\n\nRegular monitoring is important for detecting leaf miner infestation at an early stage. For monitoring, count and record only the number of live mines on five randomly selected leaves per plant. This observation can help assess the level of infestation and guide the need for management measures."
+  },
+  {
+    question: "What cultural or preventive measures can be used to reduce leaf miner infestation in pea?",
+    shortAnswer: "Remove and destroy infested leaves showing leaf miner mines and blotches to reduce the pest population and prevent further spread. Tomato or marigold can also be grown as trap crops for leaf miner management. These practices should be carried out regularly, particularly during the period of higher pest activity from December to March.",
+    bigAnswer: "4. Cultural control\n\nRemove and destroy infested leaves showing leaf miner mines and blotches to reduce the pest population and prevent further spread. Tomato or marigold can also be grown as trap crops for leaf miner management. These practices should be carried out regularly, particularly during the period of higher pest activity from December to March."
+  },
+  {
+    question: "Why Natural enemies are conserved in pea cultivation and what biological practices are recommended to control leaf miner pest in pea?",
+    shortAnswer: "Conserve the natural enemies of leaf miner through ecological engineering and avoid practices that unnecessarily disturb beneficial organisms. Augmentative release of natural enemies can also be followed as a biological management practice.",
+    bigAnswer: "5. Biological control\n\nConserve the natural enemies of leaf miner through ecological engineering and avoid practices that unnecessarily disturb beneficial organisms. Augmentative release of natural enemies can also be followed as a biological management practice. Conservation and augmentation of natural enemies can help suppress the leaf miner population as part of integrated pest management."
+  },
+  {
+    question: "What are the effective management strategies and chemical controls for managing Leaf Miner infestation in Pea crops in Madhya Pradesh?",
+    shortAnswer: "For chemical control, apply Oxydemeton methyl 25% EC @ 1 litre/ha in 1,000 litres of water/ha, equivalent to approximately 405 ml/acre in 405 litres of water/acre. Repeat at 15-day intervals as recommended.",
+    bigAnswer: "6. Chemical control\n\nWhen leaf miner infestation begins, apply Oxydemeton methyl 25% EC @ 1 litre/ha in 1,000 litres of water/ha. The equivalent dose is approximately 405 ml/acre in 405 litres of water/acre. If required, repeat the application at 15-day intervals. Use the pesticide only according to the applicable product label and recommended crop-specific instructions."
+  },
+  {
+    question: "What are the safety and precautions should I follow while spraying insecticides against Leaf Miner in Pea?",
+    shortAnswer: "Handle pesticides carefully during preparation and application. Read and follow the product label, use the recommended dose, and wear appropriate protective equipment to avoid direct contact with the pesticide. Keep pesticides away from children, animals, food, and feed.",
+    bigAnswer: "7. Safety measures\n\nHandle pesticides carefully during preparation and application. Read and follow the product label, use the recommended dose, and wear appropriate protective equipment to avoid direct contact with the pesticide. Keep pesticides away from children, animals, food, and feed, and avoid unnecessary applications that may harm beneficial natural enemies. Follow the recommended waiting period and other safety instructions given on the approved product label."
+  }
+];
+
 @Injectable()
 export class FFVService implements OnModuleInit {
   private readonly logger = new Logger(FFVService.name);
   private qaRecords: FFVQARecord[] = [];
   private questionIdMap: Map<string, FFVQARecord> = new Map();
-  // Track last question asked per phone number for "more" flow
   private lastQuestionMap: Map<string, string> = new Map();
-
-  constructor(private configService: ConfigService) {}
+  private questionIndex: Map<string, number> = new Map(); // For fuzzy matching
 
   async onModuleInit(): Promise<void> {
-    await this.loadCSVData();
+    await this.loadData();
   }
 
-  /**
-   * Load and parse the FFV Q&A CSV data
-   */
-  private async loadCSVData(): Promise<void> {
-    const csvPath = process.env.FFV_CSV_PATH || path.join(process.cwd(), 'data', 'ffv-data.csv');
+  private async loadData(): Promise<void> {
+    this.qaRecords = DEMO_QAS;
+    
+    this.questionIdMap.clear();
+    this.questionIndex.clear();
+    
+    this.qaRecords.forEach((record, index) => {
+      const questionId = `ffv_q_${index + 1}`;
+      this.questionIdMap.set(questionId, record);
+      // Store lowercase version for matching
+      this.questionIndex.set(record.question.toLowerCase(), index);
+    });
 
-    try {
-      if (!fs.existsSync(csvPath)) {
-        this.logger.warn(`FFV CSV file not found at: ${csvPath}`);
-        this.logger.warn('FFV feature will be disabled');
-        return;
-      }
-
-      const csvContent = fs.readFileSync(csvPath, 'utf-8');
-      this.qaRecords = this.parseCSV(csvContent);
-      
-      // Build question ID map for quick lookup
-      this.questionIdMap.clear();
-      this.qaRecords.forEach((record, index) => {
-        const questionId = `ffv_q_${index + 1}`;
-        this.questionIdMap.set(questionId, record);
-      });
-
-      this.logger.log(`FFV: Loaded ${this.qaRecords.length} Q&A records from CSV`);
-    } catch (error) {
-      this.logger.error(`Failed to load FFV CSV data: ${error.message}`);
-      this.qaRecords = [];
-    }
-  }
-
-  /**
-   * Parse CSV content into Q&A records
-   */
-  private parseCSV(content: string): FFVQARecord[] {
-    const lines = content.split('\n').filter(line => line.trim());
-    if (lines.length < 2) return [];
-
-    const records: FFVQARecord[] = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = this.parseCSVLine(lines[i]);
-      if (values.length >= 3) {
-        records.push({
-          question: values[0].replace(/^"|"$/g, '').trim(),
-          shortAnswer: values[1].replace(/^"|"$/g, '').trim(),
-          bigAnswer: values[2].replace(/^"|"$/g, '').trim(),
-        });
-      }
-    }
-
-    return records;
-  }
-
-  /**
-   * Parse a single CSV line handling quoted values with commas
-   */
-  private parseCSVLine(line: string): string[] {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    result.push(current);
-
-    return result;
+    this.logger.log(`FFV: Loaded ${this.qaRecords.length} hardcoded Q&A records`);
   }
 
   /**
    * Find a matching Q&A record for the given question
-   * Uses simple text matching (case-insensitive, fuzzy match)
    */
   findMatchingQA(userQuestion: string): FFVQAResult {
     if (this.qaRecords.length === 0) {
@@ -119,82 +90,54 @@ export class FFVService implements OnModuleInit {
 
     const normalizedQuestion = userQuestion.toLowerCase().trim();
 
-    // Skip very short inputs (likely greetings like "hi", "hello", "ok")
+    // Skip very short inputs
     if (normalizedQuestion.length < 10) {
       return { found: false };
     }
 
     // Try exact match first
-    for (const record of this.qaRecords) {
-      if (record.question.toLowerCase().trim() === normalizedQuestion) {
-        return this.createResult(record);
-      }
+    const exactIndex = this.questionIndex.get(normalizedQuestion);
+    if (exactIndex !== undefined) {
+      const record = this.qaRecords[exactIndex];
+      const questionId = `ffv_q_${exactIndex + 1}`;
+      return {
+        found: true,
+        shortAnswer: record.shortAnswer,
+        bigAnswer: record.bigAnswer,
+        questionId,
+      };
     }
 
-    // Extract key topic words from user's question
-    const userWords = normalizedQuestion.split(/\s+/).filter(w => w.length > 3);
-    
-    // Try partial match - find best matching record
-    let bestMatch: FFVQARecord | null = null;
-    let bestScore = 0;
-
-    for (const record of this.qaRecords) {
-      const normalizedRecordQuestion = record.question.toLowerCase().trim();
-      const recordWords = normalizedRecordQuestion.split(/\s+/).filter(w => w.length > 3);
+    // Try partial match - check if any record question is contained in user question or vice versa
+    for (let i = 0; i < this.qaRecords.length; i++) {
+      const record = this.qaRecords[i];
+      const recordQuestion = record.question.toLowerCase();
       
-      // Count matching significant words (length > 3)
-      const matchingWords = recordWords.filter(w => 
-        userWords.some(uw => w.includes(uw) || uw.includes(w))
+      // Check if user question contains key words from record question
+      const keyWords = ['leaf miner', 'pea', 'chemical', 'control', 'monitor', 'cultural', 'biological', 'safety', 'damage', 'identify'];
+      const matchingKeywords = keyWords.filter(kw => 
+        normalizedQuestion.includes(kw) && recordQuestion.includes(kw)
       );
       
-      // Calculate score: weighted by how many key words match
-      const score = matchingWords.length;
-      
-      // Bonus points for key topic matches
-      const keyTopics = ['leaf', 'miner', 'chemical', 'control', 'pea', 'pest', 'management'];
-      const topicBonus = keyTopics.filter(t => 
-        normalizedQuestion.includes(t) && normalizedRecordQuestion.includes(t)
-      ).length * 2;
-      
-      const totalScore = score + topicBonus;
-      
-      if (totalScore > bestScore && totalScore >= 4) {
-        bestScore = totalScore;
-        bestMatch = record;
+      if (matchingKeywords.length >= 2) {
+        const questionId = `ffv_q_${i + 1}`;
+        return {
+          found: true,
+          shortAnswer: record.shortAnswer,
+          bigAnswer: record.bigAnswer,
+          questionId,
+        };
       }
-    }
-
-    if (bestMatch) {
-      return this.createResult(bestMatch);
     }
 
     return { found: false };
   }
 
-  /**
-   * Get Q&A record by question ID
-   */
   getByQuestionId(questionId: string): FFVQAResult {
     const record = this.questionIdMap.get(questionId);
     if (!record) {
       return { found: false };
     }
-    return this.createResult(record);
-  }
-
-  /**
-   * Create a result object from a Q&A record
-   */
-  private createResult(record: FFVQARecord): FFVQAResult {
-    // Find the question ID for this record
-    let questionId = '';
-    for (const [id, rec] of this.questionIdMap.entries()) {
-      if (rec === record) {
-        questionId = id;
-        break;
-      }
-    }
-
     return {
       found: true,
       shortAnswer: record.shortAnswer,
@@ -203,38 +146,24 @@ export class FFVService implements OnModuleInit {
     };
   }
 
-  /**
-   * Check if FFV is enabled and has data
-   */
-  isEnabled(): boolean {
-    return this.qaRecords.length > 0;
-  }
-
-  /**
-   * Get total number of Q&A records
-   */
-  getRecordCount(): number {
-    return this.qaRecords.length;
-  }
-
-  /**
-   * Set the last question ID for a phone number (for "more" flow)
-   */
   setLastQuestionId(phoneNumber: string, questionId: string): void {
     this.lastQuestionMap.set(phoneNumber, questionId);
   }
 
-  /**
-   * Get the last question ID for a phone number
-   */
   getLastQuestionId(phoneNumber: string): string | undefined {
     return this.lastQuestionMap.get(phoneNumber);
   }
 
-  /**
-   * Reload CSV data (useful for updating content without restart)
-   */
-  async reloadData(): Promise<void> {
-    await this.loadCSVData();
+  isEnabled(): boolean {
+    return this.qaRecords.length > 0;
+  }
+
+  getRecordCount(): number {
+    return this.qaRecords.length;
+  }
+
+  // Get all questions for the demo menu
+  getAllQuestions(): string[] {
+    return this.qaRecords.map((q, i) => `${i + 1}. ${q.question}`);
   }
 }

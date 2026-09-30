@@ -101,10 +101,11 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
         }
       }
 
-      // ── No FFV match - Send friendly message ──
+      // ── No FFV match - Send friendly message with available questions ──
+      const allQuestions = this.ffvService.getAllQuestions().join('\n');
       await this.whatsappService.sendTextMessage(
         phoneNumber,
-        '🌾 *This is a DEMO version with limited questions.*\n\nAvailable topics:\n• Leaf Miner in Pea - Identification\n• Leaf Miner in Pea - Damage symptoms\n• Leaf Miner in Pea - Monitoring & ETL\n• Leaf Miner in Pea - Cultural control\n• Leaf Miner in Pea - Biological control\n• Leaf Miner in Pea - Chemical control\n• Leaf Miner in Pea - Safety measures\n\nPlease ask about one of these topics!',
+        `🌾 *This is a DEMO version.*\n\n*Available Questions:*\n${allQuestions}\n\nPlease copy-paste any question above!`,
         messageId,
       );
       await this.whatsappUserRepo.recordMessage(phoneNumber, content);
