@@ -104,7 +104,7 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
       // ── No FFV match - Send friendly message ──
       await this.whatsappService.sendTextMessage(
         phoneNumber,
-        '🙏 Sorry, I don\'t have information on this topic yet. Please ask me about pea crop diseases, pests, or management practices.',
+        '🌾 *This is a DEMO version with limited questions.*\n\nAvailable topics:\n• Leaf Miner in Pea - Identification\n• Leaf Miner in Pea - Damage symptoms\n• Leaf Miner in Pea - Monitoring & ETL\n• Leaf Miner in Pea - Cultural control\n• Leaf Miner in Pea - Biological control\n• Leaf Miner in Pea - Chemical control\n• Leaf Miner in Pea - Safety measures\n\nPlease ask about one of these topics!',
         messageId,
       );
       await this.whatsappUserRepo.recordMessage(phoneNumber, content);

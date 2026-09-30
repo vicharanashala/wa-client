@@ -110,7 +110,7 @@ export class FFVService implements OnModuleInit {
 
   /**
    * Find a matching Q&A record for the given question
-   * Uses simple text matching (case-insensitive, exact or close match)
+   * Uses simple text matching (case-insensitive, fuzzy match)
    */
   findMatchingQA(userQuestion: string): FFVQAResult {
     if (this.qaRecords.length === 0) {
@@ -131,17 +131,41 @@ export class FFVService implements OnModuleInit {
       }
     }
 
-    // Try partial match - user question contains the record question
+    // Extract key topic words from user's question
+    const userWords = normalizedQuestion.split(/\s+/).filter(w => w.length > 3);
+    
+    // Try partial match - find best matching record
+    let bestMatch: FFVQARecord | null = null;
+    let bestScore = 0;
+
     for (const record of this.qaRecords) {
       const normalizedRecordQuestion = record.question.toLowerCase().trim();
+      const recordWords = normalizedRecordQuestion.split(/\s+/).filter(w => w.length > 3);
       
-      // User question should contain at least 60% of record question words
-      const recordWords = normalizedRecordQuestion.split(/\s+/).filter(w => w.length > 2);
-      const matchCount = recordWords.filter(w => normalizedQuestion.includes(w)).length;
+      // Count matching significant words (length > 3)
+      const matchingWords = recordWords.filter(w => 
+        userWords.some(uw => w.includes(uw) || uw.includes(w))
+      );
       
-      if (recordWords.length > 0 && matchCount >= recordWords.length * 0.6) {
-        return this.createResult(record);
+      // Calculate score: weighted by how many key words match
+      const score = matchingWords.length;
+      
+      // Bonus points for key topic matches
+      const keyTopics = ['leaf', 'miner', 'chemical', 'control', 'pea', 'pest', 'management'];
+      const topicBonus = keyTopics.filter(t => 
+        normalizedQuestion.includes(t) && normalizedRecordQuestion.includes(t)
+      ).length * 2;
+      
+      const totalScore = score + topicBonus;
+      
+      if (totalScore > bestScore && totalScore >= 4) {
+        bestScore = totalScore;
+        bestMatch = record;
       }
+    }
+
+    if (bestMatch) {
+      return this.createResult(bestMatch);
     }
 
     return { found: false };
