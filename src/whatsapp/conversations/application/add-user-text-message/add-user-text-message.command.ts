@@ -46,8 +46,17 @@ export class AddUserTextMessageHandler implements ICommandHandler<AddUserTextMes
       if (this.ffvService.isEnabled()) {
         const normalizedContent = content.toLowerCase().trim();
         
-        // Handle "more" keyword to show full answer
-        if (normalizedContent === 'more' || normalizedContent === 'show more' || normalizedContent === 'full answer' || normalizedContent === 'more details' || normalizedContent === 'पूरा उत्तर' || normalizedContent === 'ज्यादा जानकारी') {
+        // Handle "more" keyword OR button title text to show full answer
+        if (
+          normalizedContent === 'more' || 
+          normalizedContent === 'show more' || 
+          normalizedContent === 'full answer' || 
+          normalizedContent === 'more details' || 
+          normalizedContent === 'पूरा उत्तर' || 
+          normalizedContent === 'ज्यादा जानकारी' ||
+          normalizedContent.includes('show full details') ||
+          content.includes('📖 Show Full Details')
+        ) {
           this.logger.log(`[${phoneNumber}] FFV show more request`);
           
           const lastQuestionId = this.ffvService.getLastQuestionId(phoneNumber);
