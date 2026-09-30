@@ -72,7 +72,7 @@ const DEMO_QAS: FFVQARecord[] = [
   },
   {
     question: "What are the damage symptoms of Leaf Miner infestation in Pea crop?",
-    shortAnswer: "TThe larvae make numerous tunnels or mines between the upper and lower epidermis of the leaves, which interfere with photosynthesis and proper plant growth. The affected leaves develop characteristic serpentine mines and blotches and may become unattractive. In severe infestations, the leaves may dry and drop. The pest also sucks the juice of the stem and leaves, further affecting plant growth.",
+    shortAnswer: "The larvae make numerous tunnels or mines between the upper and lower epidermis of the leaves, which interfere with photosynthesis and proper plant growth. The affected leaves develop characteristic serpentine mines and blotches and may become unattractive. In severe infestations, the leaves may dry and drop. The pest also sucks the juice of the stem and leaves, further affecting plant growth.",
     bigAnswer: big_answer
   },
   {
