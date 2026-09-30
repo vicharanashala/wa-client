@@ -72,7 +72,7 @@ Users should independently validate recommendations before acting.`
   },
   {
     question: "What are the damage symptoms of Leaf Miner infestation in Pea crop?",
-    shortAnswer: "The larvae make numerous tunnels or mines between the upper and lower epidermis of the leaves, which interfere with photosynthesis and proper plant growth. The affected leaves develop characteristic serpentine mines and blotches and may become unattractive. In severe infestations, the leaves may dry and drop.",
+    shortAnswer: "TThe larvae make numerous tunnels or mines between the upper and lower epidermis of the leaves, which interfere with photosynthesis and proper plant growth. The affected leaves develop characteristic serpentine mines and blotches and may become unattractive. In severe infestations, the leaves may dry and drop. The pest also sucks the juice of the stem and leaves, further affecting plant growth.",
     bigAnswer: `Leaf miner is an important insect pest of pea, with damage generally more severe during December to March. The larvae make tunnels between the upper and lower epidermis of the leaves, which interferes with photosynthesis and proper plant growth. Effective management includes regular monitoring, removal and destruction of infested leaves, conservation of natural enemies, use of suitable trap crops, and need-based chemical control. 
     
 1. Identification of leaf miner
@@ -237,7 +237,7 @@ Users should independently validate recommendations before acting.`
   },
   {
     question: "Why Natural enemies are conserved in pea cultivation and what biological practices are recommended to control leaf miner pest in pea?",
-    shortAnswer: "Conserve the natural enemies of leaf miner through ecological engineering and avoid practices that unnecessarily disturb beneficial organisms. Augmentative release of natural enemies can also be followed as a biological management practice.",
+    shortAnswer: "Conserve the natural enemies of leaf miner through ecological engineering and avoid practices that unnecessarily disturb beneficial organisms. Augmentative release of natural enemies can also be followed as a biological management practice. Conservation and augmentation of natural enemies can help suppress the leaf miner population as part of integrated pest management.",
     bigAnswer: `Leaf miner is an important insect pest of pea, with damage generally more severe during December to March. The larvae make tunnels between the upper and lower epidermis of the leaves, which interferes with photosynthesis and proper plant growth. Effective management includes regular monitoring, removal and destruction of infested leaves, conservation of natural enemies, use of suitable trap crops, and need-based chemical control. 
     
 1. Identification of leaf miner
@@ -292,7 +292,7 @@ Users should independently validate recommendations before acting.`
   },
   {
     question: "What are the effective management strategies and chemical controls for managing Leaf Miner infestation in Pea crops in Madhya Pradesh?",
-    shortAnswer: "For chemical control, apply Oxydemeton methyl 25% EC @ 1 litre/ha in 1,000 litres of water/ha, equivalent to approximately 405 ml/acre in 405 litres of water/acre. Repeat at 15-day intervals as recommended.",
+    shortAnswer: "Effective management of leaf miner in pea should focus on early identification, regular monitoring, removal and destruction of infested leaves, trap cropping, and conservation of natural enemies. The pest is more damaging during December to March, and its larvae cause serpentine mines that interfere with photosynthesis and plant growth. For chemical control, Oxydemeton methyl 25% EC @ 1 litre/ha in 1,000 litres of water/ha, equivalent to approximately 405 ml/acre in 405 litres of water/acre, can be applied when the attack begins and repeated at 15-day intervals as recommended. Combining cultural, biological, monitoring, and need-based chemical measures can help reduce leaf miner damage and protect pea crop growth and productivity.",
     bigAnswer: `Leaf miner is an important insect pest of pea, with damage generally more severe during December to March. The larvae make tunnels between the upper and lower epidermis of the leaves, which interferes with photosynthesis and proper plant growth. Effective management includes regular monitoring, removal and destruction of infested leaves, conservation of natural enemies, use of suitable trap crops, and need-based chemical control. 
     
 1. Identification of leaf miner
@@ -347,7 +347,7 @@ Users should independently validate recommendations before acting.`
   },
   {
     question: "What are the safety and precautions should I follow while spraying insecticides against Leaf Miner in Pea?",
-    shortAnswer: "Handle pesticides carefully during preparation and application. Read and follow the product label, use the recommended dose, and wear appropriate protective equipment to avoid direct contact with the pesticide. Keep pesticides away from children, animals, food, and feed.",
+    shortAnswer: "Handle pesticides carefully during preparation and application. Read and follow the product label, use the recommended dose, and wear appropriate protective equipment to avoid direct contact with the pesticide. Keep pesticides away from children, animals, food, and feed, and avoid unnecessary applications that may harm beneficial natural enemies. Follow the recommended waiting period and other safety instructions given on the approved product label.",
     bigAnswer: `Leaf miner is an important insect pest of pea, with damage generally more severe during December to March. The larvae make tunnels between the upper and lower epidermis of the leaves, which interferes with photosynthesis and proper plant growth. Effective management includes regular monitoring, removal and destruction of infested leaves, conservation of natural enemies, use of suitable trap crops, and need-based chemical control. 
     
 1. Identification of leaf miner
