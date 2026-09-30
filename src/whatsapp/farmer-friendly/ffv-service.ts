@@ -49,8 +49,8 @@ const big_answer = `Leaf miner is an important insect pest of pea, with damage g
 👤 Answered by: SURAIYA AMIN
 
 📚 Sources:
-🔗 AESA ipm pea: https://workdrive.zohoexternal.in/file/5xofr4f6f9bf806cf46b592cbde1ca4a5f989
-🔗 Field Pea Production Technology_Directorate of Pulses Developement_ Madhya Pradesh.pdf: https://workdrive.zohoexternal.in/file/at1bvf44c2eadd89c4e6bb5878c5b21cb6e5e
+🔗 AESA Based IPM Package on Pea_NIPHM, Hyderabad, Telangana : https://workdrive.zohoexternal.in/file/5xofr4f6f9bf806cf46b592cbde1ca4a5f989
+🔗 Field Pea Production Technology_Directorate of Pulses Developement_ Madhya Pradesh: https://workdrive.zohoexternal.in/file/at1bvf44c2eadd89c4e6bb5878c5b21cb6e5e
 
 ⚠️ Important Notice (Testing) ⚠️
 
