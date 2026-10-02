@@ -1047,7 +1047,9 @@ export class LangGraphClientService implements OnModuleInit {
     threadId: string,
     phoneNumber: string,
   ): Promise<void> {
-    const url = `https://desk.vicharanashala.ai/api/questions/${reviewId}`;
+    const reviewerApiBaseUrl =
+      process.env.REVIEWER_API_BASE_URL || 'https://desk.vicharanashala.ai/api';
+    const url = `${reviewerApiBaseUrl}/questions/${reviewId}`;
     const headers = {
       'Content-Type': 'application/json',
       'x-internal-api-key': process.env.REVIEWER_INTERNAL_API_KEY || '',
