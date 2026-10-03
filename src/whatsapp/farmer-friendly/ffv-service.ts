@@ -146,7 +146,7 @@ const DEMO_QAS: FFVQARecord[] = [
 👤 Answered by: Jayashree N
 
 📚 Sources:
-Integrated Pest and disease management in arecanut _KVK_Mangaluru, Dakshina Kannada.pdf
+Integrated Pest and disease management in arecanut _KVK_Mangaluru: https://workdrive.zohoexternal.in/file/7l3lx90397574d2c243428d360527220afda4
 
 ⚠️ ಮಹತ್ವದ ಸೂಚನೆ (ಪರೀಕ್ಷಾ ಹಂತ) ⚠️
 
