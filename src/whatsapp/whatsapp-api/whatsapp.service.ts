@@ -372,7 +372,7 @@ export class WhatsappService {
       flow_id: flowId,
       flow_message_version: '3',
       flow_token: `FLOW_${Date.now()}_${to}`,
-      mode: 'draft',
+      mode: 'published',
       flow_cta: 'Complete Registration',
     };
 
