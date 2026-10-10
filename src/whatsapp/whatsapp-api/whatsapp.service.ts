@@ -367,6 +367,15 @@ export class WhatsappService {
       throw new Error('WHATSAPP_FLOW_ID not configured');
     }
 
+    // Build action parameters - screen and data are passed via screen payload
+    const actionParameters = {
+      flow_id: flowId,
+      flow_message_version: '3',
+      flow_token: `FLOW_${Date.now()}_${to}`,
+      mode: 'draft',
+      flow_cta: 'Complete Registration',
+    };
+
     const body = JSON.stringify({
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
@@ -388,19 +397,7 @@ export class WhatsappService {
         },
         action: {
           name: 'flow',
-          parameters: {
-            flow_id: flowId,
-            flow_message_version: '3',
-            flow_token: `FLOW_${Date.now()}_${to}`,
-            mode: 'draft',
-            flow_cta: 'Complete Registration',
-            screens: [
-              {
-                screen_id: 'STATE_SCREEN',
-                data: payload.data,
-              },
-            ],
-          },
+          parameters: actionParameters,
         },
       },
     });
