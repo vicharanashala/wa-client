@@ -27,6 +27,8 @@ import {
   WhatsappUserRepository,
 } from './user-stats/whatsapp-user.repository';
 import { formatManualOutboundWhatsAppMessage } from './manual-outbound-message';
+import { UserDetailsRepository } from './user-details/user-details.repository';
+import { FarmerRegistrationService } from './farmer-registration/farmer-registration.service';
 import * as crypto from 'crypto';
 
 // ── Webhook Types ────────────────────────────────────────────────────────────
@@ -173,6 +175,8 @@ export class WhatsappController {
     private readonly accessControlService: AccessControlService,
     private readonly langGraphClientService: LangGraphClientService,
     private readonly whatsappUserRepo: WhatsappUserRepository,
+    private readonly userDetailsRepo: UserDetailsRepository,
+    private readonly farmerRegistrationService: FarmerRegistrationService,
   ) {}
 
   private assertInternalApiKey(apiKey: string | undefined): void {
@@ -517,6 +521,10 @@ export class WhatsappController {
         `Incoming [${phoneNumber}]: "${messageText.slice(0, 60)}${messageText.length > 60 ? '…' : ''}"`,
       );
 
+      // Check if user needs registration
+      await this.checkAndSendRegistrationFlow(phoneNumber);
+
+      // Process the message through LangGraph
       this.commandBus
         .execute(
           new AddUserTextMessageCommand(phoneNumber, messageText, message.id),
@@ -528,6 +536,51 @@ export class WhatsappController {
           ),
         );
     }
+  }
+
+  /**
+   * Check if user needs registration and send flow if necessary
+   */
+  private async checkAndSendRegistrationFlow(phoneNumber: string): Promise<void> {
+    try {
+      const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
+      const statusResult = await this.userDetailsRepo.checkUserStatus(normalizedPhone);
+
+      if (statusResult.isErr()) {
+        this.logger.error(`Failed to check user status for ${phoneNumber}: ${statusResult.unwrapErr().message}`);
+        return;
+      }
+
+      const status = statusResult.unwrap();
+
+      // If profile is not complete, send registration flow
+      if (!status.profile || !status.profile.isProfileComplete) {
+        this.logger.log(`User ${phoneNumber} needs registration, sending flow`);
+
+        // Send the registration flow
+        await this.farmerRegistrationService.sendRegistrationFlow(phoneNumber);
+      }
+    } catch (error) {
+      this.logger.error(`Error checking registration status for ${phoneNumber}: ${error}`);
+    }
+  }
+
+  /**
+   * Normalize phone number to +91XXXXXXXXXX format
+   */
+  private normalizePhoneNumber(phoneNumber: string): string {
+    const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+
+    if (cleaned.startsWith('+')) {
+      return cleaned;
+    }
+
+    // Assume Indian numbers (country code 91)
+    if (cleaned.length === 10) {
+      return `+91${cleaned}`;
+    }
+
+    return `+${cleaned}`;
   }
 
   // ── Call Webhook Handler ──────────────────────────────────────────────────
