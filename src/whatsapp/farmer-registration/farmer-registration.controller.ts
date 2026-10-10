@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { FarmerRegistrationService, FlowCallbackData, FlowDataResponse } from './farmer-registration.service';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
+import { LocationService } from '../location/location.service';
 
 // ─────────────────────────────────────────────────────────────
 // DTOs
@@ -21,11 +22,15 @@ import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 interface FlowCallbackPayload {
   phone_number: string;
   screen: string;
-  data: {
-    state: { id: string; title: string };
-    district: { id: string; title: string };
-    block: { id: string; title: string };
-    village: { id: string; title: string };
+  action: string;  // 'GET_INITIAL_SCREEN' or 'FLOW_SUBMIT'
+  data?: {
+    state?: { id: string; title: string };
+    district?: { id: string; title: string };
+    block?: { id: string; title: string };
+    village?: { id: string; title: string };
+    state_code?: string;  // When navigating between screens
+    district_code?: string;
+    block_code?: string;
   };
 }
 
@@ -47,6 +52,7 @@ export class FarmerRegistrationController {
   constructor(
     private readonly farmerRegistrationService: FarmerRegistrationService,
     private readonly whatsappService: WhatsappService,
+    private readonly locationService: LocationService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────
@@ -75,37 +81,116 @@ export class FarmerRegistrationController {
   // ─────────────────────────────────────────────────────────────
 
   @Post('callback')
-  async handleFlowCallback(@Body() payload: FlowCallbackPayload): Promise<{ status: string }> {
-    this.logger.log(`Flow callback received for phone: ${payload.phone_number}`);
+  async handleFlowCallback(@Body() payload: FlowCallbackPayload): Promise<any> {
+    this.logger.log(`Flow callback received - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
 
     try {
-      // Extract data from Flow submission
-      // Flow sends {id, title} objects from dropdown selections
-      const flowData: FlowCallbackData = {
-        phone_number: payload.phone_number,
-        state: payload.data.state,
-        district: payload.data.district,
-        block: payload.data.block,
-        village: payload.data.village,
-      };
-
-      // Process the callback
-      const result = await this.farmerRegistrationService.handleFlowCallback(flowData);
-
-      if (result.isErr()) {
-        this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
-        return { status: 'error' };
+      // Handle GET_INITIAL_SCREEN - return dynamic data for screens
+      if (payload.action === 'GET_INITIAL_SCREEN') {
+        return this.getScreenData(payload);
       }
 
-      // Send welcome message
-      await this.sendWelcomeMessage(payload.phone_number);
+      // Handle FLOW_SUBMIT - process form submission
+      if (payload.action === 'FLOW_SUBMIT') {
+        // Extract data from Flow submission
+        // Flow sends {id, title} objects from dropdown selections
+        const flowData: FlowCallbackData = {
+          phone_number: payload.phone_number,
+          state: payload.data?.state,
+          district: payload.data?.district,
+          block: payload.data?.block,
+          village: payload.data?.village,
+        };
 
-      this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
-      return { status: 'success' };
+        // Process the callback
+        const result = await this.farmerRegistrationService.handleFlowCallback(flowData);
+
+        if (result.isErr()) {
+          this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
+          return { status: 'error' };
+        }
+
+        // Send welcome message
+        await this.sendWelcomeMessage(payload.phone_number);
+
+        this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
+        return { status: 'success' };
+      }
+
+      return { status: 'unknown_action' };
 
     } catch (error) {
       this.logger.error(`Flow callback error: ${error}`);
       return { status: 'error' };
+    }
+  }
+
+  /**
+   * Handle GET_INITIAL_SCREEN - return dynamic data for each screen
+   */
+  private async getScreenData(payload: FlowCallbackPayload): Promise<any> {
+    const screen = payload.screen;
+    const data = payload.data || {};
+
+    this.logger.log(`Getting screen data for: ${screen}`);
+
+    try {
+      switch (screen) {
+        case 'STATE_SCREEN': {
+          const states = await this.locationService.getStatesFormatted();
+          return {
+            version: '3',
+            screen: 'STATE_SCREEN',
+            data: { states },
+          };
+        }
+
+        case 'DISTRICT_SCREEN': {
+          const stateCode = parseInt(data.state_code || data.state?.id || '0', 10);
+          if (!stateCode) {
+            return { error: 'State code required' };
+          }
+          const districts = await this.locationService.getDistrictsFormatted(stateCode);
+          return {
+            version: '3',
+            screen: 'DISTRICT_SCREEN',
+            data: { districts },
+          };
+        }
+
+        case 'BLOCK_SCREEN': {
+          const districtCode = parseInt(data.district_code || data.district?.id || '0', 10);
+          if (!districtCode) {
+            return { error: 'District code required' };
+          }
+          const blocks = await this.locationService.getBlocksFormatted(districtCode);
+          return {
+            version: '3',
+            screen: 'BLOCK_SCREEN',
+            data: { blocks },
+          };
+        }
+
+        case 'VILLAGE_SCREEN': {
+          const blockCode = parseInt(data.block_code || data.block?.id || '0', 10);
+          if (!blockCode) {
+            return { error: 'Block code required' };
+          }
+          const villages = await this.locationService.getVillagesFormatted(blockCode);
+          return {
+            version: '3',
+            screen: 'VILLAGE_SCREEN',
+            data: { villages },
+          };
+        }
+
+        default:
+          this.logger.warn(`Unknown screen: ${screen}`);
+          return { error: 'Unknown screen' };
+      }
+    } catch (error) {
+      this.logger.error(`Error getting screen data for ${screen}: ${error}`);
+      return { error: String(error) };
     }
   }
 

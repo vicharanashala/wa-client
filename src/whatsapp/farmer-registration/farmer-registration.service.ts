@@ -17,10 +17,10 @@ import { WhatsappService } from '../whatsapp-api/whatsapp.service';
  */
 export interface FlowCallbackData {
   phone_number: string;
-  state: { id: string; title: string };
-  district: { id: string; title: string };
-  block: { id: string; title: string };
-  village: { id: string; title: string };
+  state?: { id: string; title: string };
+  district?: { id: string; title: string };
+  block?: { id: string; title: string };
+  village?: { id: string; title: string };
 }
 
 export interface FlowOption {
@@ -157,17 +157,23 @@ export class FarmerRegistrationService {
     try {
       const phoneNumber = this.normalizePhoneNumber(data.phone_number);
 
+      // Validate required fields
+      if (!data.state || !data.district || !data.block || !data.village) {
+        this.logger.error('Missing required flow data fields');
+        return Err(new RepositoryError('Missing required fields', 'INVALID_DATA' as any));
+      }
+
       // Build location profile from Flow callback data
       // Flow sends {id, title} objects from dropdown selections
       const profile: LocationProfile = {
-        stateCode: parseInt(data.state.id),
-        stateName: data.state.title,
-        districtCode: parseInt(data.district.id),
-        districtName: data.district.title,
-        blockCode: parseInt(data.block.id),
-        blockName: data.block.title,
-        villageCode: parseInt(data.village.id),
-        villageName: data.village.title,
+        stateCode: parseInt(data.state!.id),
+        stateName: data.state!.title,
+        districtCode: parseInt(data.district!.id),
+        districtName: data.district!.title,
+        blockCode: parseInt(data.block!.id),
+        blockName: data.block!.title,
+        villageCode: parseInt(data.village!.id),
+        villageName: data.village!.title,
       };
 
       // Check if user exists
