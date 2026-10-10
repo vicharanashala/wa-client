@@ -517,12 +517,13 @@ export class WhatsappController {
 
       if (!phoneNumber || !messageText) continue;
 
-      this.logger.log(
-        `Incoming [${phoneNumber}]: "${messageText.slice(0, 60)}${messageText.length > 60 ? '…' : ''}"`,
-      );
+      this.logger.warn(`🔔 NEW TEXT MESSAGE from ${phoneNumber}: "${messageText}"`);
+      this.logger.warn(`🔔 WILL CHECK REGISTRATION FOR ${phoneNumber}`);
 
       // Check if user needs registration
       await this.checkAndSendRegistrationFlow(phoneNumber);
+      
+      this.logger.warn(`🔔 DONE CHECKING REGISTRATION FOR ${phoneNumber}`);
 
       // Process the message through LangGraph
       this.commandBus
