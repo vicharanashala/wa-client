@@ -543,43 +543,66 @@ export class WhatsappController {
    */
   private async checkAndSendRegistrationFlow(phoneNumber: string): Promise<void> {
     try {
+      // WhatsApp sends numbers like: 919876543210 (no +)
+      // We need to ensure format is consistent
       const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
+      
+      this.logger.log(`[RegistrationCheck] Checking user ${normalizedPhone} (raw: ${phoneNumber})`);
+      
       const statusResult = await this.userDetailsRepo.checkUserStatus(normalizedPhone);
 
       if (statusResult.isErr()) {
-        this.logger.error(`Failed to check user status for ${phoneNumber}: ${statusResult.unwrapErr().message}`);
+        this.logger.error(`[RegistrationCheck] Failed to check user status for ${normalizedPhone}: ${statusResult.unwrapErr().message}`);
         return;
       }
 
       const status = statusResult.unwrap();
+      
+      this.logger.log(`[RegistrationCheck] User ${normalizedPhone} - exists: ${status.exists}, isComplete: ${status.profile?.isProfileComplete}`);
 
-      // If profile is not complete, send registration flow
+      // If profile is not complete or user doesn't exist, send registration flow
       if (!status.profile || !status.profile.isProfileComplete) {
-        this.logger.log(`User ${phoneNumber} needs registration, sending flow`);
+        this.logger.log(`[RegistrationCheck] User ${normalizedPhone} needs registration, sending flow`);
 
         // Send the registration flow
-        await this.farmerRegistrationService.sendRegistrationFlow(phoneNumber);
+        const flowResult = await this.farmerRegistrationService.sendRegistrationFlow(normalizedPhone);
+        
+        if (flowResult.isErr()) {
+          this.logger.error(`[RegistrationCheck] Failed to send flow: ${flowResult.unwrapErr().message}`);
+        } else {
+          this.logger.log(`[RegistrationCheck] Flow sent successfully to ${normalizedPhone}`);
+        }
       }
     } catch (error) {
-      this.logger.error(`Error checking registration status for ${phoneNumber}: ${error}`);
+      this.logger.error(`[RegistrationCheck] Error checking registration status for ${phoneNumber}: ${error}`);
     }
   }
 
   /**
-   * Normalize phone number to +91XXXXXXXXXX format
+   * Normalize phone number to +91XXXXXXXXXX format for MongoDB lookup
+   * WhatsApp sends: 919876543210 (no +)
    */
   private normalizePhoneNumber(phoneNumber: string): string {
+    // Remove any whitespace, dashes, etc
     const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
 
+    // Already has +, just return
     if (cleaned.startsWith('+')) {
       return cleaned;
     }
 
-    // Assume Indian numbers (country code 91)
+    // Indian mobile numbers are 10 digits starting with 6,7,8,9
+    // WhatsApp sends country code + number: 919876543210 (12 digits without +)
+    if (cleaned.length === 12 && cleaned.startsWith('91')) {
+      return `+${cleaned}`;
+    }
+
+    // Plain 10 digit Indian number
     if (cleaned.length === 10) {
       return `+91${cleaned}`;
     }
 
+    // For any other format, just prepend +
     return `+${cleaned}`;
   }
 
