@@ -8,6 +8,7 @@ import { CallingModule } from './calling/calling.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { UserStatsModule } from './user-stats/user-stats.module';
 import { FarmerRegistrationModule } from './farmer-registration/farmer-registration.module';
+import { UserDetailsModule } from './user-details/user-details.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FarmerRegistrationModule } from './farmer-registration/farmer-registrat
     AccessControlModule,
     UserStatsModule,
     FarmerRegistrationModule,
+    UserDetailsModule,
   ],
   controllers: [WhatsappController],
   providers: [WhatsappService],
