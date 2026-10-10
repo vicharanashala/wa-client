@@ -349,4 +349,77 @@ export class WhatsappService {
     }
     throw new Error(`Failed to send voice message to ${to}: ${rawError}`);
   }
+
+  /**
+   * Send a WhatsApp Flow to a user
+   * Uses the Messages API with interactive type to trigger WhatsApp Flows
+   */
+  async sendFlowMessage(
+    to: string,
+    payload: {
+      screen: string;
+      data: Record<string, any>;
+    },
+  ): Promise<void> {
+    const flowId = whatsappConfig.flowId;
+
+    if (!flowId) {
+      throw new Error('WHATSAPP_FLOW_ID not configured');
+    }
+
+    const body = JSON.stringify({
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type: 'interactive',
+      interactive: {
+        type: 'flow',
+        header: {
+          type: 'image',
+          image: {
+            link: 'https://res.cloudinary.com/dgwhmqdhr/image/upload/v1769143824/annam-color-with-icon_jsaz3l.png',
+          },
+        },
+        body: {
+          text: 'Please complete your registration to access Ajrasakha Chatbot Services.',
+        },
+        footer: {
+          text: 'Ajrasakha - Annam.ai',
+        },
+        action: {
+          name: 'flow',
+          parameters: {
+            flow_id: flowId,
+            flow_message_version: '3',
+            flow_token: `FLOW_${Date.now()}_${to}`,
+            mode: 'draft',
+            flow_cta: 'Complete Registration',
+            screens: [
+              {
+                screen_id: 'STATE_SCREEN',
+                data: payload.data,
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    const response = await fetch(whatsappConfig.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${whatsappConfig.accessToken}`,
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      this.logger.error(`Failed to send flow to ${to}: ${error}`);
+      throw new Error(`Failed to send flow message: ${error}`);
+    }
+
+    this.logger.log(`Flow message sent to ${to}`);
+  }
 }
