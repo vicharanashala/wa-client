@@ -10,6 +10,7 @@ import {
 import { FarmerRegistrationService, FlowCallbackData, FlowDataResponse } from './farmer-registration.service';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 import { LocationService } from '../location/location.service';
+import { FlowEncryptionService } from '../flow-encryption/flow-encryption.service';
 
 // ─────────────────────────────────────────────────────────────
 // DTOs
@@ -53,6 +54,7 @@ export class FarmerRegistrationController {
     private readonly farmerRegistrationService: FarmerRegistrationService,
     private readonly whatsappService: WhatsappService,
     private readonly locationService: LocationService,
+    private readonly flowEncryptionService: FlowEncryptionService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────
@@ -81,48 +83,130 @@ export class FarmerRegistrationController {
   // ─────────────────────────────────────────────────────────────
 
   @Post('callback')
-  async handleFlowCallback(@Body() payload: FlowCallbackPayload): Promise<any> {
-    this.logger.log(`Flow callback received - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
+  async handleFlowCallback(@Body() body: any): Promise<any> {
+    this.logger.log(`Flow callback received`);
 
     try {
-      // Handle GET_INITIAL_SCREEN - return dynamic data for screens
-      if (payload.action === 'GET_INITIAL_SCREEN') {
-        return this.getScreenData(payload);
+      // Check if the request is encrypted (Meta sends encrypted_flow_data)
+      if (body.encrypted_flow_data) {
+        return this.handleEncryptedCallback(body);
       }
 
-      // Handle FLOW_SUBMIT - process form submission
-      if (payload.action === 'FLOW_SUBMIT') {
-        // Extract data from Flow submission
-        // Flow sends {id, title} objects from dropdown selections
-        const flowData: FlowCallbackData = {
-          phone_number: payload.phone_number,
-          state: payload.data?.state,
-          district: payload.data?.district,
-          block: payload.data?.block,
-          village: payload.data?.village,
-        };
-
-        // Process the callback
-        const result = await this.farmerRegistrationService.handleFlowCallback(flowData);
-
-        if (result.isErr()) {
-          this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
-          return { status: 'error' };
-        }
-
-        // Send welcome message
-        await this.sendWelcomeMessage(payload.phone_number);
-
-        this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
-        return { status: 'success' };
-      }
-
-      return { status: 'unknown_action' };
+      // Handle plain callback (for testing without encryption)
+      const payload = body as FlowCallbackPayload;
+      return this.handlePlainCallback(payload);
 
     } catch (error) {
       this.logger.error(`Flow callback error: ${error}`);
       return { status: 'error' };
     }
+  }
+
+  /**
+   * Handle encrypted callback from Meta
+   */
+  private async handleEncryptedCallback(encryptedData: {
+    encrypted_flow_data: string;
+    encrypted_aes_key: string;
+    initial_vector: string;
+  }): Promise<any> {
+    // Decrypt the request
+    const decryptResult = this.flowEncryptionService.decryptFlowRequest(encryptedData);
+
+    if (!decryptResult.success || !decryptResult.data) {
+      this.logger.error(`Failed to decrypt: ${decryptResult.error}`);
+      return { status: 'decryption_error', error: decryptResult.error };
+    }
+
+    const payload = decryptResult.data as FlowCallbackPayload;
+    this.logger.log(`Decrypted - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
+
+    // Handle the callback
+    let responseData: any;
+
+    if (payload.action === 'GET_INITIAL_SCREEN') {
+      responseData = this.getScreenData(payload);
+    } else if (payload.action === 'FLOW_SUBMIT') {
+      const flowData: FlowCallbackData = {
+        phone_number: payload.phone_number,
+        state: payload.data?.state,
+        district: payload.data?.district,
+        block: payload.data?.block,
+        village: payload.data?.village,
+      };
+
+      const result = await this.farmerRegistrationService.handleFlowCallback(flowData);
+
+      if (result.isErr()) {
+        this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
+        responseData = { status: 'error' };
+      } else {
+        // Send welcome message
+        await this.sendWelcomeMessage(payload.phone_number);
+        this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
+        responseData = { status: 'success' };
+      }
+    } else {
+      responseData = { status: 'unknown_action' };
+    }
+
+    // Encrypt the response
+    const encryptResult = this.flowEncryptionService.encryptFlowResponse(responseData, encryptedData);
+
+    if (!encryptResult.success) {
+      this.logger.error(`Failed to encrypt response: ${encryptResult.error}`);
+      return { status: 'encryption_error', error: encryptResult.error };
+    }
+
+    return { encrypted_data: encryptResult.encrypted_data };
+  }
+
+  /**
+   * Handle plain (unencrypted) callback for testing
+   */
+  private async handlePlainCallback(payload: FlowCallbackPayload): Promise<any> {
+    this.logger.log(`Plain callback - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
+
+    // Handle GET_INITIAL_SCREEN - return dynamic data for screens
+    if (payload.action === 'GET_INITIAL_SCREEN') {
+      return this.getScreenData(payload);
+    }
+
+    // Handle FLOW_SUBMIT - process form submission
+    if (payload.action === 'FLOW_SUBMIT') {
+      const flowData: FlowCallbackData = {
+        phone_number: payload.phone_number,
+        state: payload.data?.state,
+        district: payload.data?.district,
+        block: payload.data?.block,
+        village: payload.data?.village,
+      };
+
+      const result = await this.farmerRegistrationService.handleFlowCallback(flowData);
+
+      if (result.isErr()) {
+        this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
+        return { status: 'error' };
+      }
+
+      // Send welcome message
+      await this.sendWelcomeMessage(payload.phone_number);
+
+      this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
+      return { status: 'success' };
+    }
+
+    return { status: 'unknown_action' };
+  }
+
+  /**
+   * Get public key endpoint for Meta Business Manager
+   */
+  @Get('public-key')
+  getPublicKey(): { public_key: string } {
+    return {
+      public_key: this.flowEncryptionService.getPublicKeyForMeta(),
+    };
   }
 
   /**
