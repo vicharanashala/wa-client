@@ -84,11 +84,14 @@ export class FlowEncryptionService {
       const encryptedAesKeyBuffer = Buffer.from(encryptedData.encrypted_aes_key, 'base64');
       
       // Step 2: RSA-OAEP decrypt to get the AES key (16 bytes for AES-128)
+      this.logger.log(`Encrypted AES key length: ${encryptedAesKeyBuffer.length} bytes (expected: 256 for RSA-2048)`);
+      
       const aesKeyBuffer = crypto.privateDecrypt(
         {
           key: this.privateKey,
           padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
           oaepHash: 'sha256',
+          // MGF1 hash defaults to same as oaepHash, but let's be explicit
         },
         encryptedAesKeyBuffer,
       );
