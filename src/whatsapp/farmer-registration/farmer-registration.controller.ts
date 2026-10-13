@@ -135,6 +135,9 @@ export class FarmerRegistrationController {
 
     if (payload.action === 'GET_INITIAL_SCREEN') {
       responseData = this.getScreenData(payload);
+    } else if (payload.action === 'ping') {
+      // Meta health check - return empty success
+      responseData = {};
     } else if (payload.action === 'FLOW_SUBMIT') {
       const flowData: FlowCallbackData = {
         phone_number: payload.phone_number,
