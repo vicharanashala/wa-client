@@ -184,8 +184,12 @@ export class FlowEncryptionService {
         encryptedAesKeyBuffer,
       );
 
-      // Use the same IV for consistency
-      const ivBuffer = Buffer.from(encryptedRequest.initial_vector, 'base64');
+      // Use the IV XOR'd with 0xFF for response (Meta spec requirement)
+      const requestIv = Buffer.from(encryptedRequest.initial_vector, 'base64');
+      const ivBuffer = Buffer.alloc(16);
+      for (let i = 0; i < 16; i++) {
+        ivBuffer[i] = requestIv[i] ^ 0xFF;
+      }
 
       // Encrypt the response data
       const cipher = crypto.createCipheriv('aes-128-gcm', aesKeyBuffer, ivBuffer);
