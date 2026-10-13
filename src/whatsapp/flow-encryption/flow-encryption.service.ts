@@ -85,16 +85,41 @@ export class FlowEncryptionService {
       
       // Step 2: RSA-OAEP decrypt to get the AES key (16 bytes for AES-128)
       this.logger.log(`Encrypted AES key length: ${encryptedAesKeyBuffer.length} bytes (expected: 256 for RSA-2048)`);
+      this.logger.log(`Using public key hash: ${crypto.createHash('sha256').update(this.publicKey).digest('hex').substring(0, 16)}...`);
       
-      const aesKeyBuffer = crypto.privateDecrypt(
-        {
-          key: this.privateKey,
-          padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-          oaepHash: 'sha256',
-          // MGF1 hash defaults to same as oaepHash, but let's be explicit
-        },
-        encryptedAesKeyBuffer,
-      );
+      let aesKeyBuffer: Buffer;
+      
+      // Try with SHA-256 first (Meta's current standard)
+      try {
+        aesKeyBuffer = crypto.privateDecrypt(
+          {
+            key: this.privateKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256',
+            mgf1Hash: 'sha256',
+          },
+          encryptedAesKeyBuffer,
+        );
+        this.logger.log('RSA-OAEP decryption with SHA-256 succeeded');
+      } catch (sha256Error) {
+        this.logger.warn('SHA-256 failed, trying SHA-1...');
+        // Fallback to SHA-1 (older Meta implementation)
+        try {
+          aesKeyBuffer = crypto.privateDecrypt(
+            {
+              key: this.privateKey,
+              padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+              oaepHash: 'sha1',
+              mgf1Hash: 'sha1',
+            },
+            encryptedAesKeyBuffer,
+          );
+          this.logger.log('RSA-OAEP decryption with SHA-1 succeeded');
+        } catch (sha1Error) {
+          this.logger.error(`Both SHA-256 and SHA-1 failed. SHA-256: ${sha256Error}, SHA-1: ${sha1Error}`);
+          throw sha1Error;
+        }
+      }
 
       // Verify AES key length (should be 16 bytes for AES-128)
       if (aesKeyBuffer.length !== 16) {
