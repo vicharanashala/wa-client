@@ -34,7 +34,11 @@ export class FlowEncryptionService {
         // Derive public key from private key
         const keyObject = crypto.createPrivateKey(cleanKey);
         this.privateKey = cleanKey;
-        this.publicKey = keyObject.export({ type: 'spki', format: 'pem' }) as string;
+        // Use jwk to export then convert to pem
+        const jwk = keyObject.export({ format: 'jwk' });
+        // @ts-ignore - JWK is valid for createPublicKey
+        const publicKeyObject = crypto.createPublicKey({ key: jwk });
+        this.publicKey = publicKeyObject.export({ type: 'spki', format: 'pem' }) as string;
         this.logger.log('Flow encryption: Using private key from FLOW_PRIVATE_KEY env var');
       } catch (keyError) {
         this.logger.warn(`Failed to parse FLOW_PRIVATE_KEY: ${keyError}. Generating new key pair.`);
