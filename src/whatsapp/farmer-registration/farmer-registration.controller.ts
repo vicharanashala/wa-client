@@ -164,10 +164,12 @@ export class FarmerRegistrationController {
 
     if (!encryptResult.success) {
       this.logger.error(`Failed to encrypt response: ${encryptResult.error}`);
-      return { status: 'encryption_error', error: encryptResult.error };
+      // Return plain text error
+      return encryptResult.error;
     }
 
-    return { encrypted_data: encryptResult.encrypted_data };
+    // Return base64 string directly (not wrapped in JSON)
+    return encryptResult.encrypted_data;
   }
 
   /**
