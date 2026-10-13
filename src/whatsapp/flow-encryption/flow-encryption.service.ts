@@ -89,29 +89,37 @@ export class FlowEncryptionService {
       
       let aesKeyBuffer: Buffer;
       
-      // Try with SHA-256 first (Meta's current standard)
+      // Create KeyObject from private key for proper OAEP handling
+      const privateKeyObject = crypto.createPrivateKey(this.privateKey);
+      
+      let aesKeyBuffer: Buffer;
+      let success = false;
+      
+      // Try with SHA-256 (Meta's standard)
       try {
         aesKeyBuffer = crypto.privateDecrypt(
           {
-            key: this.privateKey,
+            key: privateKeyObject,
             padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
             oaepHash: 'sha256',
-          } as crypto.RsaPrivateKey,
+          },
           encryptedAesKeyBuffer,
         );
+        success = true;
         this.logger.log('RSA-OAEP decryption with SHA-256 succeeded');
       } catch (sha256Error) {
         this.logger.warn('SHA-256 failed, trying SHA-1...');
-        // Fallback to SHA-1 (older Meta implementation)
+        // Fallback to SHA-1
         try {
           aesKeyBuffer = crypto.privateDecrypt(
             {
-              key: this.privateKey,
+              key: privateKeyObject,
               padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
               oaepHash: 'sha1',
-            } as crypto.RsaPrivateKey,
+            },
             encryptedAesKeyBuffer,
           );
+          success = true;
           this.logger.log('RSA-OAEP decryption with SHA-1 succeeded');
         } catch (sha1Error) {
           this.logger.error(`Both SHA-256 and SHA-1 failed. SHA-256: ${sha256Error}, SHA-1: ${sha1Error}`);
@@ -171,9 +179,10 @@ export class FlowEncryptionService {
     try {
       // Extract AES key from original request (same key is used for response)
       const encryptedAesKeyBuffer = Buffer.from(encryptedRequest.encrypted_aes_key, 'base64');
+      const privateKeyObject = crypto.createPrivateKey(this.privateKey);
       const aesKeyBuffer = crypto.privateDecrypt(
         {
-          key: this.privateKey,
+          key: privateKeyObject,
           padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
           oaepHash: 'sha256',
         },
