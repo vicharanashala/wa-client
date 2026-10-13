@@ -96,7 +96,7 @@ export class FlowEncryptionService {
             key: this.privateKey,
             padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
             oaepHash: 'sha256',
-          } as crypto.RSAPrivateKey,
+          } as crypto.RsaPrivateKey,
           encryptedAesKeyBuffer,
         );
         this.logger.log('RSA-OAEP decryption with SHA-256 succeeded');
@@ -109,7 +109,7 @@ export class FlowEncryptionService {
               key: this.privateKey,
               padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
               oaepHash: 'sha1',
-            } as crypto.RSAPrivateKey,
+            } as crypto.RsaPrivateKey,
             encryptedAesKeyBuffer,
           );
           this.logger.log('RSA-OAEP decryption with SHA-1 succeeded');
