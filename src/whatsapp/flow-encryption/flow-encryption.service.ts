@@ -87,13 +87,10 @@ export class FlowEncryptionService {
       this.logger.log(`Encrypted AES key length: ${encryptedAesKeyBuffer.length} bytes (expected: 256 for RSA-2048)`);
       this.logger.log(`Using public key hash: ${crypto.createHash('sha256').update(this.publicKey).digest('hex').substring(0, 16)}...`);
       
-      let aesKeyBuffer: Buffer;
-      
       // Create KeyObject from private key for proper OAEP handling
       const privateKeyObject = crypto.createPrivateKey(this.privateKey);
       
       let aesKeyBuffer: Buffer;
-      let success = false;
       
       // Try with SHA-256 (Meta's standard)
       try {
@@ -105,7 +102,6 @@ export class FlowEncryptionService {
           },
           encryptedAesKeyBuffer,
         );
-        success = true;
         this.logger.log('RSA-OAEP decryption with SHA-256 succeeded');
       } catch (sha256Error) {
         this.logger.warn('SHA-256 failed, trying SHA-1...');
@@ -119,7 +115,6 @@ export class FlowEncryptionService {
             },
             encryptedAesKeyBuffer,
           );
-          success = true;
           this.logger.log('RSA-OAEP decryption with SHA-1 succeeded');
         } catch (sha1Error) {
           this.logger.error(`Both SHA-256 and SHA-1 failed. SHA-256: ${sha256Error}, SHA-1: ${sha1Error}`);
