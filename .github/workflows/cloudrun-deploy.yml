@@ -111,6 +111,7 @@ jobs:
             TS_HOSTNAME=wa-client-staging
             WHATSAPP_FLOW_ID=${{ secrets.WHATSAPP_FLOW_ID }}
             REVIEWER_BACKEND_BASE_URL=${{ secrets.REVIEWER_BACKEND_BASE_URL }}
+            FLOW_PRIVATE_KEY=${{ secrets.FLOW_PRIVATE_KEY }}
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300
 
   deploy_production:
@@ -158,4 +159,5 @@ jobs:
             IS_PRODUCTION=true
             WHATSAPP_FLOW_ID=${{ secrets.WHATSAPP_FLOW_ID }}
             REVIEWER_BACKEND_BASE_URL=${{ secrets.REVIEWER_BACKEND_BASE_URL }}
+            FLOW_PRIVATE_KEY=${{ secrets.FLOW_PRIVATE_KEY }}
           flags: --allow-unauthenticated --port=3000 --memory=1Gi --min-instances=0 --timeout=300

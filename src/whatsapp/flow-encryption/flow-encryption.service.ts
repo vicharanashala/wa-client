@@ -17,11 +17,39 @@ export class FlowEncryptionService {
   private readonly logger = new Logger(FlowEncryptionService.name);
   
   // RSA key pair (generate once, store securely)
-  private readonly privateKey: string;
-  public readonly publicKey: string;
+  private privateKey: string;
+  public publicKey: string;
 
   constructor() {
-    // Generate RSA-2048 key pair
+    // Try to load private key from environment, otherwise generate new one
+    const envPrivateKey = process.env.FLOW_PRIVATE_KEY;
+
+    if (envPrivateKey && envPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      try {
+        // Parse the key - handle both actual newlines and \n literal strings
+        const cleanKey = envPrivateKey
+          .replace(/\\n/g, '\n')  // Replace literal \n with actual newlines
+          .trim();
+        
+        // Derive public key from private key
+        const keyObject = crypto.createPrivateKey(cleanKey);
+        this.privateKey = cleanKey;
+        this.publicKey = keyObject.export({ type: 'spki', format: 'pem' }) as string;
+        this.logger.log('Flow encryption: Using private key from FLOW_PRIVATE_KEY env var');
+      } catch (keyError) {
+        this.logger.warn(`Failed to parse FLOW_PRIVATE_KEY: ${keyError}. Generating new key pair.`);
+        this.generateNewKeyPair();
+      }
+    } else {
+      // Generate new key pair (WARNING: key will change on restart!)
+      this.generateNewKeyPair();
+    }
+  }
+
+  /**
+   * Generate new RSA key pair
+   */
+  private generateNewKeyPair(): void {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 2048,
       publicKeyEncoding: {
@@ -36,8 +64,7 @@ export class FlowEncryptionService {
 
     this.privateKey = privateKey;
     this.publicKey = publicKey;
-
-    this.logger.log('Flow encryption keys generated');
+    this.logger.warn('Flow encryption: Generated new key pair (will change on restart!)');
   }
 
   /**
