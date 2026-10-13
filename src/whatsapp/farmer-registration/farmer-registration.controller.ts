@@ -136,8 +136,8 @@ export class FarmerRegistrationController {
     if (payload.action === 'GET_INITIAL_SCREEN') {
       responseData = this.getScreenData(payload);
     } else if (payload.action === 'ping') {
-      // Meta health check - return empty success
-      responseData = {};
+      // Meta health check
+      responseData = { data: { status: 'active' } };
     } else if (payload.action === 'FLOW_SUBMIT') {
       const flowData: FlowCallbackData = {
         phone_number: payload.phone_number,
@@ -151,12 +151,25 @@ export class FarmerRegistrationController {
 
       if (result.isErr()) {
         this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
-        responseData = { status: 'error' };
+        responseData = {
+          screen: payload.screen,
+          data: { error_message: result.unwrapErr().message },
+        };
       } else {
         // Send welcome message
         await this.sendWelcomeMessage(payload.phone_number);
         this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
-        responseData = { status: 'success' };
+        // Return SUCCESS screen to close the flow
+        responseData = {
+          screen: 'SUCCESS',
+          data: {
+            extension_message_response: {
+              params: {
+                flow_token: payload.phone_number, // Using phone as flow_token if not provided
+              },
+            },
+          },
+        };
       }
     } else {
       responseData = { status: 'unknown_action' };
@@ -237,7 +250,6 @@ export class FarmerRegistrationController {
         case 'STATE_SCREEN': {
           const states = await this.locationService.getStatesFormatted();
           return {
-            version: '3',
             screen: 'STATE_SCREEN',
             data: { states },
           };
@@ -250,7 +262,6 @@ export class FarmerRegistrationController {
           }
           const districts = await this.locationService.getDistrictsFormatted(stateCode);
           return {
-            version: '3',
             screen: 'DISTRICT_SCREEN',
             data: { districts },
           };
@@ -263,7 +274,6 @@ export class FarmerRegistrationController {
           }
           const blocks = await this.locationService.getBlocksFormatted(districtCode);
           return {
-            version: '3',
             screen: 'BLOCK_SCREEN',
             data: { blocks },
           };
