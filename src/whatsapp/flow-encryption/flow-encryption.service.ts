@@ -105,16 +105,15 @@ export class FlowEncryptionService {
       const encryptedFlowDataBuffer = Buffer.from(encryptedData.encrypted_flow_data, 'base64');
 
       // Step 5: AES-GCM decrypt
+      // Verify auth tag (last 16 bytes) - must be set BEFORE decryption
+      const authTag = encryptedFlowDataBuffer.slice(-16);
       const decipher = crypto.createDecipheriv('aes-128-gcm', aesKeyBuffer, ivBuffer);
+      decipher.setAuthTag(authTag);
       
       const decryptedBuffer = Buffer.concat([
         decipher.update(encryptedFlowDataBuffer.slice(0, -16)), // Remove auth tag from end
         decipher.final(),
       ]);
-
-      // Verify auth tag (last 16 bytes)
-      const authTag = encryptedFlowDataBuffer.slice(-16);
-      decipher.setAuthTag(authTag);
 
       // Step 6: Parse JSON
       const decryptedJson = decryptedBuffer.toString('utf8');
