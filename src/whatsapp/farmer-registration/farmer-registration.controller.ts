@@ -6,6 +6,8 @@ import {
   Body,
   Logger,
   BadRequestException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FarmerRegistrationService, FlowCallbackData, FlowDataResponse } from './farmer-registration.service';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
@@ -89,6 +91,7 @@ export class FarmerRegistrationController {
   }
 
   @Post('callback')
+  @HttpCode(HttpStatus.OK)
   async handleFlowCallback(@Body() body: any): Promise<any> {
     this.logger.log(`Flow callback received`);
 
