@@ -82,6 +82,12 @@ export class FarmerRegistrationController {
   // Receives WhatsApp Flow submission data
   // ─────────────────────────────────────────────────────────────
 
+  @Get('callback')
+  async handleFlowHealthCheck(): Promise<{ status: string }> {
+    // Meta calls GET /callback to verify the endpoint is reachable
+    return { status: 'ok' };
+  }
+
   @Post('callback')
   async handleFlowCallback(@Body() body: any): Promise<any> {
     this.logger.log(`Flow callback received`);
