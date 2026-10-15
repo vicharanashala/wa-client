@@ -180,23 +180,28 @@ export class FarmerRegistrationController {
   async getFlowDataEncrypted(
     @Body() encryptedRequest: EncryptedFlowDataRequest,
   ): Promise<string> {
-    this.logger.log(`[WhatsApp Flow] Received encrypted data request`);
+    const logPrefix = '[WhatsApp Flow]';
+    console.log(`${logPrefix} Received encrypted data request at ${new Date().toISOString()}`);
+    console.log(`${logPrefix} Encrypted payload keys: ${Object.keys(encryptedRequest).join(', ')}`);
+    console.log(`${logPrefix} encrypted_flow_data length: ${encryptedRequest.encrypted_flow_data?.length || 0}`);
+    console.log(`${logPrefix} encrypted_aes_key length: ${encryptedRequest.encrypted_aes_key?.length || 0}`);
+    console.log(`${logPrefix} initial_vector length: ${encryptedRequest.initial_vector?.length || 0}`);
 
     // Step 1: Decrypt the incoming request
     const decryptResult = this.flowEncryptionService.decryptFlowRequest(encryptedRequest);
 
     if (!decryptResult.success) {
-      this.logger.error(`[WhatsApp Flow] Failed to decrypt flow request: ${decryptResult.error}`);
+      console.error(`${logPrefix} Failed to decrypt flow request: ${decryptResult.error}`);
       throw new BadRequestException('Failed to decrypt request');
     }
 
     const requestData = decryptResult.data as DecryptedFlowDataRequest;
-    this.logger.log(`[WhatsApp Flow] Decrypted request: ${JSON.stringify(requestData)}`);
+    console.log(`${logPrefix} Decrypted request: ${JSON.stringify(requestData)}`);
 
     // Step 2: Process the request and get response data
     const responseData = await this.processFlowDataRequest(requestData);
 
-    this.logger.log(`[WhatsApp Flow] API Response for ${requestData.screen}: ${JSON.stringify(responseData)}`);
+    console.log(`${logPrefix} API Response for ${requestData.screen}: ${JSON.stringify(responseData)}`);
 
     // Step 3: Encrypt and return the response
     const encryptResult = this.flowEncryptionService.encryptFlowResponse(
@@ -205,11 +210,11 @@ export class FarmerRegistrationController {
     );
 
     if (!encryptResult.success) {
-      this.logger.error(`[WhatsApp Flow] Failed to encrypt flow response: ${encryptResult.error}`);
+      console.error(`${logPrefix} Failed to encrypt flow response: ${encryptResult.error}`);
       throw new InternalServerErrorException('Failed to encrypt response');
     }
 
-    this.logger.log(`[WhatsApp Flow] Encrypted response sent successfully for ${requestData.screen}`);
+    console.log(`${logPrefix} Encrypted response sent successfully for ${requestData.screen}`);
     return encryptResult.encrypted_data as string;
   }
 
