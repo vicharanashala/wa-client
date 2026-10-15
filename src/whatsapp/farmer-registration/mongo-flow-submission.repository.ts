@@ -22,7 +22,7 @@ export class MongoFlowSubmissionRepository implements FlowSubmissionRepository {
   private readonly logger = new Logger(MongoFlowSubmissionRepository.name);
 
   constructor(
-    @InjectModel(FlowSubmissionModel.name, 'FLOW_SUBMISSION_MONGO')
+    @InjectModel(FlowSubmissionModel.name)
     private readonly flowSubmissionModel: Model<FlowSubmissionDocument>,
   ) {}
 
