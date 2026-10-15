@@ -180,21 +180,23 @@ export class FarmerRegistrationController {
   async getFlowDataEncrypted(
     @Body() encryptedRequest: EncryptedFlowDataRequest,
   ): Promise<string> {
-    this.logger.debug('Received encrypted flow data request');
+    this.logger.log(`[WhatsApp Flow] Received encrypted data request`);
 
     // Step 1: Decrypt the incoming request
     const decryptResult = this.flowEncryptionService.decryptFlowRequest(encryptedRequest);
 
     if (!decryptResult.success) {
-      this.logger.error(`Failed to decrypt flow request: ${decryptResult.error}`);
+      this.logger.error(`[WhatsApp Flow] Failed to decrypt flow request: ${decryptResult.error}`);
       throw new BadRequestException('Failed to decrypt request');
     }
 
     const requestData = decryptResult.data as DecryptedFlowDataRequest;
-    this.logger.debug(`Decrypted flow request: action=${requestData.action}, screen=${requestData.screen}`);
+    this.logger.log(`[WhatsApp Flow] Decrypted request: ${JSON.stringify(requestData)}`);
 
     // Step 2: Process the request and get response data
     const responseData = await this.processFlowDataRequest(requestData);
+
+    this.logger.log(`[WhatsApp Flow] API Response for ${requestData.screen}: ${JSON.stringify(responseData)}`);
 
     // Step 3: Encrypt and return the response
     const encryptResult = this.flowEncryptionService.encryptFlowResponse(
@@ -203,11 +205,11 @@ export class FarmerRegistrationController {
     );
 
     if (!encryptResult.success) {
-      this.logger.error(`Failed to encrypt flow response: ${encryptResult.error}`);
+      this.logger.error(`[WhatsApp Flow] Failed to encrypt flow response: ${encryptResult.error}`);
       throw new InternalServerErrorException('Failed to encrypt response');
     }
 
-    this.logger.debug('Flow data response sent successfully');
+    this.logger.log(`[WhatsApp Flow] Encrypted response sent successfully for ${requestData.screen}`);
     return encryptResult.encrypted_data as string;
   }
 
