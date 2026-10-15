@@ -181,6 +181,10 @@ export class FarmerRegistrationController {
     @Body() encryptedRequest: EncryptedFlowDataRequest,
   ): Promise<string> {
     this.logger.log(`[WhatsApp Flow] Received encrypted data request`);
+    this.logger.log(`[WhatsApp Flow] Raw payload: ${JSON.stringify(encryptedRequest)}`);
+    this.logger.log(`[WhatsApp Flow] Missing encrypted_flow_data: ${!encryptedRequest.encrypted_flow_data}`);
+    this.logger.log(`[WhatsApp Flow] Missing encrypted_aes_key: ${!encryptedRequest.encrypted_aes_key}`);
+    this.logger.log(`[WhatsApp Flow] Missing initial_vector: ${!encryptedRequest.initial_vector}`);
     this.logger.log(`[WhatsApp Flow] Encrypted payload keys: ${Object.keys(encryptedRequest).join(', ')}`);
     this.logger.log(`[WhatsApp Flow] encrypted_flow_data length: ${encryptedRequest.encrypted_flow_data?.length || 0}`);
     this.logger.log(`[WhatsApp Flow] encrypted_aes_key length: ${encryptedRequest.encrypted_aes_key?.length || 0}`);
