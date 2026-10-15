@@ -229,7 +229,7 @@ export class FarmerRegistrationController {
     }
 
     const payload = decryptResult.data as FlowCallbackPayload;
-    this.logger.log(`Decrypted - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
+    this.logger.debug(`Decrypted - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
 
     // Handle the callback
     let responseData: any;
