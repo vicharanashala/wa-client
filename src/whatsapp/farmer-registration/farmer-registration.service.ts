@@ -6,6 +6,7 @@ import { LocationProfile } from '../user-details/user-details.schema';
 import { RepositoryError } from '../user-details/user-details.repository';
 import { whatsappConfig } from '../whatsapp-api/whatsapp.config';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
+import { FlowSubmissionRepository } from './flow-submission.repository';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -47,6 +48,39 @@ export interface FlowExecutePayload {
   };
 }
 
+/**
+ * Simplified Flow Data format from WhatsApp Flow
+ * This matches the format sent when user clicks "Complete Profile":
+ * { state: "9", district: "va", block: "vs", village: "rj" }
+ */
+export interface SimplifiedFlowData {
+  state?: string;
+  district?: string;
+  block?: string;
+  village?: string;
+}
+
+/**
+ * Location names for display purposes
+ */
+export interface LocationNames {
+  stateName: string;
+  districtName: string;
+  blockName: string;
+  villageName: string;
+}
+
+/**
+ * Result of processing simplified flow complete
+ */
+export interface FlowCompleteResult {
+  stateCode: string;
+  districtCode: string;
+  blockCode: string;
+  villageCode: string;
+  submittedAt: Date;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Farmer Registration Service
 // ─────────────────────────────────────────────────────────────
@@ -59,6 +93,7 @@ export class FarmerRegistrationService {
     private readonly userDetailsRepository: UserDetailsRepository,
     private readonly locationService: LocationService,
     private readonly whatsappService: WhatsappService,
+    private readonly flowSubmissionRepository: FlowSubmissionRepository,
   ) {}
 
   // ─────────────────────────────────────────────────────────────
@@ -166,14 +201,14 @@ export class FarmerRegistrationService {
       // Build location profile from Flow callback data
       // Flow sends {id, title} objects from dropdown selections
       const profile: LocationProfile = {
-        stateCode: parseInt(data.state!.id),
-        stateName: data.state!.title,
-        districtCode: parseInt(data.district!.id),
-        districtName: data.district!.title,
-        blockCode: parseInt(data.block!.id),
-        blockName: data.block!.title,
-        villageCode: parseInt(data.village!.id),
-        villageName: data.village!.title,
+        stateCode: parseInt(data.state.id),
+        stateName: data.state.title,
+        districtCode: parseInt(data.district.id),
+        districtName: data.district.title,
+        blockCode: parseInt(data.block.id),
+        blockName: data.block.title,
+        villageCode: parseInt(data.village.id),
+        villageName: data.village.title,
       };
 
       // Check if user exists
@@ -255,12 +290,78 @@ export class FarmerRegistrationService {
     return result.unwrap();
   }
 
+  /**
+   * Process simplified Flow complete submission
+   * 
+   * This handles the new Flow format where Meta sends:
+   * { action: 'complete', data: { state: '9', district: 'va', block: 'vs', village: 'rj' } }
+   * 
+   * Note: For this MVP with hardcoded Flow data, we don't have phone_number.
+   * We store submissions in a dedicated collection. Users can be linked later
+   * by enhancing the Flow JSON to include user identification.
+   */
+  async processSimplifiedFlowComplete(
+    data: SimplifiedFlowData,
+  ): Promise<Result<FlowCompleteResult, RepositoryError>> {
+    this.logger.log(`Processing simplified flow complete: state=${data.state}, district=${data.district}, block=${data.block}, village=${data.village}`);
+
+    try {
+      // Validate required fields
+      if (!data.state || !data.district || !data.block || !data.village) {
+        return Err(new RepositoryError(
+          'Missing required fields (state, district, block, village)',
+          'INVALID_DATA' as any,
+        ));
+      }
+
+      // Save to MongoDB via the repository
+      const saveResult = await this.flowSubmissionRepository.createSubmission({
+        userId: null, // No user association for MVP with hardcoded Flow data
+        data: {
+          state: data.state,
+          district: data.district,
+          block: data.block,
+          village: data.village,
+        },
+      });
+
+      if (saveResult.isErr()) {
+        this.logger.error(`Failed to save flow submission: ${saveResult.unwrapErr().message}`);
+        return Err(saveResult.unwrapErr());
+      }
+
+      const submission = saveResult.unwrap();
+      
+      this.logger.log(`[FlowComplete] Saved submission: ${submission.id} - ${data.state}/${data.district}/${data.block}/${data.village}`);
+
+      const result: FlowCompleteResult = {
+        stateCode: data.state,
+        districtCode: data.district,
+        blockCode: data.block,
+        villageCode: data.village,
+        submittedAt: submission.submittedAt,
+      };
+
+      return Ok(result);
+
+    } catch (error) {
+      this.logger.error(`Error processing simplified flow complete: ${error}`);
+      return Err(
+        new RepositoryError(
+          String(error),
+          'UNKNOWN' as any,
+          error,
+        ),
+      );
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Helpers
   // ─────────────────────────────────────────────────────────────
 
   private normalizePhoneNumber(phoneNumber: string): string {
-    const cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    const cleaned = phoneNumber.replace(/[\s\-()]/g, '');
 
     if (cleaned.startsWith('+')) {
       return cleaned;

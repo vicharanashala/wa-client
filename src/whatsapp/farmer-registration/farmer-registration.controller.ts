@@ -9,7 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { FarmerRegistrationService, FlowCallbackData, FlowDataResponse } from './farmer-registration.service';
+import { FarmerRegistrationService, FlowCallbackData, FlowDataResponse, SimplifiedFlowData } from './farmer-registration.service';
 import { WhatsappService } from '../whatsapp-api/whatsapp.service';
 import { LocationService } from '../location/location.service';
 import { FlowEncryptionService } from '../flow-encryption/flow-encryption.service';
@@ -37,11 +37,45 @@ interface FlowCallbackPayload {
   };
 }
 
+/**
+ * WhatsApp Flow Complete Payload (simplified format)
+ * When user clicks "Complete Profile", Meta sends:
+ * {
+ *   "version": "3",
+ *   "action": "complete",
+ *   "data": { "state": "9", "district": "va", "block": "vs", "village": "rj" },
+ *   "flow_token": "..."
+ * }
+ */
+interface FlowCompletePayload {
+  version?: string;
+  action: string;
+  data: SimplifiedFlowData;
+  flow_token?: string;
+}
+
+/**
+ * Ping Payload
+ */
+interface FlowPingPayload {
+  action: string;
+}
+
 interface FlowDataQuery {
   screen: string;
   stateCode?: string;
   districtCode?: string;
   blockCode?: string;
+}
+
+/**
+ * WhatsApp Flow Response format
+ */
+interface FlowCompleteResponse {
+  data: {
+    status: string;
+    message?: string;
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -93,21 +127,88 @@ export class FarmerRegistrationController {
   @Post('callback')
   @HttpCode(HttpStatus.OK)
   async handleFlowCallback(@Body() body: any): Promise<any> {
-    this.logger.log(`Flow callback received`);
+    this.logger.debug(`Flow callback received: action=${body.action}`);
 
     try {
-      // Check if the request is encrypted (Meta sends encrypted_flow_data)
+      // Handle ping action for health checks
+      if (body.action === 'ping') {
+        this.logger.debug('Handling ping request');
+        return { data: { status: 'active' } };
+      }
+
+      // Handle action=complete (new simplified format from Flow)
+      if (body.action === 'complete') {
+        return this.handleFlowComplete(body as FlowCompletePayload);
+      }
+
+      // Handle encrypted callback (Meta sends encrypted_flow_data)
       if (body.encrypted_flow_data) {
         return this.handleEncryptedCallback(body);
       }
 
-      // Handle plain callback (for testing without encryption)
+      // Handle plain callback (old format with screen/action fields)
       const payload = body as FlowCallbackPayload;
       return this.handlePlainCallback(payload);
 
     } catch (error) {
       this.logger.error(`Flow callback error: ${error}`);
-      return { status: 'error' };
+      return { data: { status: 'error', message: String(error) } };
+    }
+  }
+
+  /**
+   * Handle Flow Complete action
+   * This is called when user clicks "Complete Profile" in the WhatsApp Flow
+   * The payload format is: { action: 'complete', data: { state: '9', district: 'va', ... } }
+   */
+  private async handleFlowComplete(payload: FlowCompletePayload): Promise<FlowCompleteResponse> {
+    this.logger.log(`Handling Flow complete. flow_token=${payload.flow_token}`);
+
+    try {
+      const data = payload.data;
+
+      // Validate required fields
+      if (!data.state || !data.district || !data.block || !data.village) {
+        this.logger.warn('Missing required fields in flow complete');
+        return {
+          data: {
+            status: 'error',
+            message: 'Missing required fields (state, district, block, village)',
+          },
+        };
+      }
+
+      // Process the simplified flow data
+      const result = await this.farmerRegistrationService.processSimplifiedFlowComplete(data);
+
+      if (result.isErr()) {
+        this.logger.error(`Error processing flow complete: ${result.unwrapErr().message}`);
+        return {
+          data: {
+            status: 'error',
+            message: result.unwrapErr().message,
+          },
+        };
+      }
+
+      this.logger.log(`Flow complete processed successfully for state=${data.state}, district=${data.district}`);
+
+      // Return success response in WhatsApp Flow format
+      return {
+        data: {
+          status: 'success',
+          message: 'Profile updated successfully',
+        },
+      };
+
+    } catch (error) {
+      this.logger.error(`Error in handleFlowComplete: ${error}`);
+      return {
+        data: {
+          status: 'error',
+          message: String(error),
+        },
+      };
     }
   }
 

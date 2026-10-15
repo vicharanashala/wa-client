@@ -73,7 +73,7 @@ export class LangGraphClientService implements OnModuleInit {
     this.client = new Client({
       apiUrl,
       timeoutMs: 480_000,
-    } as any);
+    });
     await this.resolveAssistantGraphId();
 
     this.logger.log(
@@ -341,7 +341,7 @@ export class LangGraphClientService implements OnModuleInit {
       return;
     }
 
-    const yesterdayMessages: any[] = (yesterdayState?.values as any)?.messages ?? [];
+    const yesterdayMessages: any[] = (yesterdayState?.values)?.messages ?? [];
     if (yesterdayMessages.length > 0) {
       try {
         const summaryRunOutput = await this.client.runs.wait(
@@ -434,7 +434,7 @@ export class LangGraphClientService implements OnModuleInit {
    * Looks for human messages with actual question content.
    */
   private extractLastUserQuestions(state: any, count: number): string[] {
-    const messages: any[] = (state?.values as any)?.messages ?? [];
+    const messages: any[] = (state?.values)?.messages ?? [];
     const questions: string[] = [];
 
     // Go through messages in reverse order to find last N user questions

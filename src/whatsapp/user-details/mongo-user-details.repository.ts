@@ -78,7 +78,7 @@ export class MongoUserDetailsRepository implements UserDetailsRepository {
           profile: null,
           shouldStartRegistration: true,
           shouldResumeRegistration: false,
-        } as UserCheckResult);
+        });
       }
 
       const profile = this.mapToProfile(doc);
@@ -88,7 +88,7 @@ export class MongoUserDetailsRepository implements UserDetailsRepository {
         profile,
         shouldStartRegistration: false,
         shouldResumeRegistration: doc.isRegistrationInProgress && !doc.isProfileComplete,
-      } as UserCheckResult);
+      });
 
     } catch (error) {
       this.logger.error(`[${userId}] Error checking user status: ${error}`);
@@ -248,7 +248,7 @@ export class MongoUserDetailsRepository implements UserDetailsRepository {
         completedRegistrations: completed,
         inProgressRegistrations: inProgress,
         abandonedRegistrations: totalUsers - completed - inProgress,
-      } as RegistrationStats);
+      });
 
     } catch (error) {
       this.logger.error(`Error getting stats: ${error}`);
