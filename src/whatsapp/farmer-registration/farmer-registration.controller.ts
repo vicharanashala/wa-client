@@ -6,6 +6,7 @@ import {
   Body,
   Logger,
   BadRequestException,
+  InternalServerErrorException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -69,12 +70,58 @@ interface FlowDataQuery {
 }
 
 /**
+ * Encrypted Flow Data Request from WhatsApp
+ * WhatsApp Flow 3.0 sends encrypted payloads via POST
+ */
+interface EncryptedFlowDataRequest {
+  encrypted_flow_data: string;
+  encrypted_aes_key: string;
+  initial_vector: string;
+}
+
+/**
+ * Decrypted Flow Data Request Body
+ * After decryption, the payload contains:
+ * {
+ *   "action": "GET_DATA",
+ *   "screen": "STATE_SCREEN" | "DISTRICT_SCREEN" | "BLOCK_SCREEN" | "VILLAGE_SCREEN",
+ *   "data": {
+ *     "state_code"?: string,   // For DISTRICT_SCREEN
+ *     "district_code"?: string, // For BLOCK_SCREEN
+ *     "block_code"?: string     // For VILLAGE_SCREEN
+ *   }
+ * }
+ */
+interface DecryptedFlowDataRequest {
+  action: string;
+  screen: string;
+  data?: {
+    state_code?: string;
+    district_code?: string;
+    block_code?: string;
+  };
+}
+
+/**
  * WhatsApp Flow Response format
  */
 interface FlowCompleteResponse {
   data: {
     status: string;
     message?: string;
+  };
+}
+
+/**
+ * Flow Data Screen Response (matches Flow JSON structure)
+ */
+interface FlowDataScreenResponse {
+  screen: string;
+  data: {
+    states?: Array<{ id: string; title: string }>;
+    districts?: Array<{ id: string; title: string }>;
+    blocks?: Array<{ id: string; title: string }>;
+    villages?: Array<{ id: string; title: string }>;
   };
 }
 
@@ -111,6 +158,126 @@ export class FarmerRegistrationController {
       districtCode: query.districtCode,
       blockCode: query.blockCode,
     });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Encrypted Flow Data Endpoint (WhatsApp Flow 3.0)
+  // Called by Meta's Flow engine with encrypted payload
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * POST /whatsapp/flows/data (Encrypted)
+   * 
+   * WhatsApp Flow 3.0 sends an encrypted POST request with:
+   * - encrypted_flow_data: Base64 encoded encrypted JSON payload
+   * - encrypted_aes_key: Base64 encoded RSA-encrypted AES key
+   * - initial_vector: Base64 encoded 16-byte IV
+   * 
+   * We decrypt, process, and return an encrypted response.
+   */
+  @Post('data')
+  @HttpCode(HttpStatus.OK)
+  async getFlowDataEncrypted(
+    @Body() encryptedRequest: EncryptedFlowDataRequest,
+  ): Promise<string> {
+    this.logger.debug('Received encrypted flow data request');
+
+    // Step 1: Decrypt the incoming request
+    const decryptResult = this.flowEncryptionService.decryptFlowRequest(encryptedRequest);
+
+    if (!decryptResult.success) {
+      this.logger.error(`Failed to decrypt flow request: ${decryptResult.error}`);
+      throw new BadRequestException('Failed to decrypt request');
+    }
+
+    const requestData = decryptResult.data as DecryptedFlowDataRequest;
+    this.logger.debug(`Decrypted flow request: action=${requestData.action}, screen=${requestData.screen}`);
+
+    // Step 2: Process the request and get response data
+    const responseData = await this.processFlowDataRequest(requestData);
+
+    // Step 3: Encrypt and return the response
+    const encryptResult = this.flowEncryptionService.encryptFlowResponse(
+      responseData,
+      encryptedRequest,
+    );
+
+    if (!encryptResult.success) {
+      this.logger.error(`Failed to encrypt flow response: ${encryptResult.error}`);
+      throw new InternalServerErrorException('Failed to encrypt response');
+    }
+
+    this.logger.debug('Flow data response sent successfully');
+    return encryptResult.encrypted_data as string;
+  }
+
+  /**
+   * Process the decrypted flow data request and return response data
+   */
+  private async processFlowDataRequest(request: DecryptedFlowDataRequest): Promise<FlowDataScreenResponse> {
+    const { screen } = request;
+    const { state_code, district_code, block_code } = request.data || {};
+
+    try {
+      switch (screen) {
+        case 'STATE_SCREEN': {
+          const states = await this.locationService.getStatesFormatted();
+          return {
+            screen: 'STATE_SCREEN',
+            data: { states },
+          };
+        }
+
+        case 'DISTRICT_SCREEN': {
+          if (!state_code) {
+            return { screen: 'DISTRICT_SCREEN', data: { districts: [] } };
+          }
+          const stateCodeNum = parseInt(state_code, 10);
+          const districts = await this.locationService.getDistrictsFormatted(stateCodeNum);
+          return {
+            screen: 'DISTRICT_SCREEN',
+            data: { districts },
+          };
+        }
+
+        case 'BLOCK_SCREEN': {
+          if (!district_code) {
+            return { screen: 'BLOCK_SCREEN', data: { blocks: [] } };
+          }
+          const districtCodeNum = parseInt(district_code, 10);
+          const blocks = await this.locationService.getBlocksFormatted(districtCodeNum);
+          return {
+            screen: 'BLOCK_SCREEN',
+            data: { blocks },
+          };
+        }
+
+        case 'VILLAGE_SCREEN': {
+          if (!block_code) {
+            return { screen: 'VILLAGE_SCREEN', data: { villages: [] } };
+          }
+          const blockCodeNum = parseInt(block_code, 10);
+          const villages = await this.locationService.getVillagesFormatted(blockCodeNum);
+          return {
+            screen: 'VILLAGE_SCREEN',
+            data: { villages },
+          };
+        }
+
+        default:
+          this.logger.warn(`Unknown screen in encrypted request: ${screen}`);
+          return {
+            screen: screen || 'UNKNOWN_SCREEN',
+            data: {},
+          };
+      }
+    } catch (error) {
+      this.logger.error(`Error processing flow data request for ${screen}: ${error}`);
+      return {
+        screen,
+        data: {},
+      };
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
