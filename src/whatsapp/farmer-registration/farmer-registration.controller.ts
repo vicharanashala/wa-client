@@ -325,7 +325,7 @@ export class FarmerRegistrationController {
 
     try {
       // Handle init action - Meta sends this first to get initial screen
-      if (body.action === 'init') {
+      if (body.action?.toLowerCase() === 'init') {
         this.logger.log('[WhatsApp Flow] Handling init request - returning STATE_SCREEN');
         const states = await this.locationService.getStatesFormatted();
         return {
@@ -515,7 +515,7 @@ export class FarmerRegistrationController {
     this.logger.log(`Plain callback - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
 
     // Handle init action - Meta sends this first to get initial screen
-    if (payload.action === 'init') {
+    if (payload.action?.toLowerCase() === 'init') {
       this.logger.log('[WhatsApp Flow] Plain callback - Handling init request - returning STATE_SCREEN');
       const states = await this.locationService.getStatesFormatted();
       return {
