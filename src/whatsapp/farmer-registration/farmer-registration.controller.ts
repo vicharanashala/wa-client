@@ -443,7 +443,15 @@ export class FarmerRegistrationController {
     // Handle the callback
     let responseData: any;
 
-    if (payload.action === 'GET_INITIAL_SCREEN') {
+    // Handle init action - Meta sends this first to get initial screen (after decryption)
+    if (payload.action?.toLowerCase() === 'init') {
+      this.logger.log('[WhatsApp Flow] Encrypted callback - Handling init request - returning STATE_SCREEN');
+      const states = await this.locationService.getStatesFormatted();
+      responseData = {
+        screen: 'STATE_SCREEN',
+        data: { states },
+      };
+    } else if (payload.action === 'GET_INITIAL_SCREEN') {
       responseData = this.getScreenData(payload);
     } else if (payload.action === 'ping') {
       // Meta health check
