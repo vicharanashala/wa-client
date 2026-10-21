@@ -98,14 +98,14 @@ describe('FarmerRegistrationController', () => {
     jest.clearAllMocks();
   });
 
-  describe('POST /whatsapp/flows/callback - ping action', () => {
+  describe('POST /whatsapp/flow/callback - ping action', () => {
     it('should return active status for ping action', async () => {
       const result = await controller.handleFlowCallback({ action: 'ping' });
       expect(result).toEqual({ data: { status: 'active' } });
     });
   });
 
-  describe('POST /whatsapp/flows/callback - complete action', () => {
+  describe('POST /whatsapp/flow/callback - complete action', () => {
     it('should save flow submission and return success', async () => {
       // Setup mock
       mockFarmerRegistrationService.processSimplifiedFlowComplete.mockResolvedValue(
@@ -168,10 +168,10 @@ describe('FarmerRegistrationController', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // POST /whatsapp/flows/data (Encrypted) Tests
+  // POST /whatsapp/flow/data (Encrypted) Tests
   // ─────────────────────────────────────────────────────────────
 
-  describe('POST /whatsapp/flows/data - Encrypted Flow Data', () => {
+  describe('POST /whatsapp/flow/data - Encrypted Flow Data', () => {
     describe('STATE_SCREEN', () => {
       it('should return states for STATE_SCREEN', async () => {
         mockFlowEncryptionService.decryptFlowRequest.mockReturnValue({
