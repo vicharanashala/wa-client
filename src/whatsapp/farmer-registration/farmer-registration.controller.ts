@@ -608,64 +608,57 @@ export class FarmerRegistrationController {
    * Handle GET_INITIAL_SCREEN - return dynamic data for each screen
    */
   private async getScreenData(payload: FlowCallbackPayload): Promise<any> {
-    const screen = payload.screen;
     const data = payload.data || {};
 
-    this.logger.log(`Getting screen data for: ${screen}`);
+    this.logger.log(`[WhatsApp Flow] getScreenData - payload.screen: ${payload.screen}, data: ${JSON.stringify(data)}`);
 
     try {
-      switch (screen) {
-        case 'STATE_SCREEN': {
-          const states = await this.locationService.getStatesFormatted();
-          return {
-            screen: 'STATE_SCREEN',
-            data: { states },
-          };
-        }
+      // Check data fields to determine which screen to show
+      // Meta sends state_code, district_code, block_code in data field
 
-        case 'DISTRICT_SCREEN': {
-          const stateCode = parseInt(data.state_code || data.state?.id || '0', 10);
-          if (!stateCode) {
-            return { error: 'State code required' };
-          }
-          const districts = await this.locationService.getDistrictsFormatted(stateCode);
-          return {
-            screen: 'DISTRICT_SCREEN',
-            data: { districts },
-          };
-        }
-
-        case 'BLOCK_SCREEN': {
-          const districtCode = parseInt(data.district_code || data.district?.id || '0', 10);
-          if (!districtCode) {
-            return { error: 'District code required' };
-          }
-          const blocks = await this.locationService.getBlocksFormatted(districtCode);
-          return {
-            screen: 'BLOCK_SCREEN',
-            data: { blocks },
-          };
-        }
-
-        case 'VILLAGE_SCREEN': {
-          const blockCode = parseInt(data.block_code || data.block?.id || '0', 10);
-          if (!blockCode) {
-            return { error: 'Block code required' };
-          }
-          const villages = await this.locationService.getVillagesFormatted(blockCode);
-          return {
-            version: '3',
-            screen: 'VILLAGE_SCREEN',
-            data: { villages },
-          };
-        }
-
-        default:
-          this.logger.warn(`Unknown screen: ${screen}`);
-          return { error: 'Unknown screen' };
+      if (data.state_code) {
+        // User selected a state, now show districts
+        const stateCode = parseInt(data.state_code, 10);
+        this.logger.log(`[WhatsApp Flow] Returning DISTRICT_SCREEN for state_code: ${stateCode}`);
+        const districts = await this.locationService.getDistrictsFormatted(stateCode);
+        return {
+          screen: 'DISTRICT_SCREEN',
+          data: { districts },
+        };
       }
+
+      if (data.district_code) {
+        // User selected a district, now show blocks
+        const districtCode = parseInt(data.district_code, 10);
+        this.logger.log(`[WhatsApp Flow] Returning BLOCK_SCREEN for district_code: ${districtCode}`);
+        const blocks = await this.locationService.getBlocksFormatted(districtCode);
+        return {
+          screen: 'BLOCK_SCREEN',
+          data: { blocks },
+        };
+      }
+
+      if (data.block_code) {
+        // User selected a block, now show villages
+        const blockCode = parseInt(data.block_code, 10);
+        this.logger.log(`[WhatsApp Flow] Returning VILLAGE_SCREEN for block_code: ${blockCode}`);
+        const villages = await this.locationService.getVillagesFormatted(blockCode);
+        return {
+          screen: 'VILLAGE_SCREEN',
+          data: { villages },
+        };
+      }
+
+      // No data fields - return initial STATE_SCREEN
+      this.logger.log(`[WhatsApp Flow] Returning initial STATE_SCREEN`);
+      const states = await this.locationService.getStatesFormatted();
+      return {
+        screen: 'STATE_SCREEN',
+        data: { states },
+      };
+
     } catch (error) {
-      this.logger.error(`Error getting screen data for ${screen}: ${error}`);
+      this.logger.error(`[WhatsApp Flow] Error in getScreenData: ${error}`);
       return { error: String(error) };
     }
   }
