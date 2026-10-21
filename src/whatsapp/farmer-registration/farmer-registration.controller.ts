@@ -130,7 +130,7 @@ interface FlowDataScreenResponse {
 // Controller
 // ─────────────────────────────────────────────────────────────
 
-@Controller('whatsapp/flow')
+@Controller('whatsapp/flows')
 export class FarmerRegistrationController {
   private readonly logger = new Logger(FarmerRegistrationController.name);
 
@@ -167,7 +167,7 @@ export class FarmerRegistrationController {
   // ─────────────────────────────────────────────────────────────
 
   /**
-   * POST /whatsapp/flow/data (Encrypted)
+   * POST /whatsapp/flows/data (Encrypted)
    * 
    * WhatsApp Flow 3.0 sends an encrypted POST request with:
    * - encrypted_flow_data: Base64 encoded encrypted JSON payload
