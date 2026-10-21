@@ -4,6 +4,7 @@ import {
   Post,
   Query,
   Body,
+  Req,
   Logger,
   BadRequestException,
   InternalServerErrorException,
@@ -303,8 +304,24 @@ export class FarmerRegistrationController {
 
   @Post('callback')
   @HttpCode(HttpStatus.OK)
-  async handleFlowCallback(@Body() body: any): Promise<any> {
-    this.logger.debug(`Flow callback received: action=${body.action}`);
+  async handleFlowCallback(
+    @Body() body: any,
+    @Req() req: any,
+  ): Promise<any> {
+    // DETAILED HTTP REQUEST LOGGING
+    this.logger.warn(`[HTTP DEBUG] ========== INCOMING WHATSAPP FLOW REQUEST ==========`);
+    this.logger.warn(`[HTTP DEBUG] Method: ${req.method}`);
+    this.logger.warn(`[HTTP DEBUG] URL: ${req.url}`);
+    this.logger.warn(`[HTTP DEBUG] Headers: ${JSON.stringify({
+      'content-type': req.headers['content-type'],
+      'user-agent': req.headers['user-agent'],
+      'x-hub-signature': req.headers['x-hub-signature'] ? 'present' : 'missing',
+    })}`);
+    this.logger.warn(`[HTTP DEBUG] Raw Body Keys: ${Object.keys(body).join(', ')}`);
+    this.logger.warn(`[HTTP DEBUG] Full Body: ${JSON.stringify(body)}`);
+    this.logger.warn(`[HTTP DEBUG] action field: "${body.action}"`);
+    this.logger.warn(`[HTTP DEBUG] screen field: "${body.screen}"`);
+    this.logger.warn(`[HTTP DEBUG] ======================================================`);
 
     try {
       // Handle ping action for health checks
@@ -406,6 +423,8 @@ export class FarmerRegistrationController {
     }
 
     const payload = decryptResult.data as FlowCallbackPayload;
+    // TEMP: Log ALL actions to debug what Preview sends
+    this.logger.log(`[FLOW DEBUG] Raw action: "${payload.action}", full payload: ${JSON.stringify(payload)}`);
     this.logger.debug(`Decrypted - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
 
     // Handle the callback
@@ -415,7 +434,10 @@ export class FarmerRegistrationController {
       responseData = this.getScreenData(payload);
     } else if (payload.action === 'ping') {
       // Meta health check
-      responseData = { data: { status: 'active' } };
+      responseData = { 
+        screen: payload.screen || 'MAIN',  // REQUIRED by Meta API
+        data: { status: 'active' } 
+      };
     } else if (payload.action === 'FLOW_SUBMIT') {
       const flowData: FlowCallbackData = {
         phone_number: payload.phone_number,
@@ -450,7 +472,12 @@ export class FarmerRegistrationController {
         };
       }
     } else {
-      responseData = { status: 'unknown_action' };
+      // TEMP: Log the unhandled action for debugging
+      this.logger.warn(`[FLOW DEBUG] Unknown action received: "${payload.action}"`);
+      responseData = { 
+        screen: payload.screen || 'MAIN',  // REQUIRED by Meta API - return same screen
+        data: { status: 'unknown_action', error_message: `Unknown action: ${payload.action}` }
+      };
     }
 
     // Encrypt the response
@@ -470,11 +497,21 @@ export class FarmerRegistrationController {
    * Handle plain (unencrypted) callback for testing
    */
   private async handlePlainCallback(payload: FlowCallbackPayload): Promise<any> {
+    // TEMP: Log ALL actions to debug what Preview sends
+    this.logger.log(`[FLOW DEBUG] Plain callback - action: "${payload.action}", full payload: ${JSON.stringify(payload)}`);
     this.logger.log(`Plain callback - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
 
     // Handle GET_INITIAL_SCREEN - return dynamic data for screens
     if (payload.action === 'GET_INITIAL_SCREEN') {
       return this.getScreenData(payload);
+    }
+
+    // Handle ping - Meta health check
+    if (payload.action === 'ping') {
+      return { 
+        screen: payload.screen || 'MAIN',
+        data: { status: 'active' } 
+      };
     }
 
     // Handle FLOW_SUBMIT - process form submission
@@ -491,17 +528,28 @@ export class FarmerRegistrationController {
 
       if (result.isErr()) {
         this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
-        return { status: 'error' };
+        return { 
+          screen: payload.screen || 'MAIN',
+          data: { error_message: result.unwrapErr().message } 
+        };
       }
 
       // Send welcome message
       await this.sendWelcomeMessage(payload.phone_number);
 
       this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
-      return { status: 'success' };
+      return { 
+        screen: payload.screen || 'MAIN',
+        data: { status: 'success', extension_message_response: { params: { flow_token: payload.phone_number } } }
+      };
     }
 
-    return { status: 'unknown_action' };
+    // TEMP: Log unhandled action
+    this.logger.warn(`[FLOW DEBUG] Unknown action in plain callback: "${payload.action}"`);
+    return { 
+      screen: payload.screen || 'MAIN',
+      data: { status: 'unknown_action', error_message: `Unknown action: ${payload.action}` }
+    };
   }
 
   /**
