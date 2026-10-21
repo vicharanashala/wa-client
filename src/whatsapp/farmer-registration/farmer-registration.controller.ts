@@ -453,6 +453,10 @@ export class FarmerRegistrationController {
         screen: 'STATE_SCREEN',
         data: { states },
       };
+    } else if (payload.action === 'data_exchange') {
+      // Meta sends data_exchange when user navigates to a screen (e.g., DISTRICT_SCREEN, BLOCK_SCREEN)
+      this.logger.log(`[WhatsApp Flow] data_exchange - screen: ${payload.screen}, data: ${JSON.stringify(payload.data)}`);
+      responseData = await this.getScreenData(payload);
     } else if (payload.action === 'GET_DATA') {
       // Meta sends GET_DATA when user navigates to a screen (e.g., DISTRICT_SCREEN, BLOCK_SCREEN)
       this.logger.log(`[WhatsApp Flow] GET_DATA - screen: ${payload.screen}, data: ${JSON.stringify(payload.data)}`);
