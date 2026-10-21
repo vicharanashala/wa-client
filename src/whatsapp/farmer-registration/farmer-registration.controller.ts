@@ -324,10 +324,23 @@ export class FarmerRegistrationController {
     this.logger.warn(`[HTTP DEBUG] ======================================================`);
 
     try {
+      // Handle init action - Meta sends this first to get initial screen
+      if (body.action === 'init') {
+        this.logger.log('[WhatsApp Flow] Handling init request - returning STATE_SCREEN');
+        const states = await this.locationService.getStatesFormatted();
+        return {
+          screen: 'STATE_SCREEN',
+          data: { states },
+        };
+      }
+
       // Handle ping action for health checks
       if (body.action === 'ping') {
         this.logger.debug('Handling ping request');
-        return { data: { status: 'active' } };
+        return {
+          screen: body.screen || 'MAIN',
+          data: { status: 'active' },
+        };
       }
 
       // Handle action=complete (new simplified format from Flow)
@@ -500,6 +513,16 @@ export class FarmerRegistrationController {
     // TEMP: Log ALL actions to debug what Preview sends
     this.logger.log(`[FLOW DEBUG] Plain callback - action: "${payload.action}", full payload: ${JSON.stringify(payload)}`);
     this.logger.log(`Plain callback - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
+
+    // Handle init action - Meta sends this first to get initial screen
+    if (payload.action === 'init') {
+      this.logger.log('[WhatsApp Flow] Plain callback - Handling init request - returning STATE_SCREEN');
+      const states = await this.locationService.getStatesFormatted();
+      return {
+        screen: 'STATE_SCREEN',
+        data: { states },
+      };
+    }
 
     // Handle GET_INITIAL_SCREEN - return dynamic data for screens
     if (payload.action === 'GET_INITIAL_SCREEN') {
