@@ -338,7 +338,7 @@ export class FarmerRegistrationController {
       if (body.action === 'ping') {
         this.logger.debug('Handling ping request');
         return {
-          screen: body.screen || 'MAIN',
+          screen: body.screen,
           data: { status: 'active' },
         };
       }
@@ -448,7 +448,7 @@ export class FarmerRegistrationController {
     } else if (payload.action === 'ping') {
       // Meta health check
       responseData = { 
-        screen: payload.screen || 'MAIN',  // REQUIRED by Meta API
+        screen: payload.screen,
         data: { status: 'active' } 
       };
     } else if (payload.action === 'FLOW_SUBMIT') {
@@ -488,7 +488,7 @@ export class FarmerRegistrationController {
       // TEMP: Log the unhandled action for debugging
       this.logger.warn(`[FLOW DEBUG] Unknown action received: "${payload.action}"`);
       responseData = { 
-        screen: payload.screen || 'MAIN',  // REQUIRED by Meta API - return same screen
+        screen: payload.screen,
         data: { status: 'unknown_action', error_message: `Unknown action: ${payload.action}` }
       };
     }
@@ -532,7 +532,7 @@ export class FarmerRegistrationController {
     // Handle ping - Meta health check
     if (payload.action === 'ping') {
       return { 
-        screen: payload.screen || 'MAIN',
+        screen: payload.screen,
         data: { status: 'active' } 
       };
     }
@@ -552,7 +552,7 @@ export class FarmerRegistrationController {
       if (result.isErr()) {
         this.logger.error(`Flow callback error: ${result.unwrapErr().message}`);
         return { 
-          screen: payload.screen || 'MAIN',
+          screen: payload.screen,
           data: { error_message: result.unwrapErr().message } 
         };
       }
@@ -562,7 +562,7 @@ export class FarmerRegistrationController {
 
       this.logger.log(`Flow callback processed successfully for ${payload.phone_number}`);
       return { 
-        screen: payload.screen || 'MAIN',
+        screen: payload.screen,
         data: { status: 'success', extension_message_response: { params: { flow_token: payload.phone_number } } }
       };
     }
@@ -570,7 +570,7 @@ export class FarmerRegistrationController {
     // TEMP: Log unhandled action
     this.logger.warn(`[FLOW DEBUG] Unknown action in plain callback: "${payload.action}"`);
     return { 
-      screen: payload.screen || 'MAIN',
+      screen: payload.screen,
       data: { status: 'unknown_action', error_message: `Unknown action: ${payload.action}` }
     };
   }
