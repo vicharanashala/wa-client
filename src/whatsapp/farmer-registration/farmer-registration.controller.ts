@@ -328,6 +328,7 @@ export class FarmerRegistrationController {
       if (body.action?.toLowerCase() === 'init') {
         this.logger.log('[WhatsApp Flow] Handling init request - returning STATE_SCREEN');
         const states = await this.locationService.getStatesFormatted();
+        this.logger.log(`[WhatsApp Flow] INIT - states returned: ${states.length}, data: ${JSON.stringify(states)}`);
         return {
           screen: 'STATE_SCREEN',
           data: { states },
@@ -447,6 +448,7 @@ export class FarmerRegistrationController {
     if (payload.action?.toLowerCase() === 'init') {
       this.logger.log('[WhatsApp Flow] Encrypted callback - Handling init request - returning STATE_SCREEN');
       const states = await this.locationService.getStatesFormatted();
+      this.logger.log(`[WhatsApp Flow] INIT (encrypted) - states returned: ${states.length}, data: ${JSON.stringify(states)}`);
       responseData = {
         screen: 'STATE_SCREEN',
         data: { states },
@@ -526,6 +528,7 @@ export class FarmerRegistrationController {
     if (payload.action?.toLowerCase() === 'init') {
       this.logger.log('[WhatsApp Flow] Plain callback - Handling init request - returning STATE_SCREEN');
       const states = await this.locationService.getStatesFormatted();
+      this.logger.log(`[WhatsApp Flow] INIT (plain) - states returned: ${states.length}, data: ${JSON.stringify(states)}`);
       return {
         screen: 'STATE_SCREEN',
         data: { states },

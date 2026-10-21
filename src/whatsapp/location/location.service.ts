@@ -56,9 +56,11 @@ export class LocationService {
 
   // Reviewer backend base URL
   private readonly reviewerBackendUrl: string;
+  private readonly reviewerApiKey: string;
 
   constructor() {
     this.reviewerBackendUrl = locationConfig.reviewerBackendBaseUrl;
+    this.reviewerApiKey = process.env.REVIEWER_INTERNAL_API_KEY || '';
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -77,13 +79,19 @@ export class LocationService {
     }
 
     try {
-      const response = await fetch(`${this.reviewerBackendUrl}/api/location/states`);
+      this.logger.log(`[LocationService] Fetching states from: ${this.reviewerBackendUrl}/api/location/states`);
+      const response = await fetch(`${this.reviewerBackendUrl}/api/location/states`, {
+        headers: {
+          'x-internal-api-key': this.reviewerApiKey,
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch states: ${response.status} ${response.statusText}`);
       }
 
       const states = await response.json();
+      this.logger.log(`[LocationService] Raw API response: ${JSON.stringify(states).slice(0, 500)}`);
 
       // Transform to Flow dropdown format
       const options: StateOption[] = (states as any[]).map((state) => ({
@@ -92,11 +100,11 @@ export class LocationService {
       }));
 
       this.setCache(cacheKey, options);
-      this.logger.log(`Fetched and cached ${options.length} states`);
+      this.logger.log(`[LocationService] Fetched and cached ${options.length} states`);
 
       return options;
     } catch (error) {
-      this.logger.error(`Failed to fetch states: ${error}`);
+      this.logger.error(`[LocationService] Failed to fetch states: ${error}`);
       // Return empty array on error (Flow will show empty dropdown)
       return [];
     }
@@ -116,6 +124,11 @@ export class LocationService {
     try {
       const response = await fetch(
         `${this.reviewerBackendUrl}/api/location/districts?stateCode=${stateCode}`,
+        {
+          headers: {
+            'x-internal-api-key': this.reviewerApiKey,
+          },
+        },
       );
 
       if (!response.ok) {
@@ -153,6 +166,11 @@ export class LocationService {
     try {
       const response = await fetch(
         `${this.reviewerBackendUrl}/api/location/blocks?districtCode=${districtCode}`,
+        {
+          headers: {
+            'x-internal-api-key': this.reviewerApiKey,
+          },
+        },
       );
 
       if (!response.ok) {
@@ -190,6 +208,11 @@ export class LocationService {
     try {
       const response = await fetch(
         `${this.reviewerBackendUrl}/api/location/villages?blockCode=${blockCode}`,
+        {
+          headers: {
+            'x-internal-api-key': this.reviewerApiKey,
+          },
+        },
       );
 
       if (!response.ok) {
