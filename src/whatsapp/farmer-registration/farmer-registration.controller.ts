@@ -36,6 +36,7 @@ interface FlowCallbackPayload {
     state_code?: string;  // When navigating between screens
     district_code?: string;
     block_code?: string;
+    village_code?: string;
   };
 }
 
@@ -646,6 +647,15 @@ export class FarmerRegistrationController {
         return {
           screen: 'VILLAGE_SCREEN',
           data: { villages },
+        };
+      }
+
+      if (data.village_code) {
+        // User selected a village, flow is complete
+        this.logger.log(`[WhatsApp Flow] Returning COMPLETE for village_code: ${data.village_code}`);
+        return {
+          screen: 'COMPLETE',
+          data: {},
         };
       }
 
