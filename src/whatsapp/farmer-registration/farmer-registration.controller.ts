@@ -148,7 +148,17 @@ export class FarmerRegistrationController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('data')
-  async getFlowData(@Query() query: FlowDataQuery): Promise<FlowDataResponse> {
+  async getFlowData(
+    @Query() query: FlowDataQuery,
+    @Req() req: any,
+  ): Promise<FlowDataResponse> {
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 GET /whatsapp/flows/data - Screen loading endpoint called!`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 Full URL: ${req.url}`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 Query params: ${JSON.stringify(query)}`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 Headers: ${JSON.stringify({
+      'user-agent': req.headers['user-agent'],
+      'content-type': req.headers['content-type'],
+    })}`);
     this.logger.debug(`Flow data request: screen=${query.screen}`);
 
     if (!query.screen) {
@@ -182,6 +192,11 @@ export class FarmerRegistrationController {
   async getFlowDataEncrypted(
     @Body() encryptedRequest: EncryptedFlowDataRequest,
   ): Promise<string> {
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 POST /whatsapp/flows/data (ENCRYPTED) - Screen loading endpoint called!`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 Encrypted payload keys: ${Object.keys(encryptedRequest).join(', ')}`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 encrypted_flow_data length: ${encryptedRequest.encrypted_flow_data?.length || 0}`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 encrypted_aes_key length: ${encryptedRequest.encrypted_aes_key?.length || 0}`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 initial_vector length: ${encryptedRequest.initial_vector?.length || 0}`);
     this.logger.log(`[WhatsApp Flow] Received encrypted data request`);
     this.logger.log(`[WhatsApp Flow] Raw payload: ${JSON.stringify(encryptedRequest)}`);
     this.logger.log(`[WhatsApp Flow] Missing encrypted_flow_data: ${!encryptedRequest.encrypted_flow_data}`);
@@ -310,6 +325,9 @@ export class FarmerRegistrationController {
     @Req() req: any,
   ): Promise<any> {
     // DETAILED HTTP REQUEST LOGGING
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 POST /whatsapp/flows/callback - Submission endpoint called!`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 URL: ${req.url}`);
+    this.logger.warn(`[META_ENDPOINT_HIT] 🚨 action: "${body.action}"`);
     this.logger.warn(`[HTTP DEBUG] ========== INCOMING WHATSAPP FLOW REQUEST ==========`);
     this.logger.warn(`[HTTP DEBUG] Method: ${req.method}`);
     this.logger.warn(`[HTTP DEBUG] URL: ${req.url}`);
