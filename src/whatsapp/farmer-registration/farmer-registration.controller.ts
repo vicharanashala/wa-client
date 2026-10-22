@@ -354,6 +354,18 @@ export class FarmerRegistrationController {
         };
       }
 
+      // Fallback: If action is undefined or unknown, return initial state screen
+      // This catches edge cases where Meta sends unexpected action values
+      if (!body.action || body.action === undefined || body.action === null) {
+        this.logger.warn(`[WhatsApp Flow] ⚠️ UNDEFINED/UNKNOWN ACTION - returning STATE_SCREEN as fallback. Body keys: ${Object.keys(body).join(', ')}`);
+        const states = await this.locationService.getStatesFormatted();
+        this.logger.log(`[WhatsApp Flow] FALLBACK - states returned: ${states.length}`);
+        return {
+          screen: 'STATE_SCREEN',
+          data: { states },
+        };
+      }
+
       // Handle ping action for health checks
       if (body.action === 'ping') {
         this.logger.debug('Handling ping request');
