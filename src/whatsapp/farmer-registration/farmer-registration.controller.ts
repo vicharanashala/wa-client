@@ -346,7 +346,7 @@ export class FarmerRegistrationController {
       }
 
       // Handle action=complete (new simplified format from Flow)
-      if (body.action === 'complete') {
+      if (body.action?.toLowerCase() === 'complete') {
         return this.handleFlowComplete(body as FlowCompletePayload);
       }
 
@@ -438,8 +438,15 @@ export class FarmerRegistrationController {
     }
 
     const payload = decryptResult.data as FlowCallbackPayload;
-    // TEMP: Log ALL actions to debug what Preview sends
-    this.logger.log(`[FLOW DEBUG] Raw action: "${payload.action}", full payload: ${JSON.stringify(payload)}`);
+    // DEBUG: Log exact decrypted data to see what Meta sends
+    this.logger.warn(`[FLOW DEBUG] ========== DECRYPTED DATA ==========`);
+    this.logger.warn(`[FLOW DEBUG] Raw decrypted data: ${JSON.stringify(decryptResult.data)}`);
+    this.logger.warn(`[FLOW DEBUG] Has action field: ${decryptResult.data?.hasOwnProperty('action')}`);
+    this.logger.warn(`[FLOW DEBUG] Has Action field (capital A): ${decryptResult.data?.hasOwnProperty('Action')}`);
+    this.logger.warn(`[FLOW DEBUG] Has phone_number: ${decryptResult.data?.hasOwnProperty('phone_number')}`);
+    this.logger.warn(`[FLOW DEBUG] Has screen: ${decryptResult.data?.hasOwnProperty('screen')}`);
+    this.logger.warn(`[FLOW DEBUG] All keys: ${JSON.stringify(Object.keys(decryptResult.data || {}))}`);
+    this.logger.warn(`[FLOW DEBUG] ======================================`);
     this.logger.debug(`Decrypted - phone: ${payload.phone_number}, action: ${payload.action}, screen: ${payload.screen}`);
 
     // Handle the callback
@@ -454,23 +461,25 @@ export class FarmerRegistrationController {
         screen: 'STATE_SCREEN',
         data: { states },
       };
-    } else if (payload.action === 'data_exchange') {
+    } else if (payload.action?.toLowerCase() === 'data_exchange') {
       // Meta sends data_exchange when user navigates to a screen (e.g., DISTRICT_SCREEN, BLOCK_SCREEN)
       this.logger.log(`[WhatsApp Flow] data_exchange - screen: ${payload.screen}, data: ${JSON.stringify(payload.data)}`);
       responseData = await this.getScreenData(payload);
-    } else if (payload.action === 'GET_DATA') {
+    } else if (payload.action?.toLowerCase() === 'get_data') {
       // Meta sends GET_DATA when user navigates to a screen (e.g., DISTRICT_SCREEN, BLOCK_SCREEN)
       this.logger.log(`[WhatsApp Flow] GET_DATA - screen: ${payload.screen}, data: ${JSON.stringify(payload.data)}`);
       responseData = await this.getScreenData(payload);
-    } else if (payload.action === 'GET_INITIAL_SCREEN') {
+    } else if (payload.action?.toLowerCase() === 'get_initial_screen') {
+      this.logger.log(`[WhatsApp Flow] GET_INITIAL_SCREEN - screen: ${payload.screen}`);
       responseData = this.getScreenData(payload);
-    } else if (payload.action === 'ping') {
+    } else if (payload.action?.toLowerCase() === 'ping') {
       // Meta health check
+      this.logger.debug('[WhatsApp Flow] ping - health check received');
       responseData = { 
         screen: payload.screen,
         data: { status: 'active' } 
       };
-    } else if (payload.action === 'FLOW_SUBMIT') {
+    } else if (payload.action?.toLowerCase() === 'flow_submit') {
       const flowData: FlowCallbackData = {
         phone_number: payload.phone_number,
         state: payload.data?.state,
@@ -545,12 +554,26 @@ export class FarmerRegistrationController {
     }
 
     // Handle GET_INITIAL_SCREEN - return dynamic data for screens
-    if (payload.action === 'GET_INITIAL_SCREEN') {
+    if (payload.action?.toLowerCase() === 'get_initial_screen') {
+      this.logger.log(`[WhatsApp Flow] Plain callback - GET_INITIAL_SCREEN - screen: ${payload.screen}`);
+      return this.getScreenData(payload);
+    }
+
+    // Handle data_exchange - Meta sends this when user navigates to a screen (mobile may use this)
+    if (payload.action?.toLowerCase() === 'data_exchange') {
+      this.logger.log(`[WhatsApp Flow] Plain callback - data_exchange - screen: ${payload.screen}, data: ${JSON.stringify(payload.data)}`);
+      return this.getScreenData(payload);
+    }
+
+    // Handle GET_DATA - Meta sends this when user navigates to a screen
+    if (payload.action?.toLowerCase() === 'get_data') {
+      this.logger.log(`[WhatsApp Flow] Plain callback - GET_DATA - screen: ${payload.screen}, data: ${JSON.stringify(payload.data)}`);
       return this.getScreenData(payload);
     }
 
     // Handle ping - Meta health check
-    if (payload.action === 'ping') {
+    if (payload.action?.toLowerCase() === 'ping') {
+      this.logger.debug('[WhatsApp Flow] Plain callback - ping - health check received');
       return { 
         screen: payload.screen,
         data: { status: 'active' } 
@@ -558,7 +581,7 @@ export class FarmerRegistrationController {
     }
 
     // Handle FLOW_SUBMIT - process form submission
-    if (payload.action === 'FLOW_SUBMIT') {
+    if (payload.action?.toLowerCase() === 'flow_submit') {
       const flowData: FlowCallbackData = {
         phone_number: payload.phone_number,
         state: payload.data?.state,

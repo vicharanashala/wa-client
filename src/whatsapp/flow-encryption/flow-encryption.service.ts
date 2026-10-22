@@ -149,6 +149,8 @@ export class FlowEncryptionService {
       const data = JSON.parse(decryptedJson);
 
       this.logger.log('Flow request decrypted successfully');
+      this.logger.log(`[FLOW ENCRYPT] Decrypted payload: ${JSON.stringify(data)}`);
+      this.logger.log(`[FLOW ENCRYPT] Action field: "${data?.action}"`);
       return { success: true, data };
 
     } catch (error) {
