@@ -107,7 +107,6 @@ jobs:
             AEGRA_ASSISTANT_ID=${{ secrets.AEGRA_ASSISTANT_ID_STAGING }}
             AEGRA_BASE_URL=${{ secrets.AEGRA_BASE_URL_STAGING }}
             AEGRA_API_URL=${{ secrets.AEGRA_API_URL_STAGING }}
-            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=wa-client-staging
             WHATSAPP_FLOW_ID=${{ secrets.WHATSAPP_FLOW_ID }}
             REVIEWER_BACKEND_BASE_URL=${{ secrets.REVIEWER_BACKEND_BASE_URL }}
